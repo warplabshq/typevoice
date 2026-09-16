@@ -1,11 +1,22 @@
 import SwiftUI
 
 enum Theme {
-    /// One accent. Warm, reads on any wallpaper.
-    static let accent = Color(red: 1.00, green: 0.60, blue: 0.34)
-    static let accentSoft = Color(red: 1.00, green: 0.80, blue: 0.62)
+    /// Monochrome by default. The accent only tints the waveform and the check.
+    static var accent: Color { color(for: Prefs.accent) }
     static let onGlass = Color.white
     static let onGlassDim = Color.white.opacity(0.62)
+
+    static func color(for a: Prefs.Accent) -> Color {
+        switch a {
+        case .mono: return .white
+        case .system: return Color(nsColor: .controlAccentColor)
+        case .blue: return Color(red: 0.35, green: 0.62, blue: 1.00)
+        case .purple: return Color(red: 0.72, green: 0.55, blue: 1.00)
+        case .pink: return Color(red: 1.00, green: 0.50, blue: 0.70)
+        case .green: return Color(red: 0.40, green: 0.85, blue: 0.55)
+        case .amber: return Color(red: 1.00, green: 0.72, blue: 0.35)
+        }
+    }
 
     static let spring = Animation.spring(response: 0.42, dampingFraction: 0.80)
     static let springSoft = Animation.spring(response: 0.52, dampingFraction: 0.86)

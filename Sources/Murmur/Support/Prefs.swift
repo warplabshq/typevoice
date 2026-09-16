@@ -16,13 +16,42 @@ enum Prefs {
         static let punctuation = "style.punctuation"
         static let tone = "style.tone"
         static let removeFillers = "style.removeFillers"
-        static let hudPosition = "hudPosition"         // "bottom" | "top"
+        static let hudPosition = "hudPosition"         // HUDPosition
+        static let accent = "accent"                   // Accent
+        static let numbersAsDigits = "numbersAsDigits" // Bool
     }
 
     enum HUDPosition: String, CaseIterable, Identifiable {
-        case bottom, top
+        case topLeft, topCenter, topRight, bottomLeft, bottomCenter, bottomRight
         var id: String { rawValue }
-        var label: String { self == .bottom ? "Bottom of screen" : "Top of screen" }
+        var isTop: Bool { self == .topLeft || self == .topCenter || self == .topRight }
+        var horizontal: Int { switch self { case .topLeft, .bottomLeft: return 0; case .topCenter, .bottomCenter: return 1; default: return 2 } }
+        var label: String {
+            switch self {
+            case .topLeft: return "Top left"
+            case .topCenter: return "Top centre"
+            case .topRight: return "Top right"
+            case .bottomLeft: return "Bottom left"
+            case .bottomCenter: return "Bottom centre"
+            case .bottomRight: return "Bottom right"
+            }
+        }
+    }
+
+    enum Accent: String, CaseIterable, Identifiable {
+        case mono, system, blue, purple, pink, green, amber
+        var id: String { rawValue }
+        var label: String {
+            switch self {
+            case .mono: return "None"
+            case .system: return "System"
+            case .blue: return "Blue"
+            case .purple: return "Purple"
+            case .pink: return "Pink"
+            case .green: return "Green"
+            case .amber: return "Amber"
+            }
+        }
     }
 
     enum Trigger: String, CaseIterable, Identifiable {
@@ -48,7 +77,9 @@ enum Prefs {
             Key.punctuation: Style.Punctuation.full.rawValue,
             Key.tone: Style.Tone.natural.rawValue,
             Key.removeFillers: true,
-            Key.hudPosition: HUDPosition.bottom.rawValue,
+            Key.hudPosition: HUDPosition.bottomCenter.rawValue,
+            Key.accent: Accent.mono.rawValue,
+            Key.numbersAsDigits: true,
         ])
     }
 
@@ -65,7 +96,9 @@ enum Prefs {
     static var punctuation: Style.Punctuation { Style.Punctuation(rawValue: d.string(forKey: Key.punctuation) ?? "") ?? .full }
     static var tone: Style.Tone { Style.Tone(rawValue: d.string(forKey: Key.tone) ?? "") ?? .natural }
     static var removeFillers: Bool { d.bool(forKey: Key.removeFillers) }
-    static var hudPosition: HUDPosition { HUDPosition(rawValue: d.string(forKey: Key.hudPosition) ?? "") ?? .bottom }
+    static var hudPosition: HUDPosition { HUDPosition(rawValue: d.string(forKey: Key.hudPosition) ?? "") ?? .bottomCenter }
+    static var accent: Accent { Accent(rawValue: d.string(forKey: Key.accent) ?? "") ?? .mono }
+    static var numbersAsDigits: Bool { d.bool(forKey: Key.numbersAsDigits) }
 
     /// Wipes every preference. Used by "Delete everything".
     static func reset() {

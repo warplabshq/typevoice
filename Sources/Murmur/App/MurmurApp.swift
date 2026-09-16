@@ -83,7 +83,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if main == nil {
             let host = NSHostingController(rootView: MainRoot(delegate: self))
             let w = NSWindow(contentViewController: host)
-            w.title = "Murmur"
             w.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             w.titlebarAppearsTransparent = false
             w.toolbarStyle = .unified

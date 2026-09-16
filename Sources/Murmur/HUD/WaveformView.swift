@@ -3,9 +3,10 @@ import SwiftUI
 /// Mirrored bars from the level history. Newest on the right.
 struct WaveformView: View {
     let levels: [Float]
-    var bars = 26
-    var barWidth: CGFloat = 3
-    var gap: CGFloat = 3
+    var bars = 18
+    var barWidth: CGFloat = 2
+    var gap: CGFloat = 2.5
+    var color: Color = Theme.accent
 
     var body: some View {
         Canvas { ctx, size in
@@ -13,18 +14,13 @@ struct WaveformView: View {
             let totalW = CGFloat(slice.count) * (barWidth + gap) - gap
             var x = (size.width - totalW) / 2
             let midY = size.height / 2
-            let maxH = size.height - 4
+            let maxH = size.height
             for (i, l) in slice.enumerated() {
-                // Emphasise the tail a little so motion reads left→right.
-                let weight = 0.6 + 0.4 * CGFloat(i) / CGFloat(max(slice.count - 1, 1))
-                let h = max(2.5, CGFloat(l) * maxH * weight)
+                let weight = 0.55 + 0.45 * CGFloat(i) / CGFloat(max(slice.count - 1, 1))
+                let h = max(2, CGFloat(l) * maxH * weight)
                 let rect = CGRect(x: x, y: midY - h / 2, width: barWidth, height: h)
-                let shading = GraphicsContext.Shading.linearGradient(
-                    Gradient(colors: [Theme.accentSoft, Theme.accent]),
-                    startPoint: CGPoint(x: rect.midX, y: rect.minY),
-                    endPoint: CGPoint(x: rect.midX, y: rect.maxY)
-                )
-                ctx.fill(Path(roundedRect: rect, cornerRadius: barWidth / 2), with: shading)
+                let alpha = 0.45 + 0.55 * Double(weight)
+                ctx.fill(Path(roundedRect: rect, cornerRadius: barWidth / 2), with: .color(color.opacity(alpha)))
                 x += barWidth + gap
             }
         }
@@ -40,22 +36,18 @@ struct ListeningDot: View {
             let t = ctx.date.timeIntervalSinceReferenceDate
             let s = 1 + 0.18 * sin(t * 3.2)
             ZStack {
-                Circle()
-                    .fill(Theme.accent.opacity(0.35))
-                    .frame(width: 14, height: 14)
-                    .scaleEffect(locked ? 1 : s * 1.15)
                 if locked {
                     Image(systemName: "lock.fill")
-                        .font(.system(size: 8, weight: .bold))
-                        .foregroundStyle(Theme.accent)
+                        .font(.system(size: 9, weight: .semibold))
+                        .foregroundStyle(Theme.onGlassDim)
                 } else {
                     Circle()
-                        .fill(Theme.accent)
-                        .frame(width: 7, height: 7)
+                        .fill(Theme.accent.opacity(0.9))
+                        .frame(width: 6, height: 6)
                         .scaleEffect(s)
                 }
             }
-            .frame(width: 18, height: 18)
+            .frame(width: 12, height: 12)
         }
     }
 }
@@ -73,7 +65,7 @@ struct ShimmerLine: View {
                     .frame(height: 2)
                     .overlay(
                         Capsule()
-                            .fill(LinearGradient(colors: [.clear, Theme.accentSoft, .clear], startPoint: .leading, endPoint: .trailing))
+                            .fill(LinearGradient(colors: [.clear, Theme.onGlass.opacity(0.9), .clear], startPoint: .leading, endPoint: .trailing))
                             .frame(width: w * 0.35, height: 2)
                             .offset(x: -w * 0.35 + (w + w * 0.35) * phase)
                     )

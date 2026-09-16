@@ -7,35 +7,45 @@ struct HUDView: View {
     private var phase: AppState.Phase { state.phase }
     private var shown: Bool { phase.isActive }
 
-    var body: some View {
-        VStack {
-            Spacer(minLength: 0)
-            if Prefs.hudPosition == .top { pill; Spacer(minLength: 0) } else { pill }
+    private var position: Prefs.HUDPosition { Prefs.hudPosition }
+
+    private var alignment: Alignment {
+        switch (position.isTop, position.horizontal) {
+        case (true, 0): return .topLeading
+        case (true, 1): return .top
+        case (true, _): return .topTrailing
+        case (false, 0): return .bottomLeading
+        case (false, 1): return .bottom
+        case (false, _): return .bottomTrailing
         }
-        .frame(width: HUDWindow.canvas.width, height: HUDWindow.canvas.height)
-        .animation(Theme.spring, value: phase)
+    }
+
+    var body: some View {
+        pill
+            .padding(HUDWindow.margin)
+            .frame(width: HUDWindow.canvas.width, height: HUDWindow.canvas.height, alignment: alignment)
+            .animation(Theme.spring, value: phase)
     }
 
     private var pill: some View {
         GlassEffectContainer(spacing: 0) {
             content
-                .frame(height: 30)
-                .padding(.horizontal, 16)
-                .padding(.vertical, 9)
-                .glassEffect(.regular.tint(Color.black.opacity(0.42)), in: .capsule)
+                .frame(height: 22)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .glassEffect(.regular.tint(Color.black.opacity(0.45)), in: .capsule)
                 .overlay(
                     Capsule().strokeBorder(
-                        LinearGradient(colors: [.white.opacity(0.28), .white.opacity(0.04)], startPoint: .top, endPoint: .bottom),
-                        lineWidth: 0.75
+                        LinearGradient(colors: [.white.opacity(0.22), .white.opacity(0.03)], startPoint: .top, endPoint: .bottom),
+                        lineWidth: 0.6
                     )
                 )
-                .shadow(color: .black.opacity(0.30), radius: 18, y: 8)
-                .shadow(color: .black.opacity(0.18), radius: 3, y: 1)
+                .shadow(color: .black.opacity(0.28), radius: 16, y: 6)
+                .shadow(color: .black.opacity(0.16), radius: 2, y: 1)
         }
-        .padding(.bottom, 8)
-        .scaleEffect(shown ? 1 : 0.86, anchor: Prefs.hudPosition == .top ? .top : .bottom)
+        .scaleEffect(shown ? 1 : 0.9, anchor: UnitPoint(x: [0.0, 0.5, 1.0][position.horizontal], y: position.isTop ? 0 : 1))
         .opacity(shown ? 1 : 0)
-        .blur(radius: shown ? 0 : 6)
+        .blur(radius: shown ? 0 : 5)
     }
 
     @ViewBuilder
@@ -45,11 +55,11 @@ struct HUDView: View {
             EmptyView()
 
         case .listening(let locked):
-            HStack(spacing: 12) {
-                ListeningDot(locked: locked)
+            HStack(spacing: 10) {
+                if locked { ListeningDot(locked: true) }
                 if state.isReady {
                     WaveformView(levels: state.levels)
-                        .frame(width: 150)
+                        .frame(width: 80, height: 16)
                 } else {
                     HStack(spacing: 8) {
                         ProgressRing(fraction: state.warm.fraction)
@@ -69,7 +79,7 @@ struct HUDView: View {
 
         case .processing:
             ShimmerLine()
-                .frame(width: 150)
+                .frame(width: 80)
                 .transition(.blurFade)
                 .id("processing")
 

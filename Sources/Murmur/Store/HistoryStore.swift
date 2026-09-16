@@ -6,37 +6,96 @@ struct Dictation: Identifiable, Codable, Sendable, Equatable, Hashable {
     var text: String
     var date: Date
     var appName: String
+    var bundleID: String? = nil
     var seconds: Double
+    var words: Int = 0
+    var latencyMs: Int? = nil
+
+    static func wordCount(_ s: String) -> Int {
+        s.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
+    }
+
+    init(id: UUID = UUID(), text: String, date: Date, appName: String, bundleID: String? = nil,
+         seconds: Double, words: Int = 0, latencyMs: Int? = nil) {
+        self.id = id; self.text = text; self.date = date; self.appName = appName
+        self.bundleID = bundleID; self.seconds = seconds; self.words = words; self.latencyMs = latencyMs
+    }
+
+    /// Tolerant of older files that lack the newer fields.
+    init(from decoder: Decoder) throws {
+        let c = try decoder.container(keyedBy: CodingKeys.self)
+        id = try c.decodeIfPresent(UUID.self, forKey: .id) ?? UUID()
+        text = try c.decode(String.self, forKey: .text)
+        date = try c.decodeIfPresent(Date.self, forKey: .date) ?? .now
+        appName = try c.decodeIfPresent(String.self, forKey: .appName) ?? ""
+        bundleID = try c.decodeIfPresent(String.self, forKey: .bundleID)
+        seconds = try c.decodeIfPresent(Double.self, forKey: .seconds) ?? 0
+        words = try c.decodeIfPresent(Int.self, forKey: .words) ?? Dictation.wordCount(text)
+        latencyMs = try c.decodeIfPresent(Int.self, forKey: .latencyMs)
+    }
 }
 
-/// Every dictation, newest first. Lives in ~/Library/Application Support/Murmur/history.json.
+/// Paged, searchable view over `HistoryDB`. The UI only ever holds one page.
 @MainActor
 @Observable
 final class HistoryStore {
-    private(set) var entries: [Dictation]
-    static let cap = 2000
+    private let db: HistoryDB
+    private(set) var entries: [Dictation] = []
+    private(set) var stats = HistoryDB.Stats()
+    private(set) var hasMore = false
+    var query = "" { didSet { if query != oldValue { reload() } } }
+    static let pageSize = 150
 
     init() {
-        entries = JSONFile.load([Dictation].self, from: Paths.history) ?? []
+        db = HistoryDB(url: Paths.support.appendingPathComponent("history.sqlite"))
+        migrateJSONIfNeeded()
+        reload()
     }
 
     func add(_ d: Dictation) {
-        entries.insert(d, at: 0)
-        if entries.count > Self.cap { entries.removeLast(entries.count - Self.cap) }
-        persist()
+        var d = d
+        if d.words == 0 { d.words = Dictation.wordCount(d.text) }
+        db.insert(d)
+        if query.isEmpty { entries.insert(d, at: 0) } else { reload() }
+        stats = db.stats()
     }
 
     func delete(_ ids: Set<UUID>) {
+        db.delete(Array(ids))
         entries.removeAll { ids.contains($0.id) }
-        persist()
+        stats = db.stats()
     }
 
     func clear() {
+        db.clear()
         entries.removeAll()
-        persist()
+        stats = db.stats()
+    }
+
+    func reload() {
+        let page = db.page(query: query, before: nil, limit: Self.pageSize)
+        entries = page
+        hasMore = page.count == Self.pageSize
+        stats = db.stats()
+    }
+
+    func loadMore() {
+        guard hasMore, let last = entries.last else { return }
+        let page = db.page(query: query, before: last.date, limit: Self.pageSize)
+        entries += page
+        hasMore = page.count == Self.pageSize
     }
 
     var recent: ArraySlice<Dictation> { entries.prefix(10) }
+    var isEmpty: Bool { stats.count == 0 }
 
-    private func persist() { JSONFile.save(entries, to: Paths.history) }
+    /// One-time import of the v0 JSON file.
+    private func migrateJSONIfNeeded() {
+        let old = Paths.history
+        guard FileManager.default.fileExists(atPath: old.path),
+              let items = JSONFile.load([Dictation].self, from: old) else { return }
+        for var d in items { if d.words == 0 { d.words = Dictation.wordCount(d.text) }; db.insert(d) }
+        try? FileManager.default.moveItem(at: old, to: old.appendingPathExtension("migrated"))
+        Log.app.info("migrated \(items.count) dictations from JSON")
+    }
 }

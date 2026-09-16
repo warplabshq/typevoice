@@ -7,7 +7,8 @@ enum Paths {
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
         return dir
     }()
-    static let history = support.appendingPathComponent("history.json")
+    static let history = support.appendingPathComponent("history.json")      // v0, migrated on first run
+    static let historyDB = support.appendingPathComponent("history.sqlite")
     static let dictionary = support.appendingPathComponent("dictionary.json")
 }
 

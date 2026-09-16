@@ -5,9 +5,11 @@ import SwiftUI
 struct SettingsView: View {
     @AppStorage(Prefs.Key.trigger) private var trigger = Prefs.Trigger.fn.rawValue
     @AppStorage(Prefs.Key.smartCleanup) private var smart = true
+    @AppStorage(Prefs.Key.numbersAsDigits) private var numbers = true
     @AppStorage(Prefs.Key.sounds) private var sounds = true
     @AppStorage(Prefs.Key.haptics) private var haptics = true
-    @AppStorage(Prefs.Key.hudPosition) private var hudPosition = Prefs.HUDPosition.bottom.rawValue
+    @AppStorage(Prefs.Key.hudPosition) private var hudPosition = Prefs.HUDPosition.bottomCenter.rawValue
+    @AppStorage(Prefs.Key.accent) private var accent = Prefs.Accent.mono.rawValue
     @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
     @AppStorage(Prefs.Key.insertion) private var insertion = Prefs.Insertion.auto.rawValue
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -15,7 +17,7 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
-            Section {
+            Section("Dictating") {
                 Picker("Hold to dictate", selection: $trigger) {
                     Text("🌐 Globe / Fn key").tag(Prefs.Trigger.fn.rawValue)
                     Text("Custom shortcut").tag(Prefs.Trigger.custom.rawValue)
@@ -33,20 +35,29 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                     }
                 }
-            }
-            Section {
                 Toggle("Smart cleanup", isOn: $smart)
                 Text("Fixes false starts and self-corrections with Apple Intelligence, on this Mac. Never adds anything. Tone lives under Style.")
                     .font(.callout).foregroundStyle(.secondary)
+                Toggle("Numbers as digits", isOn: $numbers)
+                Text("“twenty twenty four” becomes 2024, “five dollars fifty” becomes $5.50. Small numbers stay as words.")
+                    .font(.callout).foregroundStyle(.secondary)
             }
-            Section {
+
+            Section("Indicator") {
+                LabeledContent("Position") {
+                    PositionGrid(selection: $hudPosition)
+                }
+                LabeledContent("Accent") {
+                    AccentSwatches(selection: $accent)
+                }
+                LabeledContent("Preview") {
+                    PillPreview(accent: Prefs.Accent(rawValue: accent) ?? .mono)
+                }
                 Toggle("Sounds", isOn: $sounds)
                 Toggle("Haptics", isOn: $haptics)
-                Picker("Show indicator at", selection: $hudPosition) {
-                    ForEach(Prefs.HUDPosition.allCases) { Text($0.label).tag($0.rawValue) }
-                }
             }
-            Section {
+
+            Section("App") {
                 Toggle("Launch at login", isOn: $launchAtLogin)
                     .onChange(of: launchAtLogin) { _, on in
                         do {
@@ -57,6 +68,7 @@ struct SettingsView: View {
                     }
                 Toggle("Show menu bar icon", isOn: $showMenuBarIcon)
             }
+
             Section {
                 DisclosureGroup("Advanced", isExpanded: $advanced) {
                     Picker("Insert text via", selection: $insertion) {
@@ -64,7 +76,7 @@ struct SettingsView: View {
                         Text("Always paste").tag(Prefs.Insertion.paste.rawValue)
                     }
                     LabeledContent("Speech model") {
-                        Text("Parakeet TDT 0.6B v2 · on-device")
+                        Text("Parakeet TDT 0.6B v2 · Neural Engine")
                             .foregroundStyle(.secondary)
                     }
                 }
@@ -74,6 +86,110 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .onChange(of: trigger) { _, _ in
             NotificationCenter.default.post(name: .murmurTriggerChanged, object: nil)
+        }
+    }
+}
+
+/// A little monitor with six dots. Click where you want the pill.
+private struct PositionGrid: View {
+    @Binding var selection: String
+    private let rows: [[Prefs.HUDPosition]] = [[.topLeft, .topCenter, .topRight], [.bottomLeft, .bottomCenter, .bottomRight]]
+
+    var body: some View {
+        VStack(spacing: 0) {
+            ForEach(rows, id: \.first!.rawValue) { row in
+                HStack(spacing: 0) {
+                    ForEach(row) { p in
+                        Button { withAnimation(.snappy(duration: 0.2)) { selection = p.rawValue } } label: {
+                            ZStack {
+                                Capsule()
+                                    .fill(selection == p.rawValue ? Color.accentColor : Color.secondary.opacity(0.25))
+                                    .frame(width: selection == p.rawValue ? 22 : 12, height: 6)
+                            }
+                            .frame(width: 44, height: 30)
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .help(p.label)
+                    }
+                }
+            }
+        }
+        .padding(4)
+        .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(.background.secondary))
+        .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(.separator, lineWidth: 1))
+        .overlay(alignment: .bottom) {
+            Capsule().fill(.separator).frame(width: 30, height: 3).offset(y: 7)
+        }
+        .padding(.bottom, 6)
+        .accessibilityLabel("Indicator position")
+    }
+}
+
+private struct AccentSwatches: View {
+    @Binding var selection: String
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(Prefs.Accent.allCases) { a in
+                Button { selection = a.rawValue } label: {
+                    ZStack {
+                        Circle()
+                            .fill(swatch(a))
+                            .frame(width: 20, height: 20)
+                            .overlay(Circle().strokeBorder(.separator, lineWidth: 0.5))
+                        if selection == a.rawValue {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 9, weight: .bold))
+                                .foregroundStyle(a == .mono ? .black : .white)
+                        }
+                    }
+                    .frame(width: 26, height: 26)
+                    .contentShape(Circle())
+                }
+                .buttonStyle(.plain)
+                .help(a.label)
+            }
+        }
+    }
+    private func swatch(_ a: Prefs.Accent) -> AnyShapeStyle {
+        switch a {
+        case .mono: return AnyShapeStyle(LinearGradient(colors: [.white, Color(white: 0.8)], startPoint: .top, endPoint: .bottom))
+        default: return AnyShapeStyle(Theme.color(for: a))
+        }
+    }
+}
+
+/// The pill exactly as it will look, on a dark swatch so the glass reads.
+struct PillPreview: View {
+    let accent: Prefs.Accent
+
+    static func levels(at t: Double) -> [Float] {
+        var out: [Float] = []
+        for i in 0..<18 {
+            let d = Double(i)
+            let fast: Double = abs(sin(t * 2.3 + d * 0.6))
+            let slow: Double = 0.5 + 0.5 * sin(t * 0.8 + d * 0.25)
+            out.append(Float(0.2 + 0.7 * fast * slow))
+        }
+        return out
+    }
+    var body: some View {
+        TimelineView(.animation(minimumInterval: 1 / 30)) { ctx in
+            let t = ctx.date.timeIntervalSinceReferenceDate
+            let levels = PillPreview.levels(at: t)
+            ZStack {
+                RoundedRectangle(cornerRadius: 10, style: .continuous)
+                    .fill(LinearGradient(colors: [Color(red: 0.16, green: 0.18, blue: 0.24), Color(red: 0.08, green: 0.09, blue: 0.12)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                WaveformView(levels: levels, color: Theme.color(for: accent))
+                    .frame(width: 80, height: 16)
+                    .frame(height: 22)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .glassEffect(.regular.tint(Color.black.opacity(0.45)), in: .capsule)
+                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 0.6))
+                    .shadow(color: .black.opacity(0.3), radius: 8, y: 3)
+            }
+            .frame(width: 220, height: 64)
         }
     }
 }

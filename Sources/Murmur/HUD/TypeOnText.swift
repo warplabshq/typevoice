@@ -16,7 +16,7 @@ struct TypeOnText: View {
             HStack(spacing: 10) {
                 HuggingText(text: String(text.prefix(n)), maxWidth: maxWidth - 30)
                 Image(systemName: "checkmark")
-                    .font(.system(size: 12, weight: .bold))
+                    .font(.system(size: 11, weight: .bold))
                     .foregroundStyle(Theme.accent)
                     .scaleEffect(finished ? 1 : 0.4)
                     .opacity(finished ? 1 : 0)
@@ -36,7 +36,6 @@ struct HuggingText: View {
             label.fixedSize(horizontal: true, vertical: false)
             label.frame(width: maxWidth, alignment: .leading)
         }
-        .frame(maxWidth: maxWidth)
     }
     private var label: some View {
         Text(text)

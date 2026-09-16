@@ -32,15 +32,19 @@ final class HUDWindow: NSPanel {
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }
 
-    /// Centre the canvas horizontally on `screen`, near the top or bottom edge.
+    static let margin: CGFloat = 20
+
+    /// Put the canvas in the chosen corner/edge of `screen`'s visible area.
     func place(on screen: NSScreen, position: Prefs.HUDPosition) {
         let v = screen.visibleFrame
         let s = Self.canvas
-        let y: CGFloat
-        switch position {
-        case .bottom: y = v.minY + 22
-        case .top: y = v.maxY - s.height - 10
+        let y = position.isTop ? v.maxY - s.height : v.minY
+        let x: CGFloat
+        switch position.horizontal {
+        case 0: x = v.minX
+        case 1: x = v.midX - s.width / 2
+        default: x = v.maxX - s.width
         }
-        setFrame(CGRect(x: v.midX - s.width / 2, y: y, width: s.width, height: s.height), display: false)
+        setFrame(CGRect(x: x, y: y, width: s.width, height: s.height), display: false)
     }
 }

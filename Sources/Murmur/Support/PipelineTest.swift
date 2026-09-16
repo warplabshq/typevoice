@@ -1,4 +1,5 @@
 import AVFoundation
+import FluidAudio
 import Foundation
 
 /// `Murmur --test file.wav [file2.wav …]`: runs the text pipeline on audio files
@@ -10,6 +11,16 @@ enum PipelineTest {
         let files = Array(args[(i + 1)...])
         if files.first == "vocab" {
             vocabSelfTest(); exit(0)
+        }
+        if files.first == "itn" {
+            let n = TextNormalizer.shared
+            for c in ["the launch is in twenty twenty four", "I was born in nineteen ninety nine", "we need twenty four hours",
+                      "call me at two thirty pm", "it costs five dollars and fifty cents", "chapter twenty two, page one hundred and five",
+                      "send it to priyam at gmail dot com", "one two three four five", "I have two cats and one dog",
+                      "the year two thousand and twenty", "twenty percent off", "about a thousand words", "it's the third time", "I need it by the fifth of March", "we have three options", "It took two and a half hours", "Version two point five is out", "My number is nine eight seven six five four three two one zero", "Meet at half past two", "There were a hundred people"] {
+                print("\(c)\n  → \(Numbers.apply(c))")
+            }
+            exit(0)
         }
         Task.detached {
             let code = await run(files: files)
@@ -38,7 +49,8 @@ enum PipelineTest {
                 let t1 = ContinuousClock.now
                 let raw = try await transcriber.transcribe(samples)
                 let asrMs = Int((ContinuousClock.now - t1).ms)
-                let cleaned = Cleaner.clean(raw)
+                var cleaned = Cleaner.clean(raw)
+                if Prefs.numbersAsDigits { cleaned = Numbers.apply(cleaned) }
                 let t2 = ContinuousClock.now
                 let smartOut = await smart.clean(cleaned)
                 let smartMs = Int((ContinuousClock.now - t2).ms)

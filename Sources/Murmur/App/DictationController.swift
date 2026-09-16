@@ -187,6 +187,7 @@ final class DictationController {
 
                 let style = Style.current
                 var text = Cleaner.clean(raw, style: style)
+                if Prefs.numbersAsDigits { text = Numbers.apply(text) }
                 text = Vocabulary.apply(dictionary.terms, to: text)
                 if Prefs.smartCleanup {
                     smart.style = style
@@ -210,7 +211,9 @@ final class DictationController {
                 Log.insert.info("inserted via \(method.rawValue) into \(target.appName)")
                 Log.d("inserted via \(method.rawValue) into \(target.appName): \(text)")
 
-                history.add(Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName, seconds: rec.seconds))
+                let latency = Int((ContinuousClock.now - t0).ms)
+                history.add(Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
+                                      bundleID: target.bundleID, seconds: rec.seconds, latencyMs: latency))
                 sounds.done()
                 haptic()
                 let ms = min(2600, 700 + text.count * 12)

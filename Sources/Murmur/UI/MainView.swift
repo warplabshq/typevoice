@@ -35,7 +35,8 @@ struct MainView: View {
             List(MainTab.allCases, selection: Binding(get: { Optional(tab) }, set: { tab = $0 ?? .history })) { t in
                 Label(t.label, systemImage: t.icon).tag(t)
             }
-            .navigationSplitViewColumnWidth(min: 170, ideal: 190, max: 240)
+            .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
+            .safeAreaInset(edge: .top) { Brand() }
             .safeAreaInset(edge: .bottom) { StatusFooter(state: state) }
         } detail: {
             switch tab {
@@ -46,7 +47,32 @@ struct MainView: View {
             case .privacy: PrivacyView(history: history, dictionary: dictionary)
             }
         }
-        .frame(minWidth: 720, minHeight: 460)
+        .frame(minWidth: 800, minHeight: 520)
+    }
+}
+
+/// Small brand row at the top of the sidebar.
+private struct Brand: View {
+    var body: some View {
+        HStack(spacing: 10) {
+            ZStack {
+                RoundedRectangle(cornerRadius: 8, style: .continuous)
+                    .fill(LinearGradient(colors: [Color(white: 0.25), Color(white: 0.08)], startPoint: .top, endPoint: .bottom))
+                    .frame(width: 30, height: 30)
+                    .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(.white.opacity(0.12), lineWidth: 0.5))
+                Image(systemName: "waveform")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(.white)
+            }
+            VStack(alignment: .leading, spacing: 1) {
+                Text("Murmur").font(.headline)
+                Text("Local dictation").font(.caption).foregroundStyle(.secondary)
+            }
+            Spacer()
+        }
+        .padding(.horizontal, 14)
+        .padding(.top, 6)
+        .padding(.bottom, 8)
     }
 }
 
