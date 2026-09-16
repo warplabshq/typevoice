@@ -16,6 +16,8 @@ final class HotkeyMonitor {
     var onEscape: () -> Void = {}
     /// Return true while a session is active so Escape gets consumed.
     var isActive: () -> Bool = { false }
+    /// True after `start()` if the global event tap could be installed.
+    private(set) var tapInstalled = false
 
     private var tap: CFMachPort?
     private var runLoopSource: CFRunLoopSource?
@@ -47,6 +49,7 @@ final class HotkeyMonitor {
         fallbackMonitors.removeAll()
         KeyboardShortcuts.disable(.dictate)
         fnDown = false
+        tapInstalled = false
     }
 
     // MARK: Fn via CGEventTap
@@ -73,6 +76,7 @@ final class HotkeyMonitor {
             return false
         }
         self.tap = tap
+        tapInstalled = true
         let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         runLoopSource = source
         CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)

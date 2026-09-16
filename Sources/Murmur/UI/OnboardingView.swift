@@ -8,6 +8,7 @@ struct OnboardingView: View {
     @State private var mic = Permissions.mic
     @State private var ax = Permissions.accessibility
     @State private var poll: Task<Void, Never>?
+    @State private var askedAX: Date?
 
     private let steps = ["Microphone", "Accessibility", "Globe key", "Model"]
 
@@ -61,9 +62,10 @@ struct OnboardingView: View {
             StepCard(
                 icon: "hand.raised.fill",
                 title: "Accessibility",
-                text: "Needed to notice the 🌐 key and to type into the app you're using. Murmur never reads what's on your screen.",
+                text: axHint,
                 done: ax,
-                action: ("Allow accessibility", { Permissions.requestAccessibility(); Permissions.openAccessibilityPane() })
+                action: ("Allow accessibility", { askedAX = .now; Permissions.requestAccessibility(); Permissions.openAccessibilityPane() }),
+                secondary: askedAX == nil ? nil : ("Relaunch Murmur", { Permissions.relaunch() })
             )
         case 2:
             StepCard(
@@ -84,6 +86,13 @@ struct OnboardingView: View {
                 action: retryAction
             )
         }
+    }
+
+    private var axHint: String {
+        if let t = askedAX, Date.now.timeIntervalSince(t) > 8, !ax {
+            return "Switched it on but still stuck? macOS sometimes only notices after a relaunch. If Murmur is already listed, flip it off and on again, then relaunch."
+        }
+        return "Needed to notice the 🌐 key and to type into the app you're using. Murmur never reads what's on your screen."
     }
 
     private var micAction: (String, () -> Void) {
@@ -139,6 +148,7 @@ struct OnboardingView: View {
                 let m = Permissions.mic, a = Permissions.accessibility
                 if m != mic { mic = m }
                 if a != ax { ax = a }
+                if let t = askedAX, !a, Date.now.timeIntervalSince(t) > 8 { askedAX = t }   // nudge re-render
                 if step == 0, m == .granted { try? await Task.sleep(for: .milliseconds(500)); step = 1 }
                 else if step == 1, a { try? await Task.sleep(for: .milliseconds(500)); step = 2 }
                 try? await Task.sleep(for: .milliseconds(700))

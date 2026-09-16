@@ -7,7 +7,9 @@ struct MenuContent: View {
 
     var body: some View {
         Group {
-            if !state.isReady {
+            if state.accessibilityMissing {
+                Button("Accessibility permission missing — fix…") { Permissions.openAccessibilityPane() }
+            } else if !state.isReady {
                 Text(state.warmError ?? state.warm.label)
             } else if state.paused {
                 Text("Paused")

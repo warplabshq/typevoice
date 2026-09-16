@@ -39,6 +39,18 @@ enum Permissions {
         open("x-apple.systempreferences:com.apple.Keyboard-Settings.extension")
     }
 
+    /// Start a fresh instance and quit this one. macOS sometimes only honours a
+    /// new Accessibility grant for processes started after the switch was flipped.
+    @MainActor
+    static func relaunch() {
+        let url = Bundle.main.bundleURL
+        let cfg = NSWorkspace.OpenConfiguration()
+        cfg.createsNewApplicationInstance = true
+        NSWorkspace.shared.openApplication(at: url, configuration: cfg) { _, _ in
+            DispatchQueue.main.async { NSApp.terminate(nil) }
+        }
+    }
+
     private static func open(_ s: String) {
         if let url = URL(string: s) { NSWorkspace.shared.open(url) }
     }

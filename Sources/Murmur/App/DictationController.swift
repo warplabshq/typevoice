@@ -44,12 +44,36 @@ final class DictationController {
 
     func start() {
         hotkey.start()
+        state.accessibilityMissing = !Permissions.accessibility
+        watchAccessibility()
         warm()
         state.smartCleanupAvailable = smart.isAvailable
         if smart.isAvailable { smart.prewarm() }
     }
 
     func restartHotkey() { hotkey.start() }
+
+    private var axWatcher: Task<Void, Never>?
+
+    /// If Accessibility is missing or gets revoked, keep checking and reinstall
+    /// the hotkey the moment it's back. Cheap: one bool every 2 s.
+    private func watchAccessibility() {
+        axWatcher?.cancel()
+        axWatcher = Task { @MainActor [weak self] in
+            var last = Permissions.accessibility
+            while !Task.isCancelled {
+                try? await Task.sleep(for: .seconds(2))
+                guard let self else { return }
+                let now = Permissions.accessibility
+                if now != last {
+                    last = now
+                    self.state.accessibilityMissing = !now
+                    Log.d("accessibility changed → \(now); reinstalling hotkey")
+                    self.hotkey.start()
+                }
+            }
+        }
+    }
 
     func warm() {
         state.warmError = nil

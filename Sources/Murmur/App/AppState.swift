@@ -23,6 +23,7 @@ final class AppState {
     var warm: WarmProgress = .init(phase: .checking, fraction: 0)
     var isReady: Bool { warm.phase == .ready }
     var warmError: String?
+    var accessibilityMissing = false
     var smartCleanupAvailable = false
 
     func pushLevel(_ l: Float) {
