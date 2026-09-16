@@ -1,0 +1,51 @@
+import AppKit
+
+/// Shows the pill on the right screen while a session is active. The window
+/// is created on first use and merely hidden afterwards; nothing runs while idle.
+@MainActor
+final class HUDController {
+    let state: AppState
+    private var window: HUDWindow?
+    private var hideTask: Task<Void, Never>?
+
+    init(state: AppState) { self.state = state }
+
+    func present(for target: TextInserter.Target?) {
+        hideTask?.cancel()
+        let w = window ?? HUDWindow(state: state)
+        window = w
+        let screen = Self.screen(containing: target?.windowFrame) ?? Self.screenUnderMouse() ?? NSScreen.main ?? NSScreen.screens[0]
+        w.place(on: screen, position: Prefs.hudPosition)
+        w.orderFrontRegardless()
+    }
+
+    /// Hide after the collapse animation has had time to finish.
+    func dismiss() {
+        hideTask?.cancel()
+        hideTask = Task { @MainActor [weak self] in
+            try? await Task.sleep(for: .milliseconds(480))
+            guard let self, !Task.isCancelled, !self.state.phase.isActive else { return }
+            self.window?.orderOut(nil)
+        }
+    }
+
+    // MARK: Screen choice
+
+    static func screen(containing rect: CGRect?) -> NSScreen? {
+        guard let rect else { return nil }
+        var best: NSScreen?
+        var bestArea: CGFloat = 0
+        for s in NSScreen.screens {
+            let i = s.frame.intersection(rect)
+            if i.isNull { continue }
+            let area = i.width * i.height
+            if area > bestArea { bestArea = area; best = s }
+        }
+        return best
+    }
+
+    static func screenUnderMouse() -> NSScreen? {
+        let p = NSEvent.mouseLocation
+        return NSScreen.screens.first { $0.frame.contains(p) }
+    }
+}

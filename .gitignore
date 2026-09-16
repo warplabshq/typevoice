@@ -1,0 +1,6 @@
+.build/
+build/
+*.xcodeproj
+.swiftpm/
+.DS_Store
+Tools/clips/

@@ -1,0 +1,34 @@
+# Murmur build. `make` builds a release .app into build/, `make run` launches it.
+APP      := Murmur
+BUNDLE   := build/$(APP).app
+BIN      := .build/release/$(APP)
+SIGN_ID  ?= -
+CONFIG   ?= release
+
+.PHONY: all build app run clean debug
+
+all: app
+
+build:
+	swift build -c $(CONFIG) 2>&1 | tail -20
+
+app: build
+	@rm -rf $(BUNDLE)
+	@mkdir -p $(BUNDLE)/Contents/MacOS $(BUNDLE)/Contents/Resources
+	@cp .build/$(CONFIG)/$(APP) $(BUNDLE)/Contents/MacOS/$(APP)
+	@cp Packaging/Info.plist $(BUNDLE)/Contents/Info.plist
+	@# SPM resource bundles (if any) live next to the binary; ship them in Resources.
+	@for b in .build/$(CONFIG)/*.bundle; do [ -d "$$b" ] && cp -R "$$b" $(BUNDLE)/Contents/Resources/ || true; done
+	@[ -f Packaging/AppIcon.icns ] && cp Packaging/AppIcon.icns $(BUNDLE)/Contents/Resources/ || true
+	@codesign --force --deep --sign "$(SIGN_ID)" --options runtime --entitlements Packaging/Murmur.entitlements $(BUNDLE) 2>&1 | grep -v "replacing existing signature" || true
+	@echo "→ $(BUNDLE)"
+
+run: app
+	@pkill -x $(APP) 2>/dev/null || true
+	@open $(BUNDLE)
+
+debug:
+	@$(MAKE) CONFIG=debug run
+
+clean:
+	rm -rf .build build
