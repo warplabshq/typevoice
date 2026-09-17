@@ -1,86 +1,114 @@
-<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="assets/favicon.png"><link rel="stylesheet" href="site.css?v=2"><script src="site.js?v=2" defer></script><title>Murmur — Local dictation for Mac</title>
+<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><link rel="icon" href="assets/favicon.png"><link rel="stylesheet" href="site.css?v=3"><script src="site.js?v=3" defer></script><title>Murmur — Local dictation for Mac</title>
 <meta name="description" content="Hold a key, talk, release. Clean text lands wherever you're typing. Everything runs on your Mac: no cloud, no account, no telemetry."></head>
 <body>
 <div class="glow" aria-hidden="true"></div>
-<header class="nav wrap"><a class="brand" href="index.html"><img src="assets/icon.png" alt=""><span data-brand="name">Murmur</span></a><nav><a href="support.html">Support</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a><a href="eula.html">EULA</a><a class="navcta" data-store href="#">App Store</a></nav></header>
+<header class="nav wrap"><a class="brand" href="index.html"><img src="assets/icon.png" alt=""><span data-brand="name">Murmur</span></a><nav><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a href="support.html">Support</a><a class="navcta" data-store href="#">Download</a></nav></header>
 <main class="wrap">
+
   <section class="hero">
     <div class="demo" id="demo">
       <div class="keycap" id="keycap"><span>🌐</span><small>hold</small></div>
       <div class="pill"><canvas id="wave"></canvas><span class="pill-text" id="pill-text"></span></div>
       <div class="field"><span class="field-label">To: Sam</span><span class="typed" id="typed"></span><span class="caret" id="caret"></span></div>
     </div>
+    <p class="eyebrow">Local dictation for Mac</p>
     <h1>Hold a key. Talk.<br>It's typed.</h1>
-    <p class="lede"><span data-brand="name">Murmur</span> turns your voice into clean, punctuated text in any app, and it never leaves your Mac. No cloud. No account. No telemetry.</p>
-    <a class="cta" data-store href="#"><svg width="16" height="18" viewBox="0 0 16 18" fill="currentColor" aria-hidden="true"><path d="M13.1 9.5c0-2 1.6-2.9 1.7-3-1-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7C4.9 4.9 3.6 5.7 2.9 7c-1.5 2.6-.4 6.4 1.1 8.5.7 1 1.5 2.2 2.6 2.1 1-.1 1.4-.7 2.7-.7s1.6.7 2.7.6c1.1 0 1.8-1 2.5-2 .8-1.2 1.1-2.3 1.1-2.4 0 0-2.1-.8-2.1-3.2zM11.1 3.6c.6-.7.9-1.6.8-2.6-.8 0-1.8.5-2.4 1.2-.5.6-1 1.6-.9 2.5.9.1 1.9-.4 2.5-1.1z"/></svg> Download on the Mac App Store</a>
-    <p class="sub"><span class="badge">Pay once, own it</span> Free for 3 days, then a single purchase. No subscription. macOS 26 or later, Apple silicon.</p>
+    <p class="lede"><span data-brand="name">Murmur</span> turns your voice into clean, punctuated text in any app, on your Mac and nowhere else.</p>
+    <div class="cta-row">
+      <a class="cta" data-store href="#"><svg width="16" height="18" viewBox="0 0 16 18" fill="currentColor" aria-hidden="true"><path d="M13.1 9.5c0-2 1.6-2.9 1.7-3-1-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7C4.9 4.9 3.6 5.7 2.9 7c-1.5 2.6-.4 6.4 1.1 8.5.7 1 1.5 2.2 2.6 2.1 1-.1 1.4-.7 2.7-.7s1.6.7 2.7.6c1.1 0 1.8-1 2.5-2 .8-1.2 1.1-2.3 1.1-2.4 0 0-2.1-.8-2.1-3.2zM11.1 3.6c.6-.7.9-1.6.8-2.6-.8 0-1.8.5-2.4 1.2-.5.6-1 1.6-.9 2.5.9.1 1.9-.4 2.5-1.1z"/></svg> Download</a>
+      <a class="ghost" href="#how">See how it works</a>
+    </div>
+    <p class="sub">Free for 3 days, then one purchase. No subscription. macOS 26 or later, Apple silicon.</p>
+    <ul class="strip" aria-label="Key facts">
+      <li><b>0.3 s</b><span>from release to text</span></li>
+      <li><b>0</b><span>bytes sent anywhere</span></li>
+      <li><b>4×</b><span>faster than typing</span></li>
+      <li><b>1</b><span>purchase, yours forever</span></li>
+    </ul>
   </section>
 
-  <section class="steps reveal">
-    <div class="step"><div class="num">1</div><h3>Hold</h3><p>Any key you like: 🌐, Right ⌘, ⌥Space. Or tap to start and tap to stop.</p></div>
-    <div class="step"><div class="num">2</div><h3>Talk</h3><p>A small glass pill listens. Pauses become paragraphs, "bullet" becomes a list.</p></div>
-    <div class="step"><div class="num">3</div><h3>Release</h3><p>The sentence is already in your app, cleaned up, punctuated, spelled your way.</p></div>
+  <section class="section reveal" id="how">
+    <p class="eyebrow">How it works</p>
+    <h2>Three seconds, start to finish.</h2>
+    <div class="steps">
+      <div class="step"><div class="num">1</div><h3>Hold</h3><p>Any key you like: 🌐, Right ⌘, ⌥Space. Or tap to start and tap to stop.</p></div>
+      <div class="step"><div class="num">2</div><h3>Talk</h3><p>A small glass pill listens. Pauses become paragraphs, "bullet" becomes a list.</p></div>
+      <div class="step"><div class="num">3</div><h3>Release</h3><p>The sentence is already in your app, cleaned up, punctuated, spelled your way.</p></div>
+    </div>
   </section>
 
-  <section class="window reveal" id="mock">
-    <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">Summary</span></div>
-    <div class="body">
-      <aside class="side">
-        <div class="side-brand"><img src="assets/icon.png" alt=""><div><b data-brand="name">Murmur</b><small data-brand="tagline">Local dictation</small></div></div>
-        <div class="row sel">Summary</div><div class="row">Dictionary</div><div class="row">Style</div><div class="row">Settings</div><div class="row">License</div><div class="row">Privacy</div>
-      </aside>
-      <div class="content">
-        <div class="hero-card"><small>Time saved</small><div class="saved"><b data-count="6h 12m">0h 0m</b><span>1h 40m this week</span></div><small class="faint">Compared with typing at 40 words a minute. You speak at about 142.</small></div>
-        <div class="tiles">
-          <div class="tile"><b data-count="24,310">0</b><span>Words</span><small>6,120 this week</small></div>
-          <div class="tile"><b data-count="893">0</b><span>Dictations</span><small>214 this week</small></div>
-          <div class="tile"><b data-count="2.8h">0h</b><span>Time talking</span><small>11s on average</small></div>
-          <div class="tile"><b data-count="142">0</b><span>Words / min</span><small>typing is about 40</small></div>
-        </div>
-        <div class="list">
-          <div class="item"><span class="app a1">✉︎</span><div><p>Can we move the launch review to Wednesday at 3? Wednesday works better for the design team.</p><small>Mail · 9:41 AM · 18 words · 6s · 230 ms</small></div></div>
-          <div class="item"><span class="app a2">#</span><div><p>Shipped the new export flow to VidAI. Two things to watch: cold start on Intel, and the retry logic.</p><small>Slack · 9:32 AM · 19 words · 7s · 210 ms</small></div></div>
-          <div class="item"><span class="app a3">✎</span><div><p>Groceries: milk, eggs, bread. Also call the dentist on Monday.</p><small>Notes · 8:58 AM · 11 words · 4s · 190 ms</small></div></div>
+  <section class="section reveal" id="app">
+    <p class="eyebrow">The app</p>
+    <h2>It keeps score of the time you get back.</h2>
+    <p class="lede-left">Every dictation lands in Summary with the app it went to, how long it took, and how much typing it saved. Search it, export it, or delete it. It's yours.</p>
+    <div class="window" id="mock">
+      <div class="titlebar"><span class="dots"><i></i><i></i><i></i></span><span class="title">Summary</span></div>
+      <div class="body">
+        <aside class="side">
+          <div class="side-brand"><img src="assets/icon.png" alt=""><div><b data-brand="name">Murmur</b><small data-brand="tagline">Local dictation</small></div></div>
+          <div class="row sel">Summary</div><div class="row">Dictionary</div><div class="row">Style</div><div class="row">Settings</div><div class="row">License</div><div class="row">Privacy</div>
+        </aside>
+        <div class="content">
+          <div class="hero-card"><small>Time saved</small><div class="saved"><b data-count="6h 12m">0h 0m</b><span>1h 40m this week</span></div><small class="faint">Compared with typing at 40 words a minute. You speak at about 142.</small></div>
+          <div class="tiles">
+            <div class="tile"><b data-count="24,310">0</b><span>Words</span><small>6,120 this week</small></div>
+            <div class="tile"><b data-count="893">0</b><span>Dictations</span><small>214 this week</small></div>
+            <div class="tile"><b data-count="2.8h">0h</b><span>Time talking</span><small>11s on average</small></div>
+            <div class="tile"><b data-count="142">0</b><span>Words / min</span><small>typing is about 40</small></div>
+          </div>
+          <div class="list">
+            <div class="item"><span class="app a1">✉︎</span><div><p>Can we move the launch review to Wednesday at 3? Wednesday works better for the design team.</p><small>Mail · 9:41 AM · 18 words · 6s · 230 ms</small></div></div>
+            <div class="item"><span class="app a2">#</span><div><p>Shipped the new export flow to VidAI. Two things to watch: cold start on Intel, and the retry logic.</p><small>Slack · 9:32 AM · 19 words · 7s · 210 ms</small></div></div>
+            <div class="item"><span class="app a3">✎</span><div><p>Groceries: milk, eggs, bread. Also call the dentist on Monday.</p><small>Notes · 8:58 AM · 11 words · 4s · 190 ms</small></div></div>
+          </div>
         </div>
       </div>
     </div>
   </section>
 
-  <section class="section reveal">
-    <h2>Make it yours</h2>
-    <p class="muted">Everything about how it looks and behaves is a setting. Here are a few, moving.</p>
-    <div class="tour">
-      <div class="scene" id="scene-pos">
+  <section class="section reveal" id="features">
+    <p class="eyebrow">Features</p>
+    <h2>Make it yours.</h2>
+    <p class="lede-left">Everything about how it looks and behaves is a setting. A few of them, moving.</p>
+    <div class="bento">
+      <div class="tile-b span2" id="scene-pos">
         <div class="mini-screen"><div class="mini-menubar"></div><div class="mini-pill"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div><div class="mini-dock"></div></div>
         <div class="scene-cap"><h3>Any corner, any look</h3><p>Six positions on any display. Glass, dark or black. A splash of colour if you want one.</p><div class="swatches"><span class="on"></span><span style="--c:#4d9cff"></span><span style="--c:#b28cff"></span><span style="--c:#ff80b3"></span><span style="--c:#66d98c"></span></div></div>
       </div>
-      <div class="scene" id="scene-drag">
+      <div class="tile-b" id="scene-drag">
         <div class="drag-stage">
           <div class="chat"><div class="bubble them">Can you just tell me in your words?</div><div class="bubble me voice" id="voice"><span class="vwave"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>0:06</b></div><div class="chat-input">Message</div></div>
           <div class="dpill" id="dpill"><span class="chip" id="chip">◉ Drag audio</span></div>
         </div>
-        <div class="scene-cap"><h3>Send the voice instead</h3><p>Turn on voice notes and every dictation is also a tiny audio file. Drag the chip into iMessage, Slack or WhatsApp.</p></div>
+        <div class="scene-cap"><h3>Send the voice instead</h3><p>Optional voice notes: drag the chip into iMessage, Slack or WhatsApp.</p></div>
       </div>
-      <div class="scene" id="scene-style">
-        <div class="mini-form">
-          <div class="mrow"><span>Casing</span><div class="seg" data-seg="case"><b class="sel">Sentence</b><b>lowercase</b></div></div>
-          <div class="mrow"><span>Punctuation</span><div class="seg" data-seg="punct"><b class="sel">Full</b><b>Light</b></div></div>
-          <div class="mrow"><span>Tone</span><div class="seg" data-seg="tone"><b class="sel">As spoken</b><b>Formal</b></div></div>
-          <div class="mprev"><small>You get</small><p id="style-prev"></p></div>
-        </div>
-        <div class="scene-cap"><h3>Your style, previewed live</h3><p>Sentence case or all lowercase. Full or light punctuation. As spoken or formal. Watch the preview change as you choose.</p></div>
-      </div>
-      <div class="scene" id="scene-dict">
+      <div class="tile-b" id="scene-dict">
         <div class="dict-stage">
           <div class="dict-chip">Dictionary · <b>VidAI</b></div>
           <div class="dict-field"><span id="dict-text"></span><span class="caret"></span></div>
         </div>
-        <div class="scene-cap"><h3>Your words, spelled your way</h3><p>Add a name once. Whatever the model hears, "vid AI", "Vidai", "video eye", lands as VidAI.</p></div>
+        <div class="scene-cap"><h3>Your words, spelled your way</h3><p>Add a name once. However it's heard, it lands right.</p></div>
       </div>
+      <div class="tile-b span2" id="scene-style">
+        <div class="style-wrap">
+          <div class="mini-form">
+            <div class="mrow"><span>Casing</span><div class="seg" data-seg="case"><b class="sel">Sentence</b><b>lowercase</b></div></div>
+            <div class="mrow"><span>Punctuation</span><div class="seg" data-seg="punct"><b class="sel">Full</b><b>Light</b></div></div>
+            <div class="mrow"><span>Tone</span><div class="seg" data-seg="tone"><b class="sel">As spoken</b><b>Formal</b></div></div>
+            <div class="mprev"><small>You get</small><p id="style-prev"></p></div>
+          </div>
+        </div>
+        <div class="scene-cap"><h3>Your style, previewed live</h3><p>Sentence case or lowercase, full or light punctuation, as-spoken or formal. The preview changes as you choose.</p></div>
+      </div>
+      <div class="tile-b small"><div class="ic">✦</div><h3>Says what you meant</h3><p>"Tuesday, no wait, Wednesday" becomes Wednesday. Ums go; "very very" stays.</p></div>
+      <div class="tile-b small"><div class="ic">1.</div><h3>Numbers, lists, paragraphs</h3><p>"Twenty twenty four" is 2024. Say "bullet" for a list. Pause for a paragraph.</p></div>
+      <div class="tile-b small"><div class="ic">⌥</div><h3>Any trigger</h3><p>Hold a key, or tap to start and tap to stop. Double-tap to keep listening.</p></div>
+      <div class="tile-b small"><div class="ic">◌</div><h3>Quietly there</h3><p>The pill appears while you speak and slides away when you're done.</p></div>
     </div>
   </section>
 
-  <section class="section reveal">
+  <section class="section reveal" id="examples">
+    <p class="eyebrow">Cleanup</p>
     <h2>You say it once. It reads like you typed it.</h2>
     <div class="pair" id="pair">
       <div class="say"><small>You say</small><p id="say"></p></div>
@@ -89,28 +117,32 @@
     </div>
   </section>
 
-  <section class="grid reveal">
-    <div class="card"><div class="big" data-count="0.3">0</div><h3>Seconds from release to text</h3><p>Recognition runs on the Neural Engine with NVIDIA's Parakeet model. Let go of the key and the sentence is already there.</p></div>
-    <div class="card"><div class="big">0 bytes</div><h3>Sent anywhere</h3><p>Audio is transcribed on-device and discarded. There is no server, no analytics, and nothing to sign up for.</p></div>
-    <div class="card"><div class="big">3×</div><h3>Faster than typing</h3><p>Most people speak at 130 words a minute and type at 40. The Summary page keeps score of the time you get back.</p></div>
-  </section>
-
-  <section class="section reveal">
-    <h2>Made for the way people actually talk</h2>
-    <div class="grid">
-      <div class="card"><div class="ic">✦</div><h3>Says what you meant</h3><p>"Tuesday, no wait, Wednesday" becomes Wednesday. Ums and stutters go; "very very" stays, because you meant it.</p></div>
-      <div class="card"><div class="ic">1.</div><h3>Numbers, lists, paragraphs</h3><p>"Twenty twenty four" becomes 2024. Say "bullet" or "number one" to shape a list. Pause after a sentence and you get a new paragraph.</p></div>
-      <div class="card"><div class="ic">Aa</div><h3>Your words, your spelling</h3><p>Add product names and people to the Dictionary once. Anything that sounds like them is fixed on the way in.</p></div>
-      <div class="card"><div class="ic">¶</div><h3>Your style</h3><p>Sentence case or all lowercase, full or light punctuation, as-spoken or formal. Preview every choice live.</p></div>
-      <div class="card"><div class="ic">♪</div><h3>Voice notes</h3><p>Optionally keep the audio too, and drag it straight into iMessage, Slack or WhatsApp when the voice says it better.</p></div>
-      <div class="card"><div class="ic">◌</div><h3>Quietly there</h3><p>A small glass pill appears while you speak and slides away when you're done. Put it in any corner, on any display.</p></div>
+  <section class="section reveal" id="voice-notes">
+    <div class="split">
+      <div class="split-copy">
+        <p class="eyebrow">Voice notes</p>
+        <h2>Sometimes the voice says it better.</h2>
+        <p class="lede-left">Turn on <b>Keep recordings</b> and every dictation is also a tiny audio file. After you speak, a chip appears on the pill. Drag it into iMessage, Slack, WhatsApp or an email and they hear you, not just read you. Text still lands where you were typing.</p>
+        <ul class="ticks"><li>Off by default, on with one switch</li><li>Play, drag or reveal any recording from Summary</li><li>Small AAC files, kept only on your Mac</li></ul>
+      </div>
+      <div class="vstage" id="vstage">
+        <div class="msgwin">
+          <div class="msghead"><span class="dots"><i></i><i></i><i></i></span><span class="msgname">Sam</span></div>
+          <div class="msgbody">
+            <div class="bubble them">Just tell me in your own words?</div>
+            <div class="bubble me voice big" id="voice2"><span class="play" id="play2">▶</span><span class="vwave" id="vwave2"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span><b>0:06</b></div>
+          </div>
+          <div class="msginput" id="msginput">iMessage</div>
+        </div>
+        <div class="vpill" id="vpill"><span class="vtext" id="vtext">Sure, here's the short version of what happened.</span><span class="chip big" id="chip2">◉ Drag audio</span></div>
+      </div>
     </div>
   </section>
 
-  <section class="section reveal pricing">
+  <section class="section reveal" id="pricing">
+    <p class="eyebrow">Pricing</p>
     <div class="price-card">
       <div class="price-left">
-        <small>Pricing</small>
         <h2>One purchase. Yours forever.</h2>
         <p class="muted">Try everything free for three days, no card and no account. If it earns its place, buy it once on the App Store and use it on every Mac signed in to your Apple ID. No subscription, no renewal, nothing to cancel.</p>
         <ul class="ticks">
@@ -122,16 +154,71 @@
       </div>
       <div class="price-right">
         <div class="price-tag"><span data-brand="price">One-time</span><small data-brand="priceNote">purchase</small></div>
-        <a class="cta" data-store href="#">Start the free trial</a>
-        <small class="faint">Billed by Apple. Refunds through Apple.</small>
+        <a class="cta" data-store href="#">Download</a>
+        <small class="faint">Free for 3 days. Billed by Apple after that, if you keep it.</small>
       </div>
     </div>
   </section>
 
-  <section class="section reveal privacy-band">
-    <h2>Privacy, plainly</h2>
-    <p class="muted">Speech recognition and cleanup happen on your Mac, using the Neural Engine and Apple Intelligence. The app makes exactly two kinds of network requests: a one-time download of the speech model, and App Store purchase validation. History and your dictionary are plain files you can open, back up or delete. <a href="privacy.html">Read the full policy.</a></p>
+  <section class="section reveal" id="privacy">
+    <p class="eyebrow">Privacy</p>
+    <h2>Nothing leaves your Mac.</h2>
+    <div class="flow">
+      <svg viewBox="0 0 900 250" width="100%" role="img" aria-label="Diagram: your voice becomes text inside your Mac; nothing is sent to the internet">
+        <defs>
+          <path id="p-in" d="M 120 150 C 200 150, 220 150, 300 150 S 400 150, 480 150 S 580 150, 660 150"/>
+          <linearGradient id="g-mac" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="rgba(255,255,255,.06)"/><stop offset="1" stop-color="rgba(255,255,255,.02)"/></linearGradient>
+        </defs>
+        <rect class="mac" x="40" y="40" width="680" height="190" rx="22" fill="url(#g-mac)"/>
+        <text class="lbl-title" x="64" y="72">Your Mac</text>
+        <g class="node" transform="translate(120 150)"><circle r="26"/><text y="5" text-anchor="middle" class="ico">🎙</text><text y="52" text-anchor="middle" class="lbl">Your voice</text></g>
+        <g class="node" transform="translate(300 150)"><rect x="-52" y="-24" width="104" height="48" rx="12"/><text y="5" text-anchor="middle" class="lbl-strong">Neural Engine</text><text y="52" text-anchor="middle" class="lbl">recognition</text></g>
+        <g class="node" transform="translate(480 150)"><rect x="-60" y="-24" width="120" height="48" rx="12"/><text y="5" text-anchor="middle" class="lbl-strong">Apple Intelligence</text><text y="52" text-anchor="middle" class="lbl">cleanup</text></g>
+        <g class="node" transform="translate(660 150)"><circle r="26"/><text y="5" text-anchor="middle" class="ico">✎</text><text y="52" text-anchor="middle" class="lbl">Your app</text></g>
+        <use href="#p-in" class="wire"/>
+        <circle class="dot" r="5"><animateMotion dur="4.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear"><mpath href="#p-in"/></animateMotion></circle>
+        <line class="wire-out" x1="720" y1="135" x2="800" y2="135"/>
+        <g transform="translate(838 135)"><circle class="cloud" r="30"/><text y="6" text-anchor="middle" class="ico">☁︎</text><text y="56" text-anchor="middle" class="lbl">Internet</text></g>
+        <g class="badge-out" transform="translate(760 135)"><rect x="-36" y="-14" width="72" height="28" rx="14"/><text y="5" text-anchor="middle" class="lbl-strong">0 bytes</text></g>
+        <text class="lbl-small" x="838" y="212" text-anchor="middle">model download, once</text>
+        <text class="lbl-small" x="838" y="228" text-anchor="middle">App Store receipts</text>
+      </svg>
+    </div>
+    <div class="priv-grid">
+      <div><h3>On-device recognition</h3><p>Speech becomes text on the Neural Engine. Audio is discarded the moment it's transcribed.</p></div>
+      <div><h3>On-device cleanup</h3><p>Apple Intelligence tidies the sentence locally. No text is sent to any server.</p></div>
+      <div><h3>Two network calls, ever</h3><p>A one-time model download, and App Store purchase validation. That's the whole list.</p></div>
+      <div><h3>Your files, your folder</h3><p>History and your dictionary are plain files you can open, back up or delete. <a href="privacy.html">Full policy</a></p></div>
+    </div>
+  </section>
+
+  <section class="section reveal" id="faq">
+    <p class="eyebrow">FAQ</p>
+    <h2>Questions people ask.</h2>
+    <div class="faq">
+      <details><summary>Why does it need Accessibility and Microphone?</summary><p>Microphone, to hear you while you hold the key. Accessibility, to notice the key anywhere on the Mac and to paste the text into the app you're using. It never reads your screen.</p></details>
+      <details><summary>Does it work offline?</summary><p>Yes. After the one-time model download on first launch, dictation needs no connection at all.</p></details>
+      <details><summary>Which languages?</summary><p>English, all accents. The model is English-only by design; that's what makes it this accurate and this fast.</p></details>
+      <details><summary>What happens after the trial?</summary><p>Dictation pauses until you buy it, once, on the App Store. Everything you dictated stays in Summary.</p></details>
+      <details><summary>Which Macs?</summary><p>Any Mac with Apple silicon running macOS 26 or later.</p></details>
+    </div>
+    <p class="muted">More on the <a href="support.html">support page</a>.</p>
+  </section>
+
+  <section class="final reveal">
+    <div class="pill mini"><canvas id="wave2"></canvas></div>
+    <h2>Say it. It's typed.</h2>
+    <a class="cta" data-store href="#">Download</a>
+    <p class="sub">Free for 3 days · One-time purchase · Runs entirely on your Mac</p>
   </section>
 </main>
-<footer><div class="wrap"><div class="fbrand"><img src="assets/icon.png" alt=""><span data-brand="name">Murmur</span></div><div class="links"><a href="support.html">Support</a><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Use</a><a href="eula.html">License Agreement</a></div><p>© <span data-year></span> <span data-brand="company">Priyam Ventures</span>. <span data-brand="name">Murmur</span> runs entirely on your Mac. Mac and macOS are trademarks of Apple Inc.</p></div></footer>
+<footer><div class="wrap">
+  <div class="fcols">
+    <div class="fbrand"><img src="assets/icon.png" alt=""><div><b data-brand="name">Murmur</b><br><small data-brand="tagline">Local dictation</small></div></div>
+    <div><h4>Product</h4><a href="#features">Features</a><a href="#pricing">Pricing</a><a href="#faq">FAQ</a><a data-store href="#">Download</a></div>
+    <div><h4>Support</h4><a href="support.html">Help &amp; FAQ</a><a data-mail href="#">support</a></div>
+    <div><h4>Legal</h4><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Use</a><a href="eula.html">License Agreement</a></div>
+  </div>
+  <p>© <span data-year></span> <span data-brand="company">Priyam Ventures</span>. Mac and macOS are trademarks of Apple Inc.</p>
+</div></footer>
 </body></html>

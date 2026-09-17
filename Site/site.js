@@ -21,9 +21,9 @@ document.addEventListener("DOMContentLoaded", () => {
   for (const a of document.querySelectorAll("a[data-store]")) a.href = SITE.appStoreURL;
   document.title = document.title.replace("Murmur", SITE.name);
   const y = document.querySelector("[data-year]"); if (y) y.textContent = new Date().getFullYear();
-  // Hero pill: calm, voice-like bars on a canvas.
-  const c = document.getElementById("wave");
-  if (c) {
+  // Pill bars: calm, voice-like, on a canvas (hero + final).
+  function startBars(c) {
+    if (!c) return;
     const ctx = c.getContext("2d"), dpr = window.devicePixelRatio || 1;
     const W = 168, H = 40; c.width = W * dpr; c.height = H * dpr; c.style.width = W + "px"; c.style.height = H + "px"; ctx.scale(dpr, dpr);
     const n = 18, bw = 2.5, gap = 2; let disp = new Array(n).fill(0);
@@ -40,7 +40,11 @@ document.addEventListener("DOMContentLoaded", () => {
         ctx.beginPath(); ctx.roundRect(x, H / 2 - h / 2, bw, h, bw / 2); ctx.fill(); x += bw + gap; }
       requestAnimationFrame(frame); }
     requestAnimationFrame(frame);
-
+  }
+  startBars(document.getElementById("wave2"));
+  const c = document.getElementById("wave");
+  if (c) {
+    startBars(c);
     // Product loop: listen → type the sentence into the field → clear → repeat.
     const pill = c.parentElement, typed = document.getElementById("typed"), caret = document.getElementById("caret");
     const phrases = ["Can we move the launch review to Wednesday at 3? Wednesday works better for the design team.",
@@ -134,6 +138,27 @@ document.addEventListener("DOMContentLoaded", () => {
       }
     })();
   }
+  // Voice-note showcase: chip drags into iMessage, a voice bubble appears and "plays".
+  const chip2 = document.getElementById("chip2");
+  if (chip2) {
+    const voice2 = document.getElementById("voice2"), input2 = document.getElementById("msginput"), wave2 = document.getElementById("vwave2"), bars = [...wave2.querySelectorAll("i")];
+    const sleep = ms => new Promise(r => setTimeout(r, ms));
+    (async function loop() {
+      while (true) {
+        chip2.className = "chip big"; chip2.style.transform = ""; voice2.classList.remove("show"); input2.classList.remove("hot"); wave2.classList.remove("playing"); bars.forEach(b => b.classList.remove("on"));
+        await sleep(2200);
+        chip2.classList.add("lift");
+        const from = chip2.getBoundingClientRect(), to = input2.getBoundingClientRect();
+        chip2.style.transform = `translate(${to.left + 60 - from.left}px, ${to.top + 8 - from.top}px)`;
+        await sleep(1000); input2.classList.add("hot");
+        await sleep(700); chip2.classList.add("gone"); input2.classList.remove("hot");
+        await sleep(350); voice2.classList.add("show");
+        await sleep(900); wave2.classList.add("playing");
+        for (let i = 0; i < bars.length; i++) { bars[i].classList.add("on"); await sleep(320); }
+        await sleep(1600);
+      }
+    })();
+  }
   const prev = document.getElementById("style-prev");
   if (prev) {
     const state = { case: 0, punct: 0, tone: 0 };
@@ -164,8 +189,10 @@ document.addEventListener("DOMContentLoaded", () => {
     })();
   }
   // Reveal on scroll, count-up numbers.
-  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.12 });
+  const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.02, rootMargin: "0px 0px -8% 0px" });
   document.querySelectorAll(".reveal").forEach(el => io.observe(el));
+  // Never leave anything hidden (print, odd scroll tools, very tall viewports).
+  setTimeout(() => document.querySelectorAll(".reveal:not(.in)").forEach(el => { if (el.getBoundingClientRect().top < innerHeight) el.classList.add("in"); }), 1200);
   const co = new IntersectionObserver(es => es.forEach(e => { if (!e.isIntersecting) return; co.unobserve(e.target); countUp(e.target); }), { threshold: 0.4 });
   document.querySelectorAll("[data-count]").forEach(el => co.observe(el));
   function countUp(el) {
