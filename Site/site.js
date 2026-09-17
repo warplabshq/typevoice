@@ -21,6 +21,11 @@ document.addEventListener("DOMContentLoaded", () => {
   for (const a of document.querySelectorAll("a[data-store]")) a.href = SITE.appStoreURL;
   document.title = document.title.replace("Murmur", SITE.name);
   const y = document.querySelector("[data-year]"); if (y) y.textContent = new Date().getFullYear();
+  // Speech as it sounds: each word slightly tilted, offset and wobbling at its own pace.
+  const clumsy = (text) => text.trim().split(/\s+/).map((w, i) => {
+    const r = ((i * 7) % 11 - 5) * 0.55, y = ((i * 5) % 7 - 3) * 0.9, d = 2.6 + (i * 3) % 5 * 0.4, dl = -((i * 11) % 9) * 0.35, o = 0.42 + ((i * 13) % 5) * 0.09;
+    return `<i class="w" style="--r:${r}deg;--y:${y}px;--d:${d}s;--dl:${dl}s;--o:${o}">${w}</i>`;
+  }).join(" ");
   // Pill bars: calm, voice-like, on a canvas (hero + final).
   function startBars(c, opt = {}) {
     if (!c) return;
@@ -51,10 +56,6 @@ document.addEventListener("DOMContentLoaded", () => {
     const raw = "um so can we move the launch review to wednesday at 3 wednesday works better for the design team   shipped the new export flow to vid ai two things to watch cold start and the retry logic   groceries milk eggs bread also um call the dentist on monday   hey uh quick one the invoice for march is still open can you nudge them   i think we should uh hold the release till the crash on intel is fixed   ";
     const clean = "Can we move the launch review to Wednesday at 3? Wednesday works better for the design team.   Shipped the new export flow to VidAI. Two things to watch: cold start, and the retry logic.   Groceries: milk, eggs, bread. Also call the dentist on Monday.   Hey, quick one: the invoice for March is still open, can you nudge them?   I think we should hold the release till the crash on Intel is fixed.   ";
     const speed = 42; // px per second, same on both sides
-    const clumsy = (text) => text.trim().split(/\s+/).map((w, i) => {
-      const r = ((i * 7) % 11 - 5) * 0.55, y = ((i * 5) % 7 - 3) * 0.9, d = 2.6 + (i * 3) % 5 * 0.4, dl = -((i * 11) % 9) * 0.35, o = 0.42 + ((i * 13) % 5) * 0.09;
-      return `<i class="w" style="--r:${r}deg;--y:${y}px;--d:${d}s;--dl:${dl}s;--o:${o}">${w}</i>`;
-    }).join(" ");
     for (const [id, text] of [["track-raw", raw], ["track-clean", clean]]) {
       const track = document.getElementById(id), html = id === "track-raw" ? clumsy(text) : text;
       track.innerHTML = `<span>${html}</span><span>${html}</span>`;
@@ -82,7 +83,7 @@ document.addEventListener("DOMContentLoaded", () => {
       ["the the meeting was very very good, honestly it's it's the best one this quarter", "The meeting was very very good, honestly it's the best one this quarter."],
     ];
     const say = document.getElementById("say"), get = document.getElementById("get"); let i = 0;
-    const show = () => { say.textContent = "“" + ex[i][0] + "”"; get.textContent = ex[i][1]; };
+    const show = () => { say.innerHTML = clumsy(ex[i][0]); get.textContent = ex[i][1]; };
     show();
     setInterval(async () => { pair.classList.add("swap"); await new Promise(r => setTimeout(r, 600)); i = (i + 1) % ex.length; show(); pair.classList.remove("swap"); }, 6500);
   }
