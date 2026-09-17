@@ -1,5 +1,5 @@
 {
-  "originHash" : "9b302af2bc8e470fbe8052ec43fde31d8e4e357205232de5a9f16c17c2151dcd",
+  "originHash" : "e24c75c9fcc5a6a9b49307685e336f81634d13a30eba95d0ee79de9985108044",
   "pins" : [
     {
       "identity" : "fluidaudio",
@@ -11,12 +11,12 @@
       }
     },
     {
-      "identity" : "sparkle",
+      "identity" : "purchases-ios-spm",
       "kind" : "remoteSourceControl",
-      "location" : "https://github.com/sparkle-project/Sparkle",
+      "location" : "https://github.com/RevenueCat/purchases-ios-spm.git",
       "state" : {
-        "revision" : "eef1a539a373c1f1a320624b1130fc5de7b2e100",
-        "version" : "2.10.0"
+        "revision" : "3555033df339c6ee36e8c5f4a75a41475de7b018",
+        "version" : "5.90.1"
       }
     }
   ],

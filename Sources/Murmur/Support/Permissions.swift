@@ -20,24 +20,10 @@ enum Permissions {
 
     static var accessibility: Bool { AXIsProcessTrusted() }
 
-    /// Shows the system prompt and opens the pane. If a stale entry exists from an
-    /// earlier build (ad-hoc signatures change every build), clear it first so the
-    /// switch the user flips applies to *this* binary.
+    /// Shows the system prompt (once per app signature) and opens the pane.
     static func requestAccessibility() {
-        if !AXIsProcessTrusted() { resetStaleAccessibilityEntry() }
         let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(opts)
-    }
-
-    private static func resetStaleAccessibilityEntry() {
-        guard let id = Bundle.main.bundleIdentifier else { return }
-        let p = Process()
-        p.executableURL = URL(fileURLWithPath: "/usr/bin/tccutil")
-        p.arguments = ["reset", "Accessibility", id]
-        p.standardOutput = nil; p.standardError = nil
-        try? p.run()
-        p.waitUntilExit()
-        Log.app.info("tccutil reset Accessibility → \(p.terminationStatus)")
     }
 
     static func openAccessibilityPane() {

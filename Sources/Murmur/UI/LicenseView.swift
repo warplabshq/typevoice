@@ -1,10 +1,9 @@
 import AppKit
+import RevenueCat
 import SwiftUI
 
 struct LicenseView: View {
     let licensing: Licensing
-    @State private var key = ""
-    @State private var busy = false
 
     var body: some View {
         Form {
@@ -12,44 +11,45 @@ struct LicenseView: View {
                 switch licensing.state {
                 case .trial(let days):
                     hero(icon: "clock", title: days == 1 ? "1 day left in your trial" : "\(days) days left in your trial",
-                         text: "Everything works during the trial. Buy once, use it forever on this Mac.")
+                         text: "Everything works during the trial. Unlock Murmur Pro to keep dictating after it ends.")
                 case .expired:
                     hero(icon: "lock", title: "Your trial has ended",
-                         text: "Dictation is paused until you enter a license. Everything you dictated is still in your history.")
-                case .licensed:
-                    hero(icon: "checkmark.seal.fill", title: "Licensed",
-                         text: "Thank you. This Mac is activated with key \(licensing.licenseKeyMasked ?? "").")
+                         text: "Dictation is paused until you unlock Pro. Everything you dictated is still in your Summary.")
+                case .pro:
+                    hero(icon: "checkmark.seal.fill", title: "Murmur Pro",
+                         text: "Thank you. Purchases are tied to your Apple ID and work on all your Macs.")
                 }
             }
-            if licensing.state != .licensed {
-                Section("Buy") {
-                    LabeledContent("Lifetime license") {
-                        Button("Buy Murmur…") { NSWorkspace.shared.open(Licensing.checkoutURL) }
-                            .buttonStyle(.borderedProminent)
-                    }
-                    Text("Checkout is handled by Dodo Payments. Your key arrives by email within a minute.")
-                        .font(.callout).foregroundStyle(.secondary)
-                }
-                Section("Already have a key?") {
-                    HStack(spacing: 8) {
-                        TextField(text: $key, prompt: Text("Paste your license key")) { Text("License key") }
-                            .labelsHidden()
-                            .textFieldStyle(.roundedBorder)
-                            .font(.system(.body, design: .monospaced))
-                            .onSubmit(activate)
-                        Button(busy ? "Activating…" : "Activate") { activate() }
-                            .disabled(busy || key.trimmingCharacters(in: .whitespaces).isEmpty)
+            if licensing.state != .pro {
+                Section("Unlock Pro") {
+                    if !Licensing.isConfigured {
+                        Text("Purchases will be available once Murmur is on the App Store.")
+                            .foregroundStyle(.secondary)
+                    } else if licensing.packages.isEmpty {
+                        HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Loading prices…").foregroundStyle(.secondary) }
+                            .task { await licensing.sync() }
+                    } else {
+                        ForEach(licensing.packages, id: \.identifier) { p in
+                            LabeledContent {
+                                Button(licensing.busy ? "…" : p.storeProduct.localizedPriceString) {
+                                    Task { await licensing.purchase(p) }
+                                }
+                                .buttonStyle(.borderedProminent)
+                                .disabled(licensing.busy)
+                            } label: {
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(p.storeProduct.localizedTitle)
+                                    Text(p.storeProduct.localizedDescription).font(.callout).foregroundStyle(.secondary)
+                                }
+                            }
+                        }
                     }
                     if let e = licensing.lastError {
                         Label(e, systemImage: "exclamationmark.triangle").foregroundStyle(.red).font(.callout)
                     }
-                    Text("Activation contacts Dodo Payments once to register this Mac, then re-checks about weekly. No other data is sent.")
-                        .font(.callout).foregroundStyle(.secondary)
-                }
-            } else {
-                Section {
-                    Button("Deactivate this Mac…", role: .destructive) { Task { await licensing.deactivate() } }
-                    Text("Frees the activation so you can use the key on another Mac.")
+                    Button("Restore Purchases") { Task { await licensing.restore() } }
+                        .disabled(!Licensing.isConfigured || licensing.busy)
+                    Text("Billed by Apple through the App Store. No account with Murmur, ever.")
                         .font(.callout).foregroundStyle(.secondary)
                 }
             }
@@ -61,7 +61,7 @@ struct LicenseView: View {
         HStack(spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 26, weight: .semibold))
-                .foregroundStyle(licensing.state == .licensed ? Color.green : Color.accentColor)
+                .foregroundStyle(licensing.state == .pro ? Color.green : Color.accentColor)
                 .frame(width: 44)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.title3.weight(.semibold))
@@ -69,10 +69,5 @@ struct LicenseView: View {
             }
         }
         .padding(.vertical, 6)
-    }
-
-    private func activate() {
-        busy = true
-        Task { await licensing.activate(key); busy = false; if licensing.state == .licensed { key = "" } }
     }
 }

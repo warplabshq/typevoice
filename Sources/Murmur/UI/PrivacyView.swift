@@ -21,7 +21,7 @@ struct PrivacyView: View {
                 row("mic", "Audio is captured only while you hold the key, and is discarded the moment it's transcribed. It is never written to disk.")
                 row("cpu", "Speech recognition runs on the Neural Engine using NVIDIA's Parakeet model. No audio is ever sent anywhere.")
                 row("sparkles", "Smart cleanup uses Apple Intelligence's on-device model. Text stays on this Mac.")
-                row("network", "Network use is limited to: the one-time model download from huggingface.co, the update check against Murmur's own appcast, and, if you buy a license, activating and re-checking that key with Dodo Payments.")
+                row("network", "Network use is limited to the one-time model download from huggingface.co and App Store purchase validation through RevenueCat. No analytics, no accounts.")
                 row("internaldrive", "History and your dictionary are plain JSON files you can read, back up or delete.")
             }
             Section("Your data") {

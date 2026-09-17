@@ -6,21 +6,20 @@ let package = Package(
     platforms: [.macOS("26.0")],
     dependencies: [
         .package(url: "https://github.com/FluidInference/FluidAudio.git", from: "0.15.7"),
-        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.10.0"),
+        .package(url: "https://github.com/RevenueCat/purchases-ios-spm.git", from: "5.90.0"),
     ],
     targets: [
         .executableTarget(
             name: "Murmur",
             dependencies: [
                 .product(name: "FluidAudio", package: "FluidAudio"),
-                .product(name: "Sparkle", package: "Sparkle"),
+                .product(name: "RevenueCat", package: "purchases-ios-spm"),
             ],
             path: "Sources/Murmur",
             swiftSettings: [
                 .swiftLanguageMode(.v5),
             ],
             linkerSettings: [
-                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"]),
                 .linkedFramework("AppKit"),
                 .linkedFramework("Carbon"),
                 .linkedFramework("ServiceManagement"),

@@ -63,7 +63,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         controller = DictationController(state: state, history: history, dictionary: dictionary)
         controller.licensing = licensing
-        _ = Updater.shared
         hud = HUDController(state: state)
         hud.onCopy = { [weak self] in self?.controller.copyOffered() }
         controller.hud = hud

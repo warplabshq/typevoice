@@ -13,7 +13,7 @@ struct SettingsView: View {
     @AppStorage(Prefs.Key.pillLook) private var pillLook = Prefs.PillLook.black.rawValue
     @AppStorage(Prefs.Key.pillShadow) private var pillShadow = Prefs.PillShadow.soft.rawValue
     @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
-    @AppStorage(Prefs.Key.insertion) private var insertion = Prefs.Insertion.auto.rawValue
+    @AppStorage(Prefs.Key.leadingSpace) private var leadingSpace = false
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var advanced = false
 
@@ -31,7 +31,10 @@ struct SettingsView: View {
                 Toggle("Show in menu bar", isOn: $showMenuBarIcon)
                 Text(showMenuBarIcon ? "Murmur lives in the menu bar; there is no Dock icon." : "With the icon hidden, open Murmur again from Finder or Spotlight to get here.")
                     .font(.callout).foregroundStyle(.secondary)
-                UpdatesRow()
+                LabeledContent("Version") {
+                    Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")
+                        .foregroundStyle(.secondary)
+                }
             }
             Section("Dictating") {
                 Picker("Hold to dictate", selection: $trigger) {
@@ -96,10 +99,9 @@ struct SettingsView: View {
 
             Section {
                 DisclosureGroup("Advanced", isExpanded: $advanced) {
-                    Picker("Insert text via", selection: $insertion) {
-                        Text("Accessibility, then paste").tag(Prefs.Insertion.auto.rawValue)
-                        Text("Always paste").tag(Prefs.Insertion.paste.rawValue)
-                    }
+                    Toggle("Start with a space", isOn: $leadingSpace)
+                    Text("Mac apps add the space before pasted text themselves. Turn this on if a web app you use doesn't.")
+                        .font(.callout).foregroundStyle(.secondary)
                     LabeledContent("Speech model") {
                         Text("Parakeet TDT 0.6B v2 · Neural Engine")
                             .foregroundStyle(.secondary)

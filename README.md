@@ -6,8 +6,8 @@ Hold 🌐, talk, release. Clean text lands at your cursor. Everything runs on th
 - **Cleanup:** Apple's on-device model, with a hard 1.2 s deadline. Never blocks insertion.
 - **UI:** a Liquid Glass pill that appears at the bottom of the screen you're typing on while you
   hold the key, shows the sentence as it's typed, and vanishes. Nothing is on screen otherwise.
-- **App:** menu bar only. The main window has History, Dictionary (your spellings, e.g. VidAI),
-  Style (casing, punctuation, tone), Settings and Privacy. No telemetry, no accounts.
+- **App:** menu bar only. The main window has Summary (time saved, history), Dictionary
+  (your spellings, e.g. VidAI), Style, Settings, License and Privacy. No telemetry, no accounts.
 
 ## Build
 
@@ -22,48 +22,56 @@ build/Murmur.app/Contents/MacOS/Murmur --test vocab      # dictionary matcher se
 Requires macOS 26+, Xcode 26+ (Swift 6). First launch downloads ~600 MB of CoreML models
 and compiles them for this Mac; that happens once.
 
-### Signing (do this once)
+### Signing
 
-macOS ties the Accessibility grant to the app's code signature. An ad-hoc signature
-changes on every build, so the grant silently stops applying after each rebuild.
-Give the build a stable identity once and the problem goes away:
+`make` signs ad-hoc with a stable, identifier-based designated requirement, so macOS keeps the
+Accessibility and Microphone grants across rebuilds. If Accessibility ever looks on but Murmur
+doesn't react: System Settings › Privacy & Security › Accessibility, flip Murmur off and on,
+then relaunch.
 
-1. Open **Keychain Access** → menu **Keychain Access › Certificate Assistant › Create a Certificate…**
-2. Name: `Murmur Dev` · Identity Type: Self Signed Root · Certificate Type: **Code Signing** → Create.
-3. `make run` now picks it up automatically (or pass `SIGN_ID="Murmur Dev"`).
+## App Store
 
-If you'd rather use your Apple ID: Xcode › Settings › Accounts › add it › Manage Certificates › **+ Apple Development**. `make` prefers that automatically.
+Murmur is built for the Mac App Store: sandboxed, hardened runtime, purchases through
+StoreKit via RevenueCat. Text is inserted by pasting into the frontmost app (the sandbox rules
+out the Accessibility API), which needs the Accessibility permission for the key tap and the
+synthetic ⌘V, plus the Microphone permission.
 
-If Accessibility ever looks on but Murmur doesn't react: System Settings › Privacy & Security › Accessibility, flip Murmur off and on, then relaunch.
+### One-time setup (your side)
 
-## Trial and licensing
+1. **App Store Connect:** create the app (bundle ID `com.priyam.murmur`, or change it in
+   `project.yml` and `Packaging/Info.plist`). Category Productivity.
+2. **In-app purchase:** create the products (e.g. a non-consumable "Murmur Pro", or a
+   subscription with a 3-day free trial if you prefer StoreKit-enforced trials). Complete the
+   Paid Apps agreement and tax/banking in App Store Connect.
+3. **RevenueCat:** new project → add the macOS app → enter the App Store Connect
+   In-App Purchase key (or shared secret) → create the entitlement **`pro`** and attach the
+   products → create an offering with those packages. Copy the **public SDK key** (`appl_…`)
+   into `Licensing.apiKey` in `Sources/Murmur/Support/Licensing.swift`.
+4. **Signing:** put your Team ID in `project.yml` (`DEVELOPMENT_TEAM`) and
+   `Packaging/ExportOptions.plist` (`teamID`). Xcode with your Apple ID signed in handles the
+   provisioning automatically.
+5. **Review notes:** say that Murmur is a dictation utility that needs Accessibility to notice
+   the hold-to-talk key and to paste the recognised text into the frontmost app, and that all
+   speech recognition runs on-device. Mention that the speech model (~450 MB) downloads on
+   first launch. Provide a demo video: reviewers can't hold Fn through a screenshot.
+6. **Privacy nutrition label:** "Data Not Collected". Nothing leaves the Mac except purchase
+   validation.
 
-Three-day trial from first launch (the date is kept in defaults and in a hidden marker file in
-the data folder). After that, dictation pauses and the License tab offers a Dodo Payments
-checkout plus a key field. Activation calls Dodo's public `/licenses/activate` once, then
-`/licenses/validate` about weekly with a 30-day offline grace period.
+### Shipping a build
 
-To go live: create the product in Dodo with **license keys enabled** (activation limit 1–2),
-then replace `Licensing.checkoutURL` in `Sources/Murmur/Support/Licensing.swift` with the
-hosted checkout link. `defaults write com.priyam.murmur dodoTest -bool true` points the app at
-Dodo's test host.
+```bash
+make project     # regenerate Murmur.xcodeproj from project.yml (XcodeGen)
+make archive     # archive + upload to App Store Connect
+```
 
-## Updates
+Or open `Murmur.xcodeproj` in Xcode → Product › Archive → Distribute App. Bump
+`MARKETING_VERSION` / `CURRENT_PROJECT_VERSION` in `project.yml` for each build.
+TestFlight for Mac works for beta testers.
 
-Sparkle 2 is embedded. It checks `SUFeedURL` (Info.plist) daily and shows the standard
-"Check for Updates…" flow. The EdDSA public key is in Info.plist; the private key lives in the
-login keychain of the Mac that generated it (this one).
+### Local development
 
-Publishing a version:
-
-1. Bump `CFBundleShortVersionString` / `CFBundleVersion` in `Packaging/Info.plist`.
-2. `make release` → `dist/Murmur-<version>.zip` and `dist/appcast.xml` (signed).
-3. Upload both to the host named in `SUFeedURL` (GitHub Releases works; point the feed at the
-   raw appcast URL). Replace the `REPLACE-ME` feed URL in Info.plist once you have it.
-
-For real distribution you also need an Apple Developer ID certificate and notarization,
-otherwise Gatekeeper blocks the download on other Macs. `make SIGN_ID="Developer ID Application: …"`
-picks it up; notarize the zip with `xcrun notarytool submit` before running `generate_appcast`.
+`make run` still produces a sandboxed, ad-hoc-signed app for day-to-day use. Its data lives
+in `~/Library/Containers/com.priyam.murmur/Data/Library/Application Support/Murmur`.
 
 ## Layout
 

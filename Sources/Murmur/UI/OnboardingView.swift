@@ -127,7 +127,7 @@ struct OnboardingView: View {
         if let t = askedAX, Date.now.timeIntervalSince(t) > 8, !ax {
             return "Still not on? If Murmur is already listed in the Accessibility pane, flip it off and on, or remove it with − and allow again. A relaunch fixes the rest."
         }
-        return "Needed to notice the key and to type into the app you're using. Murmur never reads what's on your screen."
+        return "Needed to notice the key you hold and to paste the text into the app you're using. Murmur never reads what's on your screen."
     }
 
     private var micAction: (String, () -> Void) {

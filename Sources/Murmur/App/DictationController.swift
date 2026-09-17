@@ -152,7 +152,7 @@ final class DictationController {
         state.phase = .listening(locked: false)
         hud?.present(for: target)
         Log.app.info("listening → \(self.target?.appName ?? "?")")
-        Log.d("listening → \(target?.appName ?? "?") ax=\(target?.element != nil) ctx=\(target?.context.textBeforeCaret?.suffix(20).description ?? "nil")")
+        Log.d("listening → \(target?.appName ?? "?")")
     }
 
     private func release() {
@@ -250,7 +250,8 @@ final class DictationController {
                     }
                 }
                 text = style.finish(text)
-                text = Cleaner.fit(text, to: target?.context ?? .unknown, style: style)
+                text = Cleaner.fit(text, to: .unknown, style: style)
+                if Prefs.leadingSpace, let f = text.first, !f.isWhitespace, !f.isPunctuation { text = " " + text }
                 produced = text.trimmingCharacters(in: .whitespaces)
                 try Task.checkCancellation()
 
