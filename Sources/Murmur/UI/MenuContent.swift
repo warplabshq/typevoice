@@ -18,7 +18,7 @@ struct MenuContent: View {
             }
         }
         Divider()
-        Button("Open Murmur") { openMainWindow(.history) }
+        Button("Open \(Brand.name)") { openMainWindow(.history) }
             .keyboardShortcut("o")
         Button(state.paused ? "Resume" : "Pause") { state.paused.toggle() }
             .keyboardShortcut("p")
@@ -37,7 +37,7 @@ struct MenuContent: View {
         Button("Settings…") { openMainWindow(.settings) }
             .keyboardShortcut(",")
         Divider()
-        Button("Quit Murmur") { NSApp.terminate(nil) }
+        Button("Quit \(Brand.name)") { NSApp.terminate(nil) }
             .keyboardShortcut("q")
     }
 }

@@ -78,10 +78,16 @@ struct HUDView: View {
                 .id("processing")
 
         case .done(let text):
-            // Preview off: `.done("")` is never shown (the controller goes straight to idle).
-            TypeOnText(text: text, maxWidth: 440)
-                .transition(.blurFade)
-                .id("done-\(text.hashValue)")
+            HStack(spacing: 12) {
+                if !text.isEmpty {
+                    TypeOnText(text: text, maxWidth: 400)
+                }
+                if let url = state.lastAudio {
+                    AudioChip(url: url)
+                }
+            }
+            .transition(.blurFade)
+            .id("done-\(text.hashValue)")
 
         case .copyOffer(let text, let copied):
             HStack(spacing: 12) {
@@ -136,5 +142,26 @@ struct ElapsedLabel: View {
                 .font(.system(size: 11, weight: .medium).monospacedDigit())
                 .foregroundStyle(Theme.onGlassDim)
         }
+    }
+}
+
+/// Drag this into any chat to send the voice instead of the words.
+struct AudioChip: View {
+    let url: URL
+    @State private var hover = false
+    var body: some View {
+        HStack(spacing: 6) {
+            Image(systemName: "waveform.circle.fill")
+                .font(.system(size: 13, weight: .semibold))
+            Text("Drag audio")
+                .font(.system(size: 12, weight: .semibold))
+        }
+        .foregroundStyle(hover ? Color.black : Theme.onGlass)
+        .padding(.horizontal, 10)
+        .padding(.vertical, 5)
+        .background(hover ? Color.white : Color.white.opacity(0.14), in: Capsule())
+        .onHover { hover = $0 }
+        .onDrag { NSItemProvider(contentsOf: url) ?? NSItemProvider() }
+        .help("Drag into a message to send the recording")
     }
 }

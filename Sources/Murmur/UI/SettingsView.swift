@@ -14,6 +14,7 @@ struct SettingsView: View {
     @AppStorage(Prefs.Key.pillShadow) private var pillShadow = Prefs.PillShadow.soft.rawValue
     @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
     @AppStorage(Prefs.Key.leadingSpace) private var leadingSpace = false
+    @AppStorage(Prefs.Key.keepRecordings) private var keepRecordings = false
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var advanced = false
 
@@ -29,7 +30,7 @@ struct SettingsView: View {
                         }
                     }
                 Toggle("Show in menu bar", isOn: $showMenuBarIcon)
-                Text(showMenuBarIcon ? "Murmur lives in the menu bar; there is no Dock icon." : "With the icon hidden, open Murmur again from Finder or Spotlight to get here.")
+                Text(showMenuBarIcon ? "\(Brand.name) lives in the menu bar; there is no Dock icon." : "With the icon hidden, open \(Brand.name) again from Finder or Spotlight to get here.")
                     .font(.callout).foregroundStyle(.secondary)
                 LabeledContent("Version") {
                     Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")
@@ -67,6 +68,11 @@ struct SettingsView: View {
                     .font(.callout).foregroundStyle(.secondary)
                 Toggle("Paragraph after a pause", isOn: $pauseParagraphs)
                 Text("Finish a sentence, pause a second, and the next one starts a new paragraph.")
+                    .font(.callout).foregroundStyle(.secondary)
+            }
+            Section("Voice notes") {
+                Toggle("Keep recordings", isOn: $keepRecordings)
+                Text("Saves each dictation as a small audio file too. Drag the chip that appears after you speak, or a row in Summary, into iMessage, Slack or WhatsApp to send your voice instead of the words. Stored only on this Mac.")
                     .font(.callout).foregroundStyle(.secondary)
             }
 

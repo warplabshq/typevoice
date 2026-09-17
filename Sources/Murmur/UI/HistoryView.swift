@@ -99,7 +99,7 @@ struct HistoryView: View {
         .confirmationDialog("Clear all \(history.stats.count.formatted()) dictations?", isPresented: $confirmClear, titleVisibility: .visible) {
             Button("Clear History", role: .destructive) { history.clear(); selection.removeAll() }
         } message: {
-            Text("This only affects Murmur's history on this Mac. Text you already inserted into other apps stays where it is.")
+            Text("This only affects \(Brand.name)'s history on this Mac. Text you already inserted into other apps stays where it is.")
         }
     }
 
@@ -158,7 +158,7 @@ struct HistoryView: View {
 
     private func export(_ format: ExportFormat) {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "Murmur history.\(format.rawValue)"
+        panel.nameFieldStringValue = "\(Brand.name) history.\(format.rawValue)"
         panel.canCreateDirectories = true
         panel.begin { resp in
             guard resp == .OK, let url = panel.url else { return }
@@ -169,7 +169,7 @@ struct HistoryView: View {
                 data = items.map { "\($0.date.formatted(date: .abbreviated, time: .shortened)) · \($0.appName)\n\($0.text)\n" }
                     .joined(separator: "\n").data(using: .utf8)!
             case .md:
-                var md = "# Murmur history\n\n"
+                var md = "# \(Brand.name) history\n\n"
                 for d in items { md += "- **\(d.date.formatted(date: .abbreviated, time: .shortened))** · \(d.appName)\n\n  \(d.text)\n\n" }
                 data = md.data(using: .utf8)!
             case .csv:
@@ -200,6 +200,7 @@ private struct HistoryRow: View {
     let onCopy: () -> Void
     let onDelete: () -> Void
     @State private var hover = false
+    @State private var playing = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -221,6 +222,22 @@ private struct HistoryRow: View {
                     if let l = d.latencyMs {
                         Text("·")
                         Text("\(l) ms").help("Key-up to text inserted")
+                    }
+                    if let url = d.audioURL {
+                        Text("·")
+                        Button {
+                            RecordingPlayer.shared.toggle(id: d.id); playing = RecordingPlayer.shared.playingID == d.id
+                        } label: {
+                            Label(playing ? "Stop" : "Play", systemImage: playing ? "stop.fill" : "play.fill")
+                                .font(.caption.weight(.semibold))
+                        }
+                        .buttonStyle(.plain)
+                        .foregroundStyle(Color.accentColor)
+                        Image(systemName: "waveform")
+                            .font(.caption)
+                            .foregroundStyle(.secondary)
+                            .onDrag { NSItemProvider(contentsOf: url) ?? NSItemProvider() }
+                            .help("Drag into a message to send the recording")
                     }
                 }
                 .font(.caption)
@@ -246,8 +263,12 @@ private struct HistoryRow: View {
         .padding(.vertical, 6)
         .contentShape(Rectangle())
         .onHover { hover = $0 }
+        .onReceive(NotificationCenter.default.publisher(for: .murmurPlaybackChanged)) { _ in playing = RecordingPlayer.shared.playingID == d.id }
         .contextMenu {
             Button("Copy", action: onCopy)
+            if let url = d.audioURL {
+                Button("Reveal Recording in Finder") { NSWorkspace.shared.activateFileViewerSelecting([url]) }
+            }
             Button("Delete", role: .destructive, action: onDelete)
         }
     }

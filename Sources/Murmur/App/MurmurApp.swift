@@ -8,7 +8,7 @@ struct MurmurApp: App {
     @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
 
     var body: some Scene {
-        MenuBarExtra("Murmur", systemImage: "waveform", isInserted: $showMenuBarIcon) {
+        MenuBarExtra(Brand.name, systemImage: "waveform", isInserted: $showMenuBarIcon) {
             MenuContent(state: delegate.state, history: delegate.history)
         }
     }
@@ -52,6 +52,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                             Log.d(String(repeating: "  ", count: depth) + String(describing: type(of: v)) + ve)
                             for s in v.subviews { dump(s, depth + 1) }
                         }
+                        Log.d("=== NSApp.windows ===")
+                        for w in NSApp.windows { Log.d("  \(type(of: w)) level=\(w.level.rawValue) visible=\(w.isVisible) frame=\(w.frame) title=\(w.title)") }
                         Log.d("=== HUD window ==="); dump(self?.hud.debugWindow?.contentView, 0)
                         Log.d("=== main window ==="); dump(self?.main?.contentView, 0)
                     }
@@ -93,7 +95,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             // Warm the model in the background so the last card is quick.
             controller.warm()
         }
-        Log.app.info("Murmur launched")
+        Log.app.info("\(Brand.name) launched")
         Log.d("launch complete; screens=\(NSScreen.screens.count)")
     }
 
@@ -138,8 +140,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let app = NSMenu()
         app.addItem(withTitle: "Settings…", action: #selector(showSettingsFromMenu), keyEquivalent: ",")
         app.addItem(.separator())
-        app.addItem(withTitle: "Hide Murmur", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
-        app.addItem(withTitle: "Quit Murmur", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
+        app.addItem(withTitle: "Hide \(Brand.name)", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
+        app.addItem(withTitle: "Quit \(Brand.name)", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         appItem.submenu = app
 
         let editItem = NSMenuItem(); menu.addItem(editItem)

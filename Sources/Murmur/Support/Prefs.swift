@@ -24,6 +24,7 @@ enum Prefs {
         static let voiceCommands = "voiceCommands"     // Bool: new line / bullet / number one
         static let pauseParagraphs = "pauseParagraphs" // Bool: paragraph after a pause
         static let leadingSpace = "leadingSpace"       // Bool: prefix a space (for web apps)
+        static let keepRecordings = "keepRecordings"   // Bool: save audio as .m4a
     }
 
     enum HUDPosition: String, CaseIterable, Identifiable {
@@ -99,6 +100,7 @@ enum Prefs {
             Key.voiceCommands: true,
             Key.pauseParagraphs: true,
             Key.leadingSpace: false,
+            Key.keepRecordings: false,
         ])
     }
 
@@ -121,6 +123,7 @@ enum Prefs {
     static var voiceCommands: Bool { d.bool(forKey: Key.voiceCommands) }
     static var pauseParagraphs: Bool { d.bool(forKey: Key.pauseParagraphs) }
     static var leadingSpace: Bool { d.bool(forKey: Key.leadingSpace) }
+    static var keepRecordings: Bool { d.bool(forKey: Key.keepRecordings) }
     static var pillShadow: PillShadow { PillShadow(rawValue: d.string(forKey: Key.pillShadow) ?? "") ?? .soft }
 
     /// "🌐" or the custom shortcut, for UI copy.

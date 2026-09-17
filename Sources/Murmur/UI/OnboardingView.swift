@@ -45,7 +45,7 @@ struct OnboardingView: View {
     private var hero: some View {
         VStack(spacing: 14) {
             PillPreview(accent: Prefs.accent)
-            Text("Murmur")
+            Text("\(Brand.name)")
                 .font(.system(size: 26, weight: .bold))
             Text("Hold a key. Talk. Release. It's typed. All on this Mac.")
                 .font(.system(size: 14))
@@ -59,7 +59,7 @@ struct OnboardingView: View {
         case 0:
             StepCard(
                 icon: "mic.fill", title: "Microphone",
-                text: "Murmur listens only while you hold the key. Audio never leaves this Mac and is never written to disk.",
+                text: "\(Brand.name) listens only while you hold the key. Audio never leaves this Mac and is never written to disk.",
                 done: mic == .granted,
                 action: micAction
             )
@@ -69,7 +69,7 @@ struct OnboardingView: View {
                 text: axHint,
                 done: ax,
                 action: ("Allow accessibility", { askedAX = .now; Permissions.requestAccessibility(); Permissions.openAccessibilityPane() }),
-                secondary: askedAX == nil ? nil : ("Relaunch Murmur", { Permissions.relaunch() })
+                secondary: askedAX == nil ? nil : ("Relaunch \(Brand.name)", { Permissions.relaunch() })
             )
         case 2:
             StepCard(
@@ -105,7 +105,7 @@ struct OnboardingView: View {
             StepCard(
                 icon: tried ? "checkmark.seal.fill" : "waveform", title: tried ? "That's it" : "Say something",
                 text: tried
-                    ? "Murmur lives in your menu bar now (the small waveform, top right). Hold \(Prefs.triggerLabel) in any app to dictate. History, dictionary and settings are one click away."
+                    ? "\(Brand.name) lives in your menu bar now (the small waveform, top right). Hold \(Prefs.triggerLabel) in any app to dictate. History, dictionary and settings are one click away."
                     : "Click the box below, hold \(Prefs.triggerLabel), say a sentence, and let go.",
                 done: tried
             ) {
@@ -125,9 +125,9 @@ struct OnboardingView: View {
 
     private var axHint: String {
         if let t = askedAX, Date.now.timeIntervalSince(t) > 8, !ax {
-            return "Still not on? If Murmur is already listed in the Accessibility pane, flip it off and on, or remove it with − and allow again. A relaunch fixes the rest."
+            return "Still not on? If \(Brand.name) is already listed in the Accessibility pane, flip it off and on, or remove it with − and allow again. A relaunch fixes the rest."
         }
-        return "Needed to notice the key you hold and to paste the text into the app you're using. Murmur never reads what's on your screen."
+        return "Needed to notice the key you hold and to paste the text into the app you're using. \(Brand.name) never reads what's on your screen."
     }
 
     private var micAction: (String, () -> Void) {

@@ -8,6 +8,11 @@ Hold 🌐, talk, release. Clean text lands at your cursor. Everything runs on th
   hold the key, shows the sentence as it's typed, and vanishes. Nothing is on screen otherwise.
 - **App:** menu bar only. The main window has Summary (time saved, history), Dictionary
   (your spellings, e.g. VidAI), Style, Settings, License and Privacy. No telemetry, no accounts.
+- **Voice notes (opt-in):** Settings › Voice notes › Keep recordings saves each dictation as a
+  small AAC file too; drag the chip after speaking, or a Summary row, into any chat.
+- **Rebrand:** the display name comes from `CFBundleDisplayName` in `Packaging/Info.plist`
+  (`Brand.name` in code); the bundle ID lives in `project.yml`, `Packaging/Info.plist` and
+  the Makefile's signing requirement; the icon is rendered by `Tools/icon.swift`.
 
 ## Build
 

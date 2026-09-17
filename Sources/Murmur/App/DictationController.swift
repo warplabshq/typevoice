@@ -116,7 +116,7 @@ final class DictationController {
         guard !state.paused else { return }
         if let licensing, licensing.isExpired, state.phase == .idle {
             hud?.present(for: inserter.captureTarget())
-            show(.error("Trial ended · open Murmur to continue"), for: .milliseconds(2200))
+            show(.error("Trial ended · open \(Brand.name) to continue"), for: .milliseconds(2200))
             openMainWindow(.license)
             return
         }
@@ -262,8 +262,10 @@ final class DictationController {
                 guard let target else { throw TextInserter.InsertError.noFocusedApp }
                 guard inserter.hasTextTarget(target) else {
                     Log.d("no text target in \(target.appName); offering copy")
-                    history.add(Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
-                                          bundleID: target.bundleID, seconds: rec.seconds, latencyMs: Int((ContinuousClock.now - t0).ms)))
+                    let entry = Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
+                                          bundleID: target.bundleID, seconds: rec.seconds, latencyMs: Int((ContinuousClock.now - t0).ms))
+                    history.add(entry)
+                    if Prefs.keepRecordings { let samples = rec.samples; _ = try? RecordingStore.save(samples: samples, id: entry.id) }
                         show(.copyOffer(text.trimmingCharacters(in: .whitespaces), copied: false), for: .seconds(8))
                     return
                 }
@@ -273,11 +275,19 @@ final class DictationController {
                 Log.d("inserted via \(method.rawValue) into \(target.appName): \(text)")
 
                 let latency = Int((ContinuousClock.now - t0).ms)
-                history.add(Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
-                                      bundleID: target.bundleID, seconds: rec.seconds, latencyMs: latency))
-                if Prefs.showPreview {
-                    let ms = min(2600, 700 + text.count * 12)
-                    show(.done(text.trimmingCharacters(in: .whitespaces)), for: .milliseconds(ms))
+                let entry = Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
+                                      bundleID: target.bundleID, seconds: rec.seconds, latencyMs: latency)
+                history.add(entry)
+                state.lastAudio = nil
+                if Prefs.keepRecordings {
+                    let samples = rec.samples
+                    let url = try? await Task.detached(priority: .utility) { try RecordingStore.save(samples: samples, id: entry.id) }.value
+                    state.lastAudio = url
+                }
+                if Prefs.showPreview || state.lastAudio != nil {
+                    // With an audio chip, linger long enough to grab it.
+                    let ms = state.lastAudio != nil ? 6000 : min(2600, 700 + text.count * 12)
+                    show(.done(Prefs.showPreview ? text.trimmingCharacters(in: .whitespaces) : ""), for: .milliseconds(ms))
                 } else {
                     // Nothing to say: retreat into the edge right away.
                     state.phase = .idle

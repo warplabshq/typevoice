@@ -1,4 +1,6 @@
 # XcodeGen spec. `xcodegen generate` → Murmur.xcodeproj (git-ignored).
+# Info.plist and the entitlements are real files under Packaging/, referenced by build settings;
+# never let XcodeGen generate them (it would overwrite them with empty ones).
 # Archive from Xcode (Product › Archive) or: make archive
 name: Murmur
 options:
@@ -38,8 +40,6 @@ targets:
       - package: RevenueCat
         product: RevenueCat
       - sdk: libsqlite3.tbd
-    entitlements:
-      path: Packaging/Murmur.entitlements
     settings:
       base:
         PRODUCT_BUNDLE_IDENTIFIER: com.priyam.murmur

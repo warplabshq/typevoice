@@ -123,7 +123,8 @@ final class HotkeyMonitor {
             let repeatKey = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
             let mods = event.flags.intersection(Shortcut.relevantFlags).rawValue
             let chord: Bool = shared.withLock { s in
-                guard !s.paused, s.shortcut.isModifierOnly, s.isDown, code != UInt16(kVK_Escape) else { return false }
+                guard !s.paused, s.shortcut.isModifierOnly, s.isDown, code != UInt16(kVK_Escape),
+                      !Shortcut.isModifierKey(code) else { return false }   // a modifier's own key-down is not a chord
                 s.isDown = false          // the eventual modifier release must not finish a session
                 return true
             }

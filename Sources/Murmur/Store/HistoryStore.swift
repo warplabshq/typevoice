@@ -15,6 +15,8 @@ struct Dictation: Identifiable, Codable, Sendable, Equatable, Hashable {
 
     enum CodingKeys: String, CodingKey { case id, text, date, appName, bundleID, seconds, words, latencyMs }
 
+    var audioURL: URL? { RecordingStore.url(for: id) }
+
     static func wordCount(_ s: String) -> Int {
         s.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
     }
@@ -65,12 +67,14 @@ final class HistoryStore {
     }
 
     func delete(_ ids: Set<UUID>) {
+        ids.forEach(RecordingStore.delete)
         db.delete(Array(ids))
         entries.removeAll { ids.contains($0.id) }
         stats = db.stats()
     }
 
     func clear() {
+        RecordingStore.deleteAll()
         db.clear()
         entries.removeAll()
         stats = db.stats()

@@ -12,13 +12,15 @@ struct PrivacyView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Label("Nothing leaves your Mac.", systemImage: "lock.shield.fill")
                         .font(.title3.weight(.semibold))
-                    Text("Murmur has no account, no analytics, no crash reporting and no telemetry of any kind. It does not know you exist.")
+                    Text("\(Brand.name) has no account, no analytics, no crash reporting and no telemetry of any kind. It does not know you exist.")
                         .foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 4)
             }
             Section("How it works") {
-                row("mic", "Audio is captured only while you hold the key, and is discarded the moment it's transcribed. It is never written to disk.")
+                row("mic", Prefs.keepRecordings
+                    ? "Audio is captured only while you hold the key. Because “Keep recordings” is on, each dictation is also saved as an audio file on this Mac. Turn it off in Settings and nothing is written."
+                    : "Audio is captured only while you hold the key, and is discarded the moment it's transcribed. It is never written to disk.")
                 row("cpu", "Speech recognition runs on the Neural Engine using NVIDIA's Parakeet model. No audio is ever sent anywhere.")
                 row("sparkles", "Smart cleanup uses Apple Intelligence's on-device model. Text stays on this Mac.")
                 row("network", "Network use is limited to the one-time model download from huggingface.co and App Store purchase validation through RevenueCat. No analytics, no accounts.")
@@ -37,11 +39,19 @@ struct PrivacyView: View {
                 }
                 LabeledContent("History") { Text("\(history.entries.count) dictations").foregroundStyle(.secondary) }
                 LabeledContent("Dictionary") { Text("\(dictionary.terms.count) terms").foregroundStyle(.secondary) }
+                if RecordingStore.totalBytes() > 0 {
+                    LabeledContent("Recordings") {
+                        HStack(spacing: 10) {
+                            Text(ByteCountFormatter.string(fromByteCount: RecordingStore.totalBytes(), countStyle: .file)).foregroundStyle(.secondary)
+                            Button("Delete Recordings…", role: .destructive) { RecordingStore.deleteAll() }
+                        }
+                    }
+                }
                 Button("Delete Everything…", role: .destructive) { confirmWipe = true }
             }
         }
         .formStyle(.grouped)
-        .confirmationDialog("Delete all Murmur data on this Mac?", isPresented: $confirmWipe, titleVisibility: .visible) {
+        .confirmationDialog("Delete all \(Brand.name) data on this Mac?", isPresented: $confirmWipe, titleVisibility: .visible) {
             Button("Delete Everything", role: .destructive) {
                 history.clear(); dictionary.clear(); Prefs.reset()
             }

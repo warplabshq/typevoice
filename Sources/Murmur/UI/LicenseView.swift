@@ -11,19 +11,19 @@ struct LicenseView: View {
                 switch licensing.state {
                 case .trial(let days):
                     hero(icon: "clock", title: days == 1 ? "1 day left in your trial" : "\(days) days left in your trial",
-                         text: "Everything works during the trial. Unlock Murmur Pro to keep dictating after it ends.")
+                         text: "Everything works during the trial. Unlock \(Brand.name) Pro to keep dictating after it ends.")
                 case .expired:
                     hero(icon: "lock", title: "Your trial has ended",
                          text: "Dictation is paused until you unlock Pro. Everything you dictated is still in your Summary.")
                 case .pro:
-                    hero(icon: "checkmark.seal.fill", title: "Murmur Pro",
+                    hero(icon: "checkmark.seal.fill", title: "\(Brand.name) Pro",
                          text: "Thank you. Purchases are tied to your Apple ID and work on all your Macs.")
                 }
             }
             if licensing.state != .pro {
                 Section("Unlock Pro") {
                     if !Licensing.isConfigured {
-                        Text("Purchases will be available once Murmur is on the App Store.")
+                        Text("Purchases will be available once \(Brand.name) is on the App Store.")
                             .foregroundStyle(.secondary)
                     } else if licensing.packages.isEmpty {
                         HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Loading prices…").foregroundStyle(.secondary) }
@@ -49,7 +49,7 @@ struct LicenseView: View {
                     }
                     Button("Restore Purchases") { Task { await licensing.restore() } }
                         .disabled(!Licensing.isConfigured || licensing.busy)
-                    Text("Billed by Apple through the App Store. No account with Murmur, ever.")
+                    Text("Billed by Apple through the App Store. No account with \(Brand.name), ever.")
                         .font(.callout).foregroundStyle(.secondary)
                 }
             }

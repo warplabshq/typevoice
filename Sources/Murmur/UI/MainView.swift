@@ -52,7 +52,7 @@ struct MainView: View {
                 .tag(t)
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
-            .safeAreaInset(edge: .top) { Brand() }
+            .safeAreaInset(edge: .top) { BrandRow() }
             .safeAreaInset(edge: .bottom) { StatusFooter(state: state) }
         } detail: {
             Group {
@@ -72,7 +72,7 @@ struct MainView: View {
                     Button { NotificationCenter.default.post(name: .murmurShowOnboarding, object: nil) } label: {
                         Label("How to use", systemImage: "questionmark.circle")
                     }
-                    .help("How to use Murmur")
+                    .help("How to use \(Brand.name)")
                 }
             }
         }
@@ -81,7 +81,7 @@ struct MainView: View {
 }
 
 /// Small brand row at the top of the sidebar.
-private struct Brand: View {
+private struct BrandRow: View {
     var body: some View {
         HStack(spacing: 10) {
             ZStack {
@@ -94,8 +94,8 @@ private struct Brand: View {
                     .foregroundStyle(.white)
             }
             VStack(alignment: .leading, spacing: 1) {
-                Text("Murmur").font(.headline)
-                Text("Local dictation").font(.caption).foregroundStyle(.secondary)
+                Text(Brand.name).font(.headline)
+                Text(Brand.tagline).font(.caption).foregroundStyle(.secondary)
             }
             Spacer()
         }

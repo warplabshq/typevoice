@@ -25,7 +25,7 @@ struct DictionaryView: View {
                 ContentUnavailableView {
                     Label("Your words, your spelling", systemImage: "character.book.closed")
                 } description: {
-                    Text("Product names, people, jargon. Murmur fixes anything that sounds like them.")
+                    Text("Product names, people, jargon. \(Brand.name) fixes anything that sounds like them.")
                 }
                 .frame(maxHeight: .infinity)
             } else {
