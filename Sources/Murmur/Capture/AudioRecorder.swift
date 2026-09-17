@@ -32,6 +32,12 @@ final class AudioRecorder: @unchecked Sendable {
         lock.withLock { samples.removeAll(keepingCapacity: true); peak = 0 }
 
         let input = engine.inputNode
+        // Chosen microphone, if any and still connected; otherwise the system default.
+        if let uid = Prefs.inputDeviceUID, let dev = InputDevices.device(uid: uid), let unit = input.audioUnit {
+            var id = dev.id
+            let status = AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
+            if status != noErr { Log.audio.warning("could not select input \(dev.name): \(status)") }
+        }
         let inFormat = input.outputFormat(forBus: 0)
         guard inFormat.sampleRate > 0, inFormat.channelCount > 0 else {
             throw RecorderError.noInput

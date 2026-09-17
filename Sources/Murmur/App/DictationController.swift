@@ -122,8 +122,13 @@ final class DictationController {
         }
         let now = ContinuousClock.now
 
-        // Second tap inside the window → lock hands-free.
-        if lockWindow != nil, state.phase.isListening {
+        // Tap-to-toggle: a press while listening ends the session.
+        if Prefs.triggerMode == .toggle, state.phase.isListening {
+            finish()
+            return
+        }
+        // Hold mode, second tap inside the window → lock hands-free.
+        if Prefs.triggerMode == .hold, Prefs.doubleTapLock, lockWindow != nil, state.phase.isListening {
             lockWindow?.cancel(); lockWindow = nil
             locked = true
             state.phase = .listening(locked: true)
@@ -134,31 +139,43 @@ final class DictationController {
             finish()
             return
         }
-        guard state.phase == .idle else { return }
+        // A press while the pill is still showing the last result starts a new session at once.
+        switch state.phase {
+        case .idle: break
+        case .done, .notHeard, .error, .copyOffer:
+            dismiss?.cancel()
+            state.phase = .idle
+        default:
+            return
+        }
 
         pressStart = now
-        dismiss?.cancel()
+        finishTask?.cancel(); finishTask = nil
+        state.lastAudio = nil
         target = inserter.captureTarget()
         state.resetLevels()
         levelSmoother = 0
         do {
             try recorder.start()
         } catch {
+            Log.d("mic start failed: \(error.localizedDescription)")
+            hud?.present(for: target)
             show(.error(error.localizedDescription), for: .milliseconds(1400))
             return
         }
-        locked = false
+        locked = Prefs.triggerMode == .toggle          // toggle mode is hands-free by nature
         state.listeningSince = .now
-        state.phase = .listening(locked: false)
+        state.phase = .listening(locked: locked)
         hud?.present(for: target)
         Log.app.info("listening → \(self.target?.appName ?? "?")")
         Log.d("listening → \(target?.appName ?? "?")")
     }
 
     private func release() {
+        guard Prefs.triggerMode == .hold else { return }   // toggle mode ignores key-up
         guard state.phase.isListening, !locked else { return }
         let held = pressStart.map { ContinuousClock.now - $0 } ?? .seconds(0)
-        if held < Self.shortHold {
+        if Prefs.doubleTapLock, held < Self.shortHold {
             // Might be the first half of a double-tap: keep recording briefly.
             lockWindow = Task { [weak self] in
                 try? await Task.sleep(for: Self.doubleTapWindow)

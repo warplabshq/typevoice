@@ -25,6 +25,9 @@ enum Prefs {
         static let pauseParagraphs = "pauseParagraphs" // Bool: paragraph after a pause
         static let leadingSpace = "leadingSpace"       // Bool: prefix a space (for web apps)
         static let keepRecordings = "keepRecordings"   // Bool: save audio as .m4a
+        static let triggerMode = "triggerMode"         // TriggerMode
+        static let doubleTapLock = "doubleTapLock"     // Bool: double-tap keeps listening (hold mode)
+        static let inputDeviceUID = "inputDeviceUID"   // String? (nil = system default)
     }
 
     enum HUDPosition: String, CaseIterable, Identifiable {
@@ -42,6 +45,12 @@ enum Prefs {
             case .bottomRight: return "Bottom right"
             }
         }
+    }
+
+    enum TriggerMode: String, CaseIterable, Identifiable {
+        case hold, toggle
+        var id: String { rawValue }
+        var label: String { self == .hold ? "Hold to talk" : "Tap to start, tap to stop" }
     }
 
     enum PillLook: String, CaseIterable, Identifiable {
@@ -101,6 +110,8 @@ enum Prefs {
             Key.pauseParagraphs: true,
             Key.leadingSpace: false,
             Key.keepRecordings: false,
+            Key.triggerMode: TriggerMode.hold.rawValue,
+            Key.doubleTapLock: true,
         ])
     }
 
@@ -124,6 +135,9 @@ enum Prefs {
     static var pauseParagraphs: Bool { d.bool(forKey: Key.pauseParagraphs) }
     static var leadingSpace: Bool { d.bool(forKey: Key.leadingSpace) }
     static var keepRecordings: Bool { d.bool(forKey: Key.keepRecordings) }
+    static var triggerMode: TriggerMode { TriggerMode(rawValue: d.string(forKey: Key.triggerMode) ?? "") ?? .hold }
+    static var doubleTapLock: Bool { d.bool(forKey: Key.doubleTapLock) }
+    static var inputDeviceUID: String? { d.string(forKey: Key.inputDeviceUID) }
     static var pillShadow: PillShadow { PillShadow(rawValue: d.string(forKey: Key.pillShadow) ?? "") ?? .soft }
 
     /// "🌐" or the custom shortcut, for UI copy.

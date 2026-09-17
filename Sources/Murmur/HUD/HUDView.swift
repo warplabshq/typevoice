@@ -62,9 +62,10 @@ struct HUDView: View {
                     }
                 }
                 if locked {
-                    Text("esc to stop")
+                    Text(Prefs.triggerMode == .toggle ? "tap \(Prefs.triggerLabel) to stop" : "\(Prefs.triggerLabel) or esc to stop")
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(Theme.onGlassDim)
+                        .lineLimit(1)
                 }
             }
             .transition(.blurFade)

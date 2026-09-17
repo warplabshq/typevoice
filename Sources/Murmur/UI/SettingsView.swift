@@ -15,6 +15,10 @@ struct SettingsView: View {
     @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
     @AppStorage(Prefs.Key.leadingSpace) private var leadingSpace = false
     @AppStorage(Prefs.Key.keepRecordings) private var keepRecordings = false
+    @AppStorage(Prefs.Key.triggerMode) private var triggerMode = Prefs.TriggerMode.hold.rawValue
+    @AppStorage(Prefs.Key.doubleTapLock) private var doubleTapLock = true
+    @AppStorage(Prefs.Key.inputDeviceUID) private var inputDeviceUID = ""
+    @State private var devices = InputDevices.all()
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var advanced = false
 
@@ -57,6 +61,17 @@ struct SettingsView: View {
                         .foregroundStyle(.secondary)
                     }
                 }
+                Picker("Trigger", selection: $triggerMode) {
+                    ForEach(Prefs.TriggerMode.allCases) { Text($0.label).tag($0.rawValue) }
+                }
+                if triggerMode == Prefs.TriggerMode.hold.rawValue {
+                    Toggle("Double-tap to keep listening", isOn: $doubleTapLock)
+                    Text("Tap the trigger twice and \(Brand.name) keeps listening hands-free until you tap it again or press Esc.")
+                        .font(.callout).foregroundStyle(.secondary)
+                } else {
+                    Text("One tap starts, the next tap stops. The pill stays up the whole time.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
                 Toggle("Smart cleanup", isOn: $smart)
                 Text("Fixes false starts and self-corrections with Apple Intelligence, on this Mac. Never adds anything. Tone lives under Style.")
                     .font(.callout).foregroundStyle(.secondary)
@@ -76,6 +91,16 @@ struct SettingsView: View {
                     .font(.callout).foregroundStyle(.secondary)
             }
 
+            Section("Microphone") {
+                Picker("Input", selection: $inputDeviceUID) {
+                    Text("System default" + (InputDevices.defaultInput().map { " (\($0.name))" } ?? "")).tag("")
+                    ForEach(devices) { Text($0.name).tag($0.uid) }
+                }
+                .onAppear { devices = InputDevices.all() }
+                LabeledContent("Level") { MicMeter(deviceUID: inputDeviceUID) }
+                Text("Press Test and speak normally: the bar should reach the middle. AirPods and other Bluetooth mics take a moment to wake up.")
+                    .font(.callout).foregroundStyle(.secondary)
+            }
             Section("Indicator") {
                 LabeledContent("Position") {
                     PositionGrid(selection: $hudPosition)
