@@ -44,7 +44,16 @@ final class DictationController {
         hotkey.onPress = { [weak self] in self?.press() }
         hotkey.onRelease = { [weak self] in self?.release() }
         hotkey.onEscape = { [weak self] in self?.cancel() }
-        hotkey.isActive = { [weak state] in state?.phase.isActive ?? false }
+        watchActive()
+    }
+
+    /// Keep the tap thread's "session active" flag in sync with the phase.
+    private func watchActive() {
+        withObservationTracking {
+            hotkey.setActive(state.phase.isActive)
+        } onChange: { [weak self] in
+            Task { @MainActor in self?.watchActive() }
+        }
     }
 
     func start() {

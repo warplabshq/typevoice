@@ -1,64 +1,34 @@
+import AppKit
 import SwiftUI
 
-/// Voice-reactive bars, kept calm: band energies (low → high) laid out from the
-/// centre, smoothed across neighbours so the outline reads as one fluid shape,
-/// eased per frame with a soft attack and a slow, even release. No glow, no caps.
-struct WaveformView: View {
-    /// Band energies 0…1, low → high.
-    let bands: [Float]
+/// Voice-reactive bars on Core Animation layers. Each bar is a CALayer; an
+/// update is a handful of property sets and the render server interpolates
+/// between them, so the main thread does almost nothing per frame.
+struct WaveformView: NSViewRepresentable {
+    /// Band energies 0…1, low → high. Ignored when `demo` is on.
+    var bands: [Float] = []
     var bars = 18
     var barWidth: CGFloat = 2
     var gap: CGFloat = 2.5
     var color: Color = Theme.accent
-    var excited = false          // hover: slightly larger swing
+    var excited = false
+    /// Self-driven synthetic voice for previews.
+    var demo = false
 
-    @State private var display: [CGFloat] = []
-    @State private var lastTick: Date = .distantPast
-
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 60)) { ctx in
-            Canvas { g, size in
-                let n = bars
-                let targets = Self.targets(bands: bands, bars: n)
-                var disp = display.count == n ? display : Array(repeating: CGFloat(0), count: n)
-                let dt = min(0.05, max(0.004, ctx.date.timeIntervalSince(lastTick)))
-                let t = ctx.date.timeIntervalSinceReferenceDate
-                let energy = targets.reduce(0, +) / CGFloat(max(n, 1))
-
-                // Soft attack, slow release. Frame-rate independent.
-                let up = 1 - pow(0.001, dt * 3.2), down = 1 - pow(0.001, dt * 1.6)
-                for i in 0..<n {
-                    let target = targets[i]
-                    disp[i] += (target - disp[i]) * (target > disp[i] ? up : down)
-                }
-
-                let breathing = energy < 0.02
-                let totalW = CGFloat(n) * (barWidth + gap) - gap
-                var x = (size.width - totalW) / 2
-                let midY = size.height / 2
-                let maxH = size.height * (excited ? 0.9 : 0.82)
-                let half = CGFloat(n - 1) / 2
-
-                for i in 0..<n {
-                    var v = disp[i]
-                    if breathing { v = 0.07 + 0.03 * CGFloat(sin(t * 1.4 + Double(i) * 0.4)) }
-                    let h = max(2, v * maxH)
-                    let rect = CGRect(x: x, y: midY - h / 2, width: barWidth, height: h)
-                    // Even brightness, a touch softer at the edges.
-                    let edge = abs(CGFloat(i) - half) / max(half, 1)
-                    let alpha = 0.95 - 0.3 * Double(edge)
-                    g.fill(Path(roundedRect: rect, cornerRadius: barWidth / 2), with: .color(color.opacity(alpha)))
-                    x += barWidth + gap
-                }
-
-                DispatchQueue.main.async { display = disp; lastTick = ctx.date }
-            }
-        }
-        .drawingGroup()
+    func makeNSView(context: Context) -> BarsView {
+        let v = BarsView()
+        v.configure(bars: bars, barWidth: barWidth, gap: gap, color: NSColor(color), excited: excited)
+        if demo { v.startDemo() } else { v.apply(bands: bands) }
+        return v
     }
 
-    /// Centre bars take the low bands, edges the high bands; then a 3-tap blur
-    /// across neighbours so the outline flows instead of flickering bar by bar.
+    func updateNSView(_ v: BarsView, context: Context) {
+        v.configure(bars: bars, barWidth: barWidth, gap: gap, color: NSColor(color), excited: excited)
+        if demo { v.startDemo() } else { v.apply(bands: bands) }
+    }
+
+    /// Centre bars take the low bands, edges the high bands; a 3-tap blur across
+    /// neighbours makes the outline flow instead of flicker bar by bar.
     static func targets(bands: [Float], bars: Int) -> [CGFloat] {
         guard !bands.isEmpty, bars > 0 else { return Array(repeating: 0, count: bars) }
         let half = CGFloat(bars - 1) / 2
@@ -77,6 +47,158 @@ struct WaveformView: View {
             raw = out
         }
         return raw
+    }
+}
+
+final class BarsView: NSView {
+    private var barLayers: [CALayer] = []
+    private var bars = 18
+    private var barWidth: CGFloat = 2
+    private var gap: CGFloat = 2.5
+    private var color = NSColor.white
+    private var excited = false
+    private var breathing = false
+    private var demoTimer: Timer?
+    private var demoStart = Date()
+
+    override init(frame: NSRect) {
+        super.init(frame: frame)
+        wantsLayer = true
+        layer?.masksToBounds = false
+    }
+    required init?(coder: NSCoder) { fatalError() }
+    deinit { demoTimer?.invalidate() }
+
+    override var isFlipped: Bool { true }
+
+    func configure(bars: Int, barWidth: CGFloat, gap: CGFloat, color: NSColor, excited: Bool) {
+        let rebuild = bars != self.bars || barLayers.isEmpty
+        self.bars = bars; self.barWidth = barWidth; self.gap = gap; self.excited = excited
+        if !color.isEqual(self.color) || rebuild {
+            self.color = color
+            for (i, l) in barLayers.enumerated() { l.backgroundColor = colorFor(i).cgColor }
+        }
+        if rebuild {
+            barLayers.forEach { $0.removeFromSuperlayer() }
+            barLayers = (0..<bars).map { i in
+                let l = CALayer()
+                l.backgroundColor = colorFor(i).cgColor
+                l.cornerRadius = barWidth / 2
+                l.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+                layer?.addSublayer(l)
+                return l
+            }
+            layoutBars(heights: Array(repeating: 2, count: bars), animated: false)
+        }
+    }
+
+    override func setFrameSize(_ newSize: NSSize) {
+        super.setFrameSize(newSize)
+        layoutBars(heights: barLayers.map { $0.bounds.height }, animated: false)
+    }
+
+    override func viewDidMoveToWindow() {
+        super.viewDidMoveToWindow()
+        layer?.contentsScale = window?.backingScaleFactor ?? 2
+        barLayers.forEach { $0.contentsScale = window?.backingScaleFactor ?? 2 }
+        layoutBars(heights: barLayers.map { $0.bounds.height }, animated: false)
+    }
+
+    private func colorFor(_ i: Int) -> NSColor {
+        let half = CGFloat(max(bars - 1, 1)) / 2
+        let edge = abs(CGFloat(i) - half) / max(half, 1)
+        return color.withAlphaComponent(0.95 - 0.3 * edge)
+    }
+
+    private func snap(_ v: CGFloat) -> CGFloat {
+        let scale = window?.backingScaleFactor ?? 2
+        return (v * scale).rounded() / scale
+    }
+
+    private func layoutBars(heights: [CGFloat], animated: Bool, rising: [Bool]? = nil) {
+        guard barLayers.count == bars, heights.count == bars else { return }
+        let bw = snap(barWidth), gp = snap(gap)
+        let totalW = CGFloat(bars) * (bw + gp) - gp
+        var x = snap((bounds.width - totalW) / 2)
+        let midY = snap(bounds.height / 2)
+        CATransaction.begin()
+        CATransaction.setDisableActions(!animated)
+        if animated {
+            CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeOut))
+        }
+        for (i, l) in barLayers.enumerated() {
+            let h = max(snap(2), snap(heights[i]))
+            if animated {
+                // Faster up, slower down: the classic meter feel.
+                let up = rising?[i] ?? true
+                CATransaction.setAnimationDuration(up ? 0.09 : 0.22)
+            }
+            l.bounds = CGRect(x: 0, y: 0, width: bw, height: h)
+            l.position = CGPoint(x: x + bw / 2, y: midY)
+            l.cornerRadius = bw / 2
+            x += bw + gp
+        }
+        CATransaction.commit()
+    }
+
+    /// Feed real band energies (0…1, low → high).
+    func apply(bands: [Float]) {
+        stopDemo()
+        let targets = WaveformView.targets(bands: bands, bars: bars)
+        let energy = targets.reduce(0, +) / CGFloat(max(bars, 1))
+        if energy < 0.02 { startBreathing(); return }
+        stopBreathing()
+        let maxH = bounds.height * (excited ? 0.9 : 0.82)
+        let heights = targets.map { $0 * maxH }
+        let rising = zip(heights, barLayers).map { $0 > $1.presentation()?.bounds.height ?? $1.bounds.height }
+        layoutBars(heights: heights, animated: true, rising: rising)
+    }
+
+    // MARK: Idle breathing
+
+    private func startBreathing() {
+        guard !breathing else { return }
+        breathing = true
+        let base = max(2, bounds.height * 0.07)
+        for (i, l) in barLayers.enumerated() {
+            let a = CABasicAnimation(keyPath: "bounds.size.height")
+            a.fromValue = base * 0.6
+            a.toValue = base * 1.4
+            a.duration = 1.6
+            a.autoreverses = true
+            a.repeatCount = .infinity
+            a.timeOffset = Double(i) * 0.09
+            a.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
+            l.add(a, forKey: "breathe")
+        }
+        layoutBars(heights: Array(repeating: base, count: bars), animated: true)
+    }
+
+    private func stopBreathing() {
+        guard breathing else { return }
+        breathing = false
+        barLayers.forEach { $0.removeAnimation(forKey: "breathe") }
+    }
+
+    // MARK: Demo
+
+    func startDemo() {
+        guard demoTimer == nil else { return }
+        demoStart = Date()
+        let t = Timer(timeInterval: 1 / 30, repeats: true) { [weak self] _ in
+            guard let self, let w = self.window, w.isVisible, !w.isMiniaturized else { return }
+            let time = Date().timeIntervalSince(self.demoStart)
+            let targets = WaveformView.targets(bands: DemoBands.at(time), bars: self.bars)
+            let maxH = self.bounds.height * 0.82
+            self.layoutBars(heights: targets.map { $0 * maxH }, animated: true)
+        }
+        RunLoop.main.add(t, forMode: .common)
+        demoTimer = t
+    }
+
+    private func stopDemo() {
+        demoTimer?.invalidate()
+        demoTimer = nil
     }
 }
 

@@ -102,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func showMain(tab: MainTab? = nil) {
         if let tab { mainTab = tab }
         if main == nil {
-            let host = NSHostingController(rootView: MainRoot(delegate: self).environment(\.controlActiveState, .key))
+            let host = NSHostingController(rootView: MainRoot(delegate: self))
             let w = NSWindow(contentViewController: host)
             w.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             w.titlebarAppearsTransparent = false

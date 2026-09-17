@@ -1,6 +1,7 @@
 import AppKit
 import Carbon.HIToolbox
 import KeyboardShortcuts
+import os
 
 extension KeyboardShortcuts.Name {
     static let dictate = Self("dictate")
@@ -9,18 +10,24 @@ extension KeyboardShortcuts.Name {
 /// Global trigger for dictation. Fn/Globe via a CGEventTap on `flagsChanged`,
 /// or a user-chosen shortcut via KeyboardShortcuts. Also swallows Escape while
 /// a session is active so the host app never sees it.
+///
+/// The tap lives on its own thread with its own run loop, so a busy main
+/// thread can never delay or drop a key press.
 @MainActor
 final class HotkeyMonitor {
     var onPress: () -> Void = {}
     var onRelease: () -> Void = {}
     var onEscape: () -> Void = {}
-    /// Return true while a session is active so Escape gets consumed.
-    var isActive: () -> Bool = { false }
     /// True after `start()` if the global event tap could be installed.
     private(set) var tapInstalled = false
 
+    /// Mirrors "a session is active" for the tap thread (decides whether to eat Escape).
+    private let activeFlag = OSAllocatedUnfairLock(initialState: false)
+    func setActive(_ on: Bool) { activeFlag.withLock { $0 = on } }
+
     private var tap: CFMachPort?
-    private var runLoopSource: CFRunLoopSource?
+    private var tapThread: Thread?
+    private var tapRunLoop: CFRunLoop?
     private var fallbackMonitors: [Any] = []
     private var fnDown = false
     private var trigger: Prefs.Trigger = .fn
@@ -33,18 +40,16 @@ final class HotkeyMonitor {
             if !installTap() { installFallbackMonitor() }
         case .custom:
             installCustomShortcut()
-            // Still need Escape handling; tap for keyDown only if we can.
             if !installTap(keyDownOnly: true) { installFallbackMonitor() }
         }
     }
 
     func stop() {
-        if let source = runLoopSource {
-            CFRunLoopRemoveSource(CFRunLoopGetMain(), source, .commonModes)
-        }
         if let tap { CGEvent.tapEnable(tap: tap, enable: false) }
+        if let rl = tapRunLoop { CFRunLoopStop(rl) }
         tap = nil
-        runLoopSource = nil
+        tapRunLoop = nil
+        tapThread = nil
         for m in fallbackMonitors { NSEvent.removeMonitor(m) }
         fallbackMonitors.removeAll()
         KeyboardShortcuts.disable(.dictate)
@@ -52,7 +57,7 @@ final class HotkeyMonitor {
         tapInstalled = false
     }
 
-    // MARK: Fn via CGEventTap
+    // MARK: Fn via CGEventTap on a dedicated thread
 
     private func installTap(keyDownOnly: Bool = false) -> Bool {
         var mask: CGEventMask = 1 << CGEventType.keyDown.rawValue
@@ -64,7 +69,7 @@ final class HotkeyMonitor {
             place: .headInsertEventTap,
             options: .defaultTap,
             eventsOfInterest: mask,
-            callback: { proxy, type, event, refcon in
+            callback: { _, type, event, refcon in
                 guard let refcon else { return Unmanaged.passUnretained(event) }
                 let monitor = Unmanaged<HotkeyMonitor>.fromOpaque(refcon).takeUnretainedValue()
                 return monitor.handle(type: type, event: event)
@@ -77,38 +82,44 @@ final class HotkeyMonitor {
         }
         self.tap = tap
         tapInstalled = true
-        let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
-        runLoopSource = source
-        CFRunLoopAddSource(CFRunLoopGetMain(), source, .commonModes)
-        CGEvent.tapEnable(tap: tap, enable: true)
-        Log.app.info("Event tap installed (\(keyDownOnly ? "keyDown" : "flagsChanged+keyDown"))")
+
+        let ready = DispatchSemaphore(value: 0)
+        let thread = Thread { [tap] in
+            let source = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+            let rl = CFRunLoopGetCurrent()
+            CFRunLoopAddSource(rl, source, .commonModes)
+            CGEvent.tapEnable(tap: tap, enable: true)
+            DispatchQueue.main.async { [weak self] in self?.tapRunLoop = rl }
+            ready.signal()
+            CFRunLoopRun()
+        }
+        thread.name = "murmur.hotkey"
+        thread.qualityOfService = .userInteractive
+        thread.start()
+        tapThread = thread
+        _ = ready.wait(timeout: .now() + 1)
+        Log.app.info("Event tap installed on its own thread (\(keyDownOnly ? "keyDown" : "flagsChanged+keyDown"))")
         Log.d("event tap installed")
         return true
     }
 
-    /// Runs on the main run loop (the tap source is scheduled there). Keep it tiny.
+    /// Runs on the tap thread. Keep it tiny; anything UI-related hops to main.
     nonisolated private func handle(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
         switch type {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
-            MainActor.assumeIsolated {
-                if let tap { CGEvent.tapEnable(tap: tap, enable: true) }
-            }
+            Task { @MainActor in if let tap = self.tap { CGEvent.tapEnable(tap: tap, enable: true) } }
             return Unmanaged.passUnretained(event)
 
         case .flagsChanged:
             let isFn = event.flags.contains(.maskSecondaryFn)
-            MainActor.assumeIsolated { fnChanged(isDown: isFn) }
+            Task { @MainActor in self.fnChanged(isDown: isFn) }
             return Unmanaged.passUnretained(event)
 
         case .keyDown:
             let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
-            if keyCode == kVK_Escape {
-                let consumed = MainActor.assumeIsolated { () -> Bool in
-                    guard isActive() else { return false }
-                    onEscape()
-                    return true
-                }
-                if consumed { return nil }
+            if keyCode == kVK_Escape, activeFlag.withLock({ $0 }) {
+                Task { @MainActor in self.onEscape() }
+                return nil   // swallowed
             }
             return Unmanaged.passUnretained(event)
 
@@ -137,7 +148,7 @@ final class HotkeyMonitor {
         let k = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] e in
             guard e.keyCode == UInt16(kVK_Escape) else { return }
             Task { @MainActor in
-                guard let self, self.isActive() else { return }
+                guard let self, self.activeFlag.withLock({ $0 }) else { return }
                 self.onEscape()
             }
         }

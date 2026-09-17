@@ -9,9 +9,9 @@ struct TypeOnText: View {
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 60)) { ctx in
-            let elapsed = ctx.date.timeIntervalSince(start)
+            let elapsed = max(0, ctx.date.timeIntervalSince(start))
             let per = min(0.012, 0.4 / Double(max(text.count, 1)))
-            let n = min(text.count, Int(elapsed / per))
+            let n = max(0, min(text.count, Int(elapsed / per)))
             let finished = n >= text.count
             HStack(spacing: 10) {
                 HuggingText(text: String(text.prefix(n)), maxWidth: maxWidth - 30)

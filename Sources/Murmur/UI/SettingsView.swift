@@ -172,20 +172,17 @@ private struct AccentSwatches: View {
     }
 }
 
-/// The pill exactly as it will look, on a dark swatch so the glass reads.
+/// The pill exactly as it will look. The bars drive themselves on a timer, so
+/// SwiftUI does no per-frame work here.
 struct PillPreview: View {
     let accent: Prefs.Accent
     var look: Prefs.PillLook = Prefs.pillLook
     var shadow: Prefs.PillShadow = Prefs.pillShadow
 
     var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30)) { ctx in
-            let t = ctx.date.timeIntervalSinceReferenceDate
-            let bands = DemoBands.at(t)
-            WaveformView(bands: bands, barWidth: 2.5, gap: 2, color: Theme.color(for: accent))
-                .frame(width: 84, height: 20)
-                .pillChrome(look: look, shadow: shadow)
-                .padding(.vertical, 6)
-        }
+        WaveformView(barWidth: 2.5, gap: 2, color: Theme.color(for: accent), demo: true)
+            .frame(width: 84, height: 20)
+            .pillChrome(look: look, shadow: shadow)
+            .padding(.vertical, 6)
     }
 }

@@ -30,10 +30,8 @@ struct HUDView: View {
     }
 
     private var pill: some View {
-        GlassEffectContainer(spacing: 0) {
-            content.pillChrome()
-        }
-        .scaleEffect(shown ? (hovering && phase.isListening ? 1.03 : 1) : 0.9,
+        content.pillChrome()
+        .scaleEffect(shown ? 1 : 0.9,
                      anchor: UnitPoint(x: [0.0, 0.5, 1.0][position.horizontal], y: position.isTop ? 0 : 1))
         .opacity(shown ? 1 : 0)
         .blur(radius: shown ? 0 : 5)

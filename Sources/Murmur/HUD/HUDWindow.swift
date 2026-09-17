@@ -29,8 +29,7 @@ final class HUDWindow: NSPanel {
         isReleasedWhenClosed = false
         animationBehavior = .none
         isFloatingPanel = true
-        contentView = NSHostingView(rootView: HUDView(state: state, onCopy: { [weak self] in self?.onCopy() })
-            .environment(\.controlActiveState, .key))
+        contentView = NSHostingView(rootView: HUDView(state: state, onCopy: { [weak self] in self?.onCopy() }))
     }
 
     /// The pill is click-through except when it has a button to press.

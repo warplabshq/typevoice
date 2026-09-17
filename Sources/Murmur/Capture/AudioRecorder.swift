@@ -10,6 +10,7 @@ final class AudioRecorder: @unchecked Sendable {
     /// Per-band energies 0…1 (low → high), same cadence.
     var onBands: (@Sendable ([Float]) -> Void)?
     private var spectrum: Spectrum?
+    private var bandTick = 0
 
     private let engine = AVAudioEngine()
     private let lock = NSLock()
@@ -85,7 +86,11 @@ final class AudioRecorder: @unchecked Sendable {
         if let spectrum {
             // Gate opens quickly once there is any signal above the noise floor.
             let gate = min(1, max(0, (db + 52) / 14))
-            onBands?(spectrum.analyze(p, count: n, gate: gate))
+            let bands = spectrum.analyze(p, count: n, gate: gate)
+            // Analyse every buffer (keeps the smoothing honest) but deliver ~30×/s.
+            bandTick += 1
+            let every = max(1, Int((buffer.format.sampleRate / Double(n)) / 30))
+            if bandTick % every == 0 { onBands?(bands) }
         }
 
         // Resample to 16 kHz mono.

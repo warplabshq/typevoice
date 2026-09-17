@@ -51,24 +51,23 @@ struct PillChrome: ViewModifier {
             .padding(.vertical, 8)
             .background {
                 ZStack {
-                    // Glass underneath for refraction; its inactive-window lightening is
-                    // covered by the explicit black layer above it. "Black" skips the glass
-                    // altogether so it is truly black on any wallpaper.
+                    // Glass underneath for refraction; "Black" skips it so it is truly black.
                     if look != .black {
                         Capsule().fill(.clear).glassEffect(.regular, in: .capsule)
                     }
-                    Capsule().fill(Color.black.opacity(look.tint))
+                    // The shadow lives on this static shape, never on the animating content,
+                    // so nothing is re-rasterised per frame and the bars stay crisp.
+                    Capsule()
+                        .fill(Color.black.opacity(look.tint))
+                        .shadow(color: .black.opacity(shadowAlpha(0.28, 0.45)), radius: shadowRadius, y: shadowY)
+                        .shadow(color: .black.opacity(shadowAlpha(0.16, 0.25)), radius: shadow == .none ? 0 : 2, y: shadow == .none ? 0 : 1)
+                    Capsule().strokeBorder(
+                        LinearGradient(colors: [.white.opacity(look == .glass ? 0.22 : 0.14), .white.opacity(0.03)],
+                                       startPoint: .top, endPoint: .bottom),
+                        lineWidth: 0.6
+                    )
                 }
             }
-            .overlay(
-                Capsule().strokeBorder(
-                    LinearGradient(colors: [.white.opacity(look == .glass ? 0.22 : 0.14), .white.opacity(0.03)],
-                                   startPoint: .top, endPoint: .bottom),
-                    lineWidth: 0.6
-                )
-            )
-            .shadow(color: .black.opacity(shadowAlpha(0.28, 0.45)), radius: shadowRadius, y: shadowY)
-            .shadow(color: .black.opacity(shadowAlpha(0.16, 0.25)), radius: shadow == .none ? 0 : 2, y: shadow == .none ? 0 : 1)
     }
 
     private func shadowAlpha(_ soft: Double, _ strong: Double) -> Double {
