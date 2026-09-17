@@ -10,6 +10,10 @@ struct Dictation: Identifiable, Codable, Sendable, Equatable, Hashable {
     var seconds: Double
     var words: Int = 0
     var latencyMs: Int? = nil
+    /// Database row id, used as the paging cursor for searches. Not persisted in exports.
+    var rowid: Int64? = nil
+
+    enum CodingKeys: String, CodingKey { case id, text, date, appName, bundleID, seconds, words, latencyMs }
 
     static func wordCount(_ s: String) -> Int {
         s.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
@@ -73,7 +77,7 @@ final class HistoryStore {
     }
 
     func reload() {
-        let page = db.page(query: query, before: nil, limit: Self.pageSize)
+        let page = db.page(query: query, before: nil, beforeRow: nil, limit: Self.pageSize)
         entries = page
         hasMore = page.count == Self.pageSize
         stats = db.stats()
@@ -81,7 +85,7 @@ final class HistoryStore {
 
     func loadMore() {
         guard hasMore, let last = entries.last else { return }
-        let page = db.page(query: query, before: last.date, limit: Self.pageSize)
+        let page = db.page(query: query, before: last.date, beforeRow: last.rowid, limit: Self.pageSize)
         entries += page
         hasMore = page.count == Self.pageSize
     }
@@ -93,7 +97,7 @@ final class HistoryStore {
         var out: [Dictation] = []
         var before: Date? = nil
         while true {
-            let page = db.page(query: nil, before: before, limit: 2000)
+            let page = db.page(query: nil, before: before, beforeRow: nil, limit: 2000)
             out += page
             if page.count < 2000 { break }
             before = page.last?.date

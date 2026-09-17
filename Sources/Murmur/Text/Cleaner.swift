@@ -33,7 +33,8 @@ enum Cleaner {
         }
 
         // Whitespace and punctuation hygiene.
-        s = s.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"[ \t]+"#, with: " ", options: .regularExpression)
+        s = s.replacingOccurrences(of: #" *\n *"#, with: "\n", options: .regularExpression)
         s = s.replacingOccurrences(of: #"\s+([,.!?;:])"#, with: "$1", options: .regularExpression)
         s = s.replacingOccurrences(of: #"([,.!?;:])(?=[A-Za-z])"#, with: "$1 ", options: .regularExpression)
         s = s.replacingOccurrences(of: #"^[,.;:\s]+"#, with: "", options: .regularExpression)

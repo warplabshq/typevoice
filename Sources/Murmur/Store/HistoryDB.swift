@@ -29,6 +29,14 @@ final class HistoryDB: @unchecked Sendable {
                 app TEXT NOT NULL, bundle TEXT, seconds REAL NOT NULL, words INTEGER NOT NULL, latency_ms INTEGER
             );
             CREATE INDEX IF NOT EXISTS dictations_date ON dictations(date DESC);
+            CREATE INDEX IF NOT EXISTS dictations_date_words ON dictations(date, words, seconds);
+            CREATE TABLE IF NOT EXISTS totals(id INTEGER PRIMARY KEY CHECK (id = 1), count INTEGER NOT NULL, words INTEGER NOT NULL, seconds REAL NOT NULL);
+            INSERT OR IGNORE INTO totals(id, count, words, seconds)
+                SELECT 1, COUNT(*), COALESCE(SUM(words),0), COALESCE(SUM(seconds),0) FROM dictations;
+            CREATE TRIGGER IF NOT EXISTS t_ai AFTER INSERT ON dictations BEGIN
+                UPDATE totals SET count = count + 1, words = words + new.words, seconds = seconds + new.seconds WHERE id = 1; END;
+            CREATE TRIGGER IF NOT EXISTS t_ad AFTER DELETE ON dictations BEGIN
+                UPDATE totals SET count = count - 1, words = words - old.words, seconds = seconds - old.seconds WHERE id = 1; END;
             CREATE VIRTUAL TABLE IF NOT EXISTS dictations_fts USING fts5(text, content='dictations', content_rowid='rowid', tokenize='porter unicode61');
             CREATE TRIGGER IF NOT EXISTS d_ai AFTER INSERT ON dictations BEGIN
                 INSERT INTO dictations_fts(rowid, text) VALUES (new.rowid, new.text); END;
@@ -43,7 +51,7 @@ final class HistoryDB: @unchecked Sendable {
     // MARK: Writes
 
     func insert(_ d: Dictation) {
-        q.sync {
+        q.async { [self] in
             let sql = "INSERT OR REPLACE INTO dictations(id,text,date,app,bundle,seconds,words,latency_ms) VALUES(?,?,?,?,?,?,?,?)"
             var st: OpaquePointer?
             guard sqlite3_prepare_v2(db, sql, -1, &st, nil) == SQLITE_OK else { return }
@@ -71,71 +79,87 @@ final class HistoryDB: @unchecked Sendable {
     }
 
     func clear() {
-        q.sync { exec("DELETE FROM dictations; INSERT INTO dictations_fts(dictations_fts) VALUES('rebuild'); VACUUM;") }
+        q.sync { exec("DELETE FROM dictations; UPDATE totals SET count = 0, words = 0, seconds = 0 WHERE id = 1; INSERT INTO dictations_fts(dictations_fts) VALUES('rebuild'); VACUUM;") }
     }
 
     // MARK: Reads
 
-    func page(query: String?, before: Date?, limit: Int) -> [Dictation] {
+    func page(query: String?, before: Date?, beforeRow: Int64?, limit: Int) -> [Dictation] {
         q.sync {
-            var sql: String
             let trimmed = query?.trimmingCharacters(in: .whitespaces) ?? ""
             if trimmed.isEmpty {
-                sql = "SELECT id,text,date,app,bundle,seconds,words,latency_ms FROM dictations WHERE (? IS NULL OR date < ?) ORDER BY date DESC LIMIT ?"
-            } else {
-                sql = """
-                SELECT d.id,d.text,d.date,d.app,d.bundle,d.seconds,d.words,d.latency_ms FROM dictations d
-                JOIN dictations_fts f ON f.rowid = d.rowid
-                WHERE dictations_fts MATCH ? AND (? IS NULL OR d.date < ?) ORDER BY d.date DESC LIMIT ?
-                """
+                return rows(sql: "SELECT rowid,id,text,date,app,bundle,seconds,words,latency_ms FROM dictations WHERE (? IS NULL OR date < ?) ORDER BY date DESC LIMIT ?") { st in
+                    if let b = before { sqlite3_bind_double(st, 1, b.timeIntervalSince1970); sqlite3_bind_double(st, 2, b.timeIntervalSince1970) }
+                    else { sqlite3_bind_null(st, 1); sqlite3_bind_null(st, 2) }
+                    sqlite3_bind_int(st, 3, Int32(limit))
+                }
             }
+            // Two steps: let FTS5 walk matches newest-first by rowid (cheap even when a
+            // common word matches everything), then fetch just those rows.
+            var ids: [Int64] = []
             var st: OpaquePointer?
-            guard sqlite3_prepare_v2(db, sql, -1, &st, nil) == SQLITE_OK else {
-                Log.app.error("sqlite page: \(String(cString: sqlite3_errmsg(self.db)))"); return []
+            let ftsSQL = "SELECT rowid FROM dictations_fts WHERE dictations_fts MATCH ? AND (? IS NULL OR rowid < ?) ORDER BY rowid DESC LIMIT ?"
+            guard sqlite3_prepare_v2(db, ftsSQL, -1, &st, nil) == SQLITE_OK else {
+                Log.app.error("sqlite fts: \(String(cString: sqlite3_errmsg(self.db)))"); return []
             }
-            defer { sqlite3_finalize(st) }
-            var i: Int32 = 1
-            if !trimmed.isEmpty { bind(st, i, Self.ftsQuery(trimmed)); i += 1 }
-            if let b = before { sqlite3_bind_double(st, i, b.timeIntervalSince1970); sqlite3_bind_double(st, i + 1, b.timeIntervalSince1970) }
-            else { sqlite3_bind_null(st, i); sqlite3_bind_null(st, i + 1) }
-            sqlite3_bind_int(st, i + 2, Int32(limit))
-            var out: [Dictation] = []
-            while sqlite3_step(st) == SQLITE_ROW {
-                out.append(Dictation(
-                    id: UUID(uuidString: col(st, 0)) ?? UUID(),
-                    text: col(st, 1),
-                    date: Date(timeIntervalSince1970: sqlite3_column_double(st, 2)),
-                    appName: col(st, 3),
-                    bundleID: sqlite3_column_type(st, 4) == SQLITE_NULL ? nil : col(st, 4),
-                    seconds: sqlite3_column_double(st, 5),
-                    words: Int(sqlite3_column_int(st, 6)),
-                    latencyMs: sqlite3_column_type(st, 7) == SQLITE_NULL ? nil : Int(sqlite3_column_int(st, 7))
-                ))
-            }
-            return out
+            bind(st, 1, Self.ftsQuery(trimmed))
+            if let r = beforeRow { sqlite3_bind_int64(st, 2, r); sqlite3_bind_int64(st, 3, r) } else { sqlite3_bind_null(st, 2); sqlite3_bind_null(st, 3) }
+            sqlite3_bind_int(st, 4, Int32(limit))
+            while sqlite3_step(st) == SQLITE_ROW { ids.append(sqlite3_column_int64(st, 0)) }
+            sqlite3_finalize(st)
+            guard !ids.isEmpty else { return [] }
+            let list = ids.map(String.init).joined(separator: ",")
+            return rows(sql: "SELECT rowid,id,text,date,app,bundle,seconds,words,latency_ms FROM dictations WHERE rowid IN (\(list)) ORDER BY rowid DESC") { _ in }
         }
     }
 
+    /// Runs a SELECT with the standard column order and maps rows.
+    private func rows(sql: String, bind bindValues: (OpaquePointer?) -> Void) -> [Dictation] {
+        var st: OpaquePointer?
+        guard sqlite3_prepare_v2(db, sql, -1, &st, nil) == SQLITE_OK else {
+            Log.app.error("sqlite page: \(String(cString: sqlite3_errmsg(self.db)))"); return []
+        }
+        defer { sqlite3_finalize(st) }
+        bindValues(st)
+        var out: [Dictation] = []
+        while sqlite3_step(st) == SQLITE_ROW {
+            var d = Dictation(
+                id: UUID(uuidString: col(st, 1)) ?? UUID(),
+                text: col(st, 2),
+                date: Date(timeIntervalSince1970: sqlite3_column_double(st, 3)),
+                appName: col(st, 4),
+                bundleID: sqlite3_column_type(st, 5) == SQLITE_NULL ? nil : col(st, 5),
+                seconds: sqlite3_column_double(st, 6),
+                words: Int(sqlite3_column_int(st, 7)),
+                latencyMs: sqlite3_column_type(st, 8) == SQLITE_NULL ? nil : Int(sqlite3_column_int(st, 8))
+            )
+            d.rowid = sqlite3_column_int64(st, 0)
+            out.append(d)
+        }
+        return out
+    }
+
+    /// O(1) totals from the maintained `totals` row plus an index-range scan for the week.
     func stats() -> Stats {
         q.sync {
             var s = Stats()
-            let weekAgo = Date().addingTimeInterval(-7 * 86400).timeIntervalSince1970
             var st: OpaquePointer?
-            let sql = """
-            SELECT COUNT(*), COALESCE(SUM(words),0), COALESCE(SUM(seconds),0),
-                   COALESCE(SUM(CASE WHEN date > ? THEN 1 ELSE 0 END),0),
-                   COALESCE(SUM(CASE WHEN date > ? THEN words ELSE 0 END),0)
-            FROM dictations
-            """
-            guard sqlite3_prepare_v2(db, sql, -1, &st, nil) == SQLITE_OK else { return s }
-            defer { sqlite3_finalize(st) }
-            sqlite3_bind_double(st, 1, weekAgo); sqlite3_bind_double(st, 2, weekAgo)
-            if sqlite3_step(st) == SQLITE_ROW {
-                s.count = Int(sqlite3_column_int64(st, 0))
-                s.words = Int(sqlite3_column_int64(st, 1))
-                s.seconds = sqlite3_column_double(st, 2)
-                s.weekCount = Int(sqlite3_column_int64(st, 3))
-                s.weekWords = Int(sqlite3_column_int64(st, 4))
+            if sqlite3_prepare_v2(db, "SELECT count, words, seconds FROM totals WHERE id = 1", -1, &st, nil) == SQLITE_OK {
+                if sqlite3_step(st) == SQLITE_ROW {
+                    s.count = Int(sqlite3_column_int64(st, 0))
+                    s.words = Int(sqlite3_column_int64(st, 1))
+                    s.seconds = sqlite3_column_double(st, 2)
+                }
+                sqlite3_finalize(st)
+            }
+            let weekAgo = Date().addingTimeInterval(-7 * 86400).timeIntervalSince1970
+            if sqlite3_prepare_v2(db, "SELECT COUNT(*), COALESCE(SUM(words),0) FROM dictations WHERE date > ?", -1, &st, nil) == SQLITE_OK {
+                sqlite3_bind_double(st, 1, weekAgo)
+                if sqlite3_step(st) == SQLITE_ROW {
+                    s.weekCount = Int(sqlite3_column_int64(st, 0))
+                    s.weekWords = Int(sqlite3_column_int64(st, 1))
+                }
+                sqlite3_finalize(st)
             }
             return s
         }

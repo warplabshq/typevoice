@@ -215,13 +215,19 @@ final class DictationController {
                     // Model still loading: wait for it rather than losing the audio.
                     try await transcriber.warm { [weak self] p in Task { @MainActor in self?.state.warm = p } }
                 }
-                let raw = try await transcriber.transcribe(rec.samples)
+                let transcript = try await transcriber.transcribe(rec.samples)
                 try Task.checkCancellation()
+                var raw = transcript.text
                 Log.asr.info("raw: \(raw)")
                 Log.d("raw(\(String(format: "%.1f", rec.seconds))s): \(raw)")
 
+                // Paragraphs from real pauses (≥ 1 s after a sentence end), using word timings.
+                if Prefs.pauseParagraphs, !transcript.tokens.isEmpty {
+                    raw = Structure.paragraphs(Structure.words(text: raw, tokens: transcript.tokens), pause: 1.0)
+                }
                 let style = Style.current
                 var text = Cleaner.clean(raw, style: style)
+                if Prefs.voiceCommands { text = Structure.commands(text) }
                 if Prefs.numbersAsDigits { text = Numbers.apply(text) }
                 text = Vocabulary.apply(dictionary.terms, to: text)
                 if Prefs.smartCleanup {
@@ -260,7 +266,9 @@ final class DictationController {
                     let ms = min(2600, 700 + text.count * 12)
                     show(.done(text.trimmingCharacters(in: .whitespaces)), for: .milliseconds(ms))
                 } else {
-                    show(.done(""), for: .milliseconds(650))
+                    // Nothing to say: retreat into the edge right away.
+                    state.phase = .idle
+                    hud?.dismiss()
                 }
             } catch is CancellationError {
                 // cancelled by user

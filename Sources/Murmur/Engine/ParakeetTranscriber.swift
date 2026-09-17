@@ -48,14 +48,15 @@ actor ParakeetTranscriber: Transcriber {
         try await task.value
     }
 
-    func transcribe(_ samples: [Float]) async throws -> String {
+    func transcribe(_ samples: [Float]) async throws -> Transcript {
         guard let manager else { throw TranscriberError.notReady }
         let t0 = ContinuousClock.now
         var state = TdtDecoderState.make(decoderLayers: await manager.decoderLayerCount)
         let result = try await manager.transcribe(samples, decoderState: &state)
         Log.timing("asr.transcribe", since: t0)
         Log.asr.debug("asr \(String(format: "%.0f", result.duration * 1000))ms audio → \(String(format: "%.0f", result.processingTime * 1000))ms, conf \(result.confidence)")
-        return result.text
+        let tokens = (result.tokenTimings ?? []).map { (token: $0.token, start: $0.startTime, end: $0.endTime) }
+        return Transcript(text: result.text, tokens: tokens)
     }
 
     enum TranscriberError: LocalizedError {

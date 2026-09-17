@@ -26,15 +26,16 @@ struct HUDView: View {
         pill
             .padding(HUDWindow.margin)
             .frame(width: HUDWindow.canvas.width, height: HUDWindow.canvas.height, alignment: alignment)
-            .animation(Theme.spring, value: phase)
+            .animation(phase == .idle ? Theme.springSoft : Theme.spring, value: phase)
     }
 
     private var pill: some View {
         content.pillChrome()
-        .scaleEffect(shown ? 1 : 0.9,
+        // Enters from its edge and retreats into it: slide + fade + slight shrink.
+        .scaleEffect(shown ? 1 : 0.92,
                      anchor: UnitPoint(x: [0.0, 0.5, 1.0][position.horizontal], y: position.isTop ? 0 : 1))
+        .offset(y: shown ? 0 : (position.isTop ? -HUDWindow.margin - 14 : HUDWindow.margin + 14))
         .opacity(shown ? 1 : 0)
-        .blur(radius: shown ? 0 : 5)
     }
 
     @ViewBuilder
@@ -77,18 +78,10 @@ struct HUDView: View {
                 .id("processing")
 
         case .done(let text):
-            if text.isEmpty {
-                Image(systemName: "checkmark")
-                    .font(.system(size: 12, weight: .bold))
-                    .foregroundStyle(Theme.accent)
-                    .frame(width: 80)
-                    .transition(.blurFade)
-                    .id("done-check")
-            } else {
-                TypeOnText(text: text, maxWidth: 440)
-                    .transition(.blurFade)
-                    .id("done-\(text.hashValue)")
-            }
+            // Preview off: `.done("")` is never shown (the controller goes straight to idle).
+            TypeOnText(text: text, maxWidth: 440)
+                .transition(.blurFade)
+                .id("done-\(text.hashValue)")
 
         case .copyOffer(let text, let copied):
             HStack(spacing: 12) {

@@ -22,6 +22,8 @@ enum Prefs {
         static let pillLook = "pillLook"               // PillLook
         static let pillShadow = "pillShadow"           // PillShadow
         static let customShortcut = "customShortcut"   // Shortcut (JSON)
+        static let voiceCommands = "voiceCommands"     // Bool: new line / bullet / number one
+        static let pauseParagraphs = "pauseParagraphs" // Bool: paragraph after a pause
     }
 
     enum HUDPosition: String, CaseIterable, Identifiable {
@@ -99,6 +101,8 @@ enum Prefs {
             Key.showPreview: true,
             Key.pillLook: PillLook.black.rawValue,
             Key.pillShadow: PillShadow.soft.rawValue,
+            Key.voiceCommands: true,
+            Key.pauseParagraphs: true,
         ])
     }
 
@@ -119,6 +123,8 @@ enum Prefs {
     static var numbersAsDigits: Bool { d.bool(forKey: Key.numbersAsDigits) }
     static var showPreview: Bool { d.bool(forKey: Key.showPreview) }
     static var pillLook: PillLook { PillLook(rawValue: d.string(forKey: Key.pillLook) ?? "") ?? .black }
+    static var voiceCommands: Bool { d.bool(forKey: Key.voiceCommands) }
+    static var pauseParagraphs: Bool { d.bool(forKey: Key.pauseParagraphs) }
     static var pillShadow: PillShadow { PillShadow(rawValue: d.string(forKey: Key.pillShadow) ?? "") ?? .soft }
 
     /// "🌐" or the custom shortcut, for UI copy.

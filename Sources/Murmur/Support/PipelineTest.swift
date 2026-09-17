@@ -12,6 +12,16 @@ enum PipelineTest {
         if files.first == "vocab" {
             vocabSelfTest(); exit(0)
         }
+        if files.first == "structure" {
+            for c in ["Here's the plan. Number one, ship the build. Number two, write the changelog. Number three, post it.",
+                      "Things to buy, bullet milk, bullet eggs, bullet point bread.",
+                      "Thanks for the update. New paragraph. I'll review it tomorrow, new line, Priyam.",
+                      "The number one priority is speed.",
+                      "Step one open settings, step two, pick a shortcut."] {
+                print("\(c)\n  →\n\(Structure.commands(c).split(separator: "\n", omittingEmptySubsequences: false).map { "    |" + $0 }.joined(separator: "\n"))")
+            }
+            exit(0)
+        }
         if files.first == "itn" {
             let n = TextNormalizer.shared
             for c in ["the launch is in twenty twenty four", "I was born in nineteen ninety nine", "we need twenty four hours",
@@ -47,9 +57,17 @@ enum PipelineTest {
             do {
                 let samples = try load16k(URL(fileURLWithPath: f))
                 let t1 = ContinuousClock.now
-                let raw = try await transcriber.transcribe(samples)
+                let transcript = try await transcriber.transcribe(samples)
+                var raw = transcript.text
+                if ProcessInfo.processInfo.environment["MURMUR_TOKENS"] == "1" {
+                    for t in transcript.tokens { print(String(format: "  %6.2f-%6.2f  %@", t.start, t.end, t.token)) }
+                }
+                if Prefs.pauseParagraphs, !transcript.tokens.isEmpty {
+                    raw = Structure.paragraphs(Structure.words(text: raw, tokens: transcript.tokens), pause: 1.0)
+                }
                 let asrMs = Int((ContinuousClock.now - t1).ms)
                 var cleaned = Cleaner.clean(raw)
+                if Prefs.voiceCommands { cleaned = Structure.commands(cleaned) }
                 if Prefs.numbersAsDigits { cleaned = Numbers.apply(cleaned) }
                 let t2 = ContinuousClock.now
                 let smartOut = await smart.clean(cleaned)

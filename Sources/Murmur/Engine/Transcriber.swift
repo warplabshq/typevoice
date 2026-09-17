@@ -7,7 +7,13 @@ protocol Transcriber: Sendable {
     func warm(progress: @escaping @Sendable (WarmProgress) -> Void) async throws
     var isReady: Bool { get async }
     /// 16 kHz mono Float32 samples in, text out. Punctuated and cased.
-    func transcribe(_ samples: [Float]) async throws -> String
+    func transcribe(_ samples: [Float]) async throws -> Transcript
+}
+
+struct Transcript: Sendable {
+    var text: String
+    /// Per-token timings when the engine provides them (SentencePiece pieces, ▁ marks a word start).
+    var tokens: [(token: String, start: TimeInterval, end: TimeInterval)]
 }
 
 struct WarmProgress: Sendable, Equatable {

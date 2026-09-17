@@ -75,7 +75,7 @@ struct Style: Sendable, Equatable {
             s = s.replacingOccurrences(of: #"[.]+\s*$"#, with: "", options: .regularExpression)
         case .none:
             s = s.replacingOccurrences(of: #"[,.!?;:…]"#, with: "", options: .regularExpression)
-            s = s.replacingOccurrences(of: #"\s{2,}"#, with: " ", options: .regularExpression)
+            s = s.replacingOccurrences(of: #"[ \t]{2,}"#, with: " ", options: .regularExpression)
         }
         switch casing {
         case .lowercase:
