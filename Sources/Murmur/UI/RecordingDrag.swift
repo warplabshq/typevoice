@@ -4,10 +4,9 @@ import UniformTypeIdentifiers
 
 /// Makes its content a drag source for one recording.
 ///
-/// SwiftUI's `.onDrag` with a file item provider leads with a file promise and a temp
-/// copy that is deleted when the drag ends, which is how WhatsApp ended up with a 0 KB
-/// file. This goes through AppKit and puts exactly what Finder puts on the pasteboard
-/// (see `RecordingWriter`).
+/// SwiftUI's `.onDrag` with a file item provider puts a file URL on the pasteboard that
+/// other sandboxed apps can't read. This goes through AppKit; see `RecordingWriter`
+/// for what is offered instead.
 struct RecordingDrag<Content: View>: NSViewRepresentable {
     let url: URL
     let fileName: String
@@ -118,36 +117,61 @@ final class DragSourceView: NSView, NSDraggingSource {
     }
 }
 
-/// What lands on the drag pasteboard for one recording, in the same shape Finder uses:
-/// a file URL first (a hard link carrying the friendly name, so the path outlives the
-/// drag), then the raw bytes for apps that only take data. No file promise: Catalyst
-/// apps such as WhatsApp don't fulfil promises from other apps and end up with 0 KB.
-final class RecordingWriter: NSObject, NSPasteboardWriting {
+/// What lands on the drag pasteboard for one recording: the raw bytes, then a file
+/// promise. Deliberately no `public.file-url`. The recording lives inside this app's
+/// sandbox container, and a Catalyst app such as WhatsApp takes the URL first, can't
+/// read the path, and shows a 0 B file. With a promise the receiver hands us a folder
+/// it can read and we write the file there ourselves, the way Photos and Mail do.
+final class RecordingWriter: NSFilePromiseProvider, NSFilePromiseProviderDelegate {
     private let source: URL
-    private let linkURL: URL?
+    private let name: String
+    private let bytes: Data?
+    private let queue: OperationQueue = {
+        let q = OperationQueue(); q.qualityOfService = .userInitiated; return q
+    }()
 
     init(url: URL, fileName: String) {
         source = url
-        linkURL = RecordingStore.dragLink(for: url, named: fileName)
+        name = fileName
+        bytes = try? Data(contentsOf: url)
         super.init()
+        fileType = UTType.m4a.identifier
+        delegate = self
     }
 
-    func writableTypes(for pasteboard: NSPasteboard) -> [NSPasteboard.PasteboardType] {
-        var types: [NSPasteboard.PasteboardType] = []
-        if linkURL != nil { types.append(.fileURL) }
-        types.append(NSPasteboard.PasteboardType(UTType.m4a.identifier))
+    private static let audioType = NSPasteboard.PasteboardType(UTType.m4a.identifier)
+
+    override func writableTypes(for pasteboard: NSPasteboard) -> [NSPasteboard.PasteboardType] {
+        var types = super.writableTypes(for: pasteboard)
+        if bytes != nil { types.insert(Self.audioType, at: 0) }
         return types
     }
 
-    func writingOptions(forType type: NSPasteboard.PasteboardType, pasteboard: NSPasteboard) -> NSPasteboard.WritingOptions {
-        // The URL is written up front (that's what carries the sandbox extension); bytes on demand.
-        type == .fileURL ? [] : .promised
+    override func writingOptions(forType type: NSPasteboard.PasteboardType, pasteboard: NSPasteboard) -> NSPasteboard.WritingOptions {
+        type == Self.audioType ? [] : super.writingOptions(forType: type, pasteboard: pasteboard)
     }
 
-    func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
-        if type == .fileURL, let linkURL { return (linkURL as NSURL).pasteboardPropertyList(forType: type) }
-        return try? Data(contentsOf: source)
+    override func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
+        type == Self.audioType ? bytes : super.pasteboardPropertyList(forType: type)
     }
+
+    // MARK: NSFilePromiseProviderDelegate
+
+    func filePromiseProvider(_ p: NSFilePromiseProvider, fileNameForType fileType: String) -> String {
+        name
+    }
+
+    func filePromiseProvider(_ p: NSFilePromiseProvider, writePromiseTo url: URL, completionHandler: @escaping (Error?) -> Void) {
+        do {
+            try FileManager.default.copyItem(at: source, to: url)
+            completionHandler(nil)
+        } catch {
+            Log.d("file promise failed: \(error)")
+            completionHandler(error)
+        }
+    }
+
+    func operationQueue(for p: NSFilePromiseProvider) -> OperationQueue { queue }
 }
 
 extension UTType {

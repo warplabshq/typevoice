@@ -61,33 +61,6 @@ enum RecordingStore {
         return name.prefix(1).uppercased() + name.dropFirst() + ".m4a"
     }
 
-    /// A hard link with the friendly name, for apps that read the dragged file URL directly.
-    /// Costs no disk space; the folder is emptied on launch.
-    static let dragFolder: URL = {
-        let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        return base.appendingPathComponent("Drag", isDirectory: true)
-    }()
-
-    static func dragLink(for url: URL, named name: String) -> URL? {
-        let fm = FileManager.default
-        try? fm.createDirectory(at: dragFolder, withIntermediateDirectories: true)
-        let link = dragFolder.appendingPathComponent(name)
-        if fm.fileExists(atPath: link.path) {
-            // Same recording already linked under this name? Reuse it.
-            if let a = try? fm.attributesOfItem(atPath: link.path)[.systemFileNumber] as? Int,
-               let b = try? fm.attributesOfItem(atPath: url.path)[.systemFileNumber] as? Int, a == b { return link }
-            try? fm.removeItem(at: link)
-        }
-        do { try fm.linkItem(at: url, to: link) } catch {
-            do { try fm.copyItem(at: url, to: link) } catch { return nil }
-        }
-        return link
-    }
-
-    static func cleanDragLinks() {
-        try? FileManager.default.removeItem(at: dragFolder)
-    }
-
     static func delete(id: UUID) {
         if let u = url(for: id) { try? FileManager.default.removeItem(at: u) }
     }

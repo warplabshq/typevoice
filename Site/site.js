@@ -54,36 +54,41 @@ document.addEventListener("DOMContentLoaded", () => {
       ["shipped the new export flow to vid ai two things to watch cold start and the retry logic", "Shipped the new export flow to VidAI. Two things to watch: cold start, and the retry logic."],
       ["groceries milk eggs bread also um call the dentist on monday", "Groceries: milk, eggs, bread. Also call the dentist on Monday."],
     ];
-    let pi = 0;
     const sleep = ms => new Promise(r => setTimeout(r, ms));
+    // Never idle: while one sentence types out below, the next one is already being
+    // spoken into the pill. The field keeps the last two sentences, like a message.
+    const speak = async (raw) => {
+      spoken.innerHTML = "";
+      for (const w of raw.split(" ")) {
+        const el = document.createElement("span"); el.textContent = w; spoken.appendChild(el);
+        requestAnimationFrame(() => el.classList.add("in"));
+        await sleep(95);
+      }
+      await sleep(320);
+      const pr = pill.getBoundingClientRect();
+      for (const el of [...spoken.children]) {
+        const r = el.getBoundingClientRect();
+        el.style.setProperty("--dx", (pr.left + pr.width / 2 - (r.left + r.width / 2)) + "px");
+        el.style.setProperty("--dy", (pr.top + pr.height / 2 - (r.top + r.height / 2)) + "px");
+        el.classList.remove("in"); el.classList.add("sink");
+        window.__boost = Math.min(1, (window.__boost || 0) + 0.5);
+        await sleep(70);
+      }
+      await sleep(600);
+    };
+    const lines = [];
+    const type = async (clean) => {
+      if (lines.length >= 2) lines.shift();
+      const prefix = lines.length ? lines.join(" ") + " " : "";
+      lines.push(clean);
+      for (let i = 1; i <= clean.length; i++) { typed.textContent = prefix + clean.slice(0, i); await sleep(clean.length > 60 ? 14 : 18); }
+    };
     (async function loop() {
+      let i = 0;
+      await speak(pairs[0][0]);
       while (true) {
-        typed.textContent = ""; pill.classList.remove("done"); spoken.innerHTML = "";
-        const [raw, clean] = pairs[pi++ % pairs.length];
-        const words = raw.split(" ");
-        // Words stream in as a plain line of speech, then sink one by one into the pill.
-        for (const w of words) {
-          const el = document.createElement("span"); el.textContent = w; spoken.appendChild(el);
-          requestAnimationFrame(() => el.classList.add("in"));
-          await sleep(95);
-        }
-        await sleep(320);
-        const pr = pill.getBoundingClientRect(), els = [...spoken.children];
-        for (const el of els) {
-          const r = el.getBoundingClientRect();
-          el.style.setProperty("--dx", (pr.left + pr.width / 2 - (r.left + r.width / 2)) + "px");
-          el.style.setProperty("--dy", (pr.top + pr.height / 2 - (r.top + r.height / 2)) + "px");
-          el.classList.remove("in"); el.classList.add("sink");
-          window.__boost = Math.min(1, (window.__boost || 0) + 0.5);
-          await sleep(70);
-        }
-        await sleep(700);
-        pill.classList.add("done");
-        await sleep(300);
-        for (let i = 1; i <= clean.length; i++) { typed.textContent = clean.slice(0, i); await sleep(clean.length > 60 ? 14 : 18); }
-        await sleep(2600);
-        pill.classList.remove("done"); spoken.innerHTML = "";
-        await sleep(700);
+        const clean = pairs[i % pairs.length][1], nextRaw = pairs[(i + 1) % pairs.length][0]; i++;
+        await Promise.all([type(clean), (async () => { await sleep(500); await speak(nextRaw); })()]);
       }
     })();
   }

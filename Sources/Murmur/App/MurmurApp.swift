@@ -41,7 +41,6 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         Log.d("didFinishLaunching ax=\(Permissions.accessibility) mic=\(Permissions.mic) onboarded=\(Prefs.hasOnboarded)")
         Self.shared = self
         installMainMenu()
-        RecordingStore.cleanDragLinks()
         if Log.debugTimings {
             DistributedNotificationCenter.default().addObserver(
                 forName: Notification.Name("murmur.debug.showTab"), object: nil, queue: .main
