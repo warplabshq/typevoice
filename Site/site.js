@@ -100,13 +100,16 @@ document.addEventListener("DOMContentLoaded", () => {
     let fi = 0, minutes = 9 * 60 + 41;
     const wordsEl = document.querySelector('.tile b[data-count="24,310"]'), dictEl = document.querySelector('.tile b[data-count="893"]');
     let words = 24310, dicts = 893;
+    // Background tabs stall requestAnimationFrame, which left ghost rows; the feed simply waits.
+    addEventListener("visibilitychange", () => { if (!document.hidden) list.querySelectorAll(".arriving").forEach(el => el.classList.remove("arriving")); });
     setInterval(() => {
+      if (document.hidden) return;
       const [cls, glyph, app, text, w, sec] = feed[fi++ % feed.length];
       minutes += 3; const h = Math.floor(minutes / 60), m = minutes % 60;
       const item = document.createElement("div"); item.className = "item arriving";
       item.innerHTML = `<span class="app ${cls}">${glyph}</span><div><p></p><small>${app} · ${h}:${String(m).padStart(2, "0")} AM · ${w} words · ${sec}s · ${180 + Math.round(Math.random() * 80)} ms</small></div>`;
       item.querySelector("p").textContent = text;
-      list.prepend(item); requestAnimationFrame(() => item.classList.remove("arriving"));
+      list.prepend(item); setTimeout(() => item.classList.remove("arriving"), 30);
       while (list.children.length > 3) list.lastElementChild.remove();
       if (wordsEl && wordsEl.dataset.done) { words += w; dicts += 1; wordsEl.textContent = words.toLocaleString(); dictEl.textContent = dicts.toLocaleString(); }
     }, 7000);

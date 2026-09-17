@@ -105,6 +105,11 @@ h3 { font-size: 17px; font-weight: 600; }
 .step h3 { margin-bottom: 6px; } .step p { margin: 0; color: var(--dim); font-size: 14.5px; }
 
 /* ---------- mock window ---------- */
+/* Screenshot stage: the window sits in a lit frame and runs off the bottom edge. */
+.stage { position: relative; margin-top: var(--s4); padding: 56px 56px 0; border-radius: 24px; border: 1px solid var(--line); overflow: hidden;
+  background: radial-gradient(70% 80% at 50% 0%, rgba(120,140,210,.18), transparent 72%), var(--card); }
+.stage::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 90px; background: linear-gradient(transparent, color-mix(in srgb, var(--card) 85%, transparent)); pointer-events: none; }
+.stage .window { max-width: 960px; margin: 0 auto -36px; border-bottom-left-radius: 0; border-bottom-right-radius: 0; box-shadow: 0 40px 100px rgba(0,0,0,.5), 0 0 0 1px rgba(255,255,255,.05) inset; }
 .window { border-radius: 14px; overflow: hidden; border: 1px solid var(--line); background: var(--bg2); box-shadow: var(--shadow), 0 0 0 1px rgba(255,255,255,.04) inset; font-size: 12px; }
 .titlebar { display: flex; align-items: center; gap: 10px; padding: 10px 12px; border-bottom: 1px solid var(--line); }
 .dots i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 6px; background: #ff5f57; } .dots i:nth-child(2) { background: #febc2e; } .dots i:nth-child(3) { background: #28c840; }
@@ -218,7 +223,7 @@ kbd { font: 13px -apple-system, BlinkMacSystemFont, sans-serif; background: var(
   :root { --s7: 56px; --s8: 72px; }
   nav { gap: 14px; } nav a:not(.navcta) { display: none; }
   .strip { display: grid; grid-template-columns: 1fr; gap: 10px 0; } .strip li { padding: 0; justify-content: center; border-left: 0; } .steps { grid-template-columns: 1fr; }
-  .window .body { grid-template-columns: 1fr; } .side { display: none; } .tiles { grid-template-columns: repeat(2, 1fr); } .titlebar .title { margin-left: 8px; }
+  .stage { padding: 24px 14px 0; border-radius: 16px; } .stage .window { margin-bottom: -20px; } .window .body { grid-template-columns: 1fr; } .side { display: none; } .tiles { grid-template-columns: repeat(2, 1fr); } .titlebar .title { margin-left: 8px; }
   .bento { grid-template-columns: 1fr; } .tile-b, .tile-b.span2, .tile-b.small { grid-column: span 1; }
   .pair { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); justify-self: center; }
   .price-card { grid-template-columns: 1fr; } .price-right { border-left: 0; padding-left: 0; border-top: 1px solid var(--line); padding-top: 20px; }
