@@ -1,18 +1,11 @@
 import AppKit
 import Carbon.HIToolbox
-import KeyboardShortcuts
 import os
 
-extension KeyboardShortcuts.Name {
-    static let dictate = Self("dictate")
-}
-
-/// Global trigger for dictation. Fn/Globe via a CGEventTap on `flagsChanged`,
-/// or a user-chosen shortcut via KeyboardShortcuts. Also swallows Escape while
+/// Global trigger for dictation. One CGEventTap on a dedicated thread watches
+/// modifier changes and key presses, matching either a lone modifier key
+/// (🌐, Right ⌘, …) or a key combo (⌥Space, F13). It also swallows Escape while
 /// a session is active so the host app never sees it.
-///
-/// The tap lives on its own thread with its own run loop, so a busy main
-/// thread can never delay or drop a key press.
 @MainActor
 final class HotkeyMonitor {
     var onPress: () -> Void = {}
@@ -21,27 +14,30 @@ final class HotkeyMonitor {
     /// True after `start()` if the global event tap could be installed.
     private(set) var tapInstalled = false
 
-    /// Mirrors "a session is active" for the tap thread (decides whether to eat Escape).
-    private let activeFlag = OSAllocatedUnfairLock(initialState: false)
-    func setActive(_ on: Bool) { activeFlag.withLock { $0 = on } }
+    /// State shared with the tap thread.
+    private struct Shared {
+        var active = false            // a session is running (eat Escape)
+        var paused = false            // the recorder is listening; ignore everything
+        var shortcut: Shortcut = .fn
+        var isDown = false
+    }
+    private let shared = OSAllocatedUnfairLock(initialState: Shared())
+    func setActive(_ on: Bool) { shared.withLock { $0.active = on } }
+    func setPaused(_ on: Bool) { shared.withLock { $0.paused = on; if on { $0.isDown = false } } }
 
     private var tap: CFMachPort?
     private var tapThread: Thread?
     private var tapRunLoop: CFRunLoop?
     private var fallbackMonitors: [Any] = []
-    private var fnDown = false
-    private var trigger: Prefs.Trigger = .fn
+
+    var currentShortcut: Shortcut { Prefs.trigger == .custom ? (Shortcut.stored ?? .fn) : .fn }
 
     func start() {
         stop()
-        trigger = Prefs.trigger
-        switch trigger {
-        case .fn:
-            if !installTap() { installFallbackMonitor() }
-        case .custom:
-            installCustomShortcut()
-            if !installTap(keyDownOnly: true) { installFallbackMonitor() }
-        }
+        let sc = currentShortcut
+        shared.withLock { $0.shortcut = sc; $0.isDown = false }
+        if !installTap() { installFallbackMonitor() }
+        Log.d("hotkey: \(sc.description)")
     }
 
     func stop() {
@@ -52,17 +48,13 @@ final class HotkeyMonitor {
         tapThread = nil
         for m in fallbackMonitors { NSEvent.removeMonitor(m) }
         fallbackMonitors.removeAll()
-        KeyboardShortcuts.disable(.dictate)
-        fnDown = false
         tapInstalled = false
     }
 
-    // MARK: Fn via CGEventTap on a dedicated thread
+    // MARK: CGEventTap on a dedicated thread
 
-    private func installTap(keyDownOnly: Bool = false) -> Bool {
-        var mask: CGEventMask = 1 << CGEventType.keyDown.rawValue
-        if !keyDownOnly { mask |= 1 << CGEventType.flagsChanged.rawValue }
-
+    private func installTap() -> Bool {
+        let mask: CGEventMask = (1 << CGEventType.keyDown.rawValue) | (1 << CGEventType.keyUp.rawValue) | (1 << CGEventType.flagsChanged.rawValue)
         let refcon = Unmanaged.passUnretained(self).toOpaque()
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
@@ -98,68 +90,97 @@ final class HotkeyMonitor {
         thread.start()
         tapThread = thread
         _ = ready.wait(timeout: .now() + 1)
-        Log.app.info("Event tap installed on its own thread (\(keyDownOnly ? "keyDown" : "flagsChanged+keyDown"))")
         Log.d("event tap installed")
         return true
     }
 
     /// Runs on the tap thread. Keep it tiny; anything UI-related hops to main.
     nonisolated private func handle(type: CGEventType, event: CGEvent) -> Unmanaged<CGEvent>? {
+        let pass = Unmanaged.passUnretained(event)
         switch type {
         case .tapDisabledByTimeout, .tapDisabledByUserInput:
             Task { @MainActor in if let tap = self.tap { CGEvent.tapEnable(tap: tap, enable: true) } }
-            return Unmanaged.passUnretained(event)
+            return pass
 
         case .flagsChanged:
-            let isFn = event.flags.contains(.maskSecondaryFn)
-            Task { @MainActor in self.fnChanged(isDown: isFn) }
-            return Unmanaged.passUnretained(event)
+            let code = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+            let flags = event.flags
+            let action: Bool? = shared.withLock { s -> Bool? in
+                guard !s.paused, s.shortcut.isModifierOnly, code == s.shortcut.keyCode,
+                      let flag = Shortcut.flag(forModifierKey: code) else { return nil }
+                let down = flags.contains(flag)
+                guard down != s.isDown else { return nil }
+                s.isDown = down
+                return down
+            }
+            if let down = action { Task { @MainActor in down ? self.onPress() : self.onRelease() } }
+            return pass
 
         case .keyDown:
-            let keyCode = event.getIntegerValueField(.keyboardEventKeycode)
-            if keyCode == kVK_Escape, activeFlag.withLock({ $0 }) {
-                Task { @MainActor in self.onEscape() }
-                return nil   // swallowed
+            let code = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+            let repeatKey = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
+            let mods = event.flags.intersection(Shortcut.relevantFlags).rawValue
+            let (isEscape, matched): (Bool, Bool) = shared.withLock { s in
+                if s.paused { return (false, false) }
+                if code == UInt16(kVK_Escape), s.active { return (true, false) }
+                guard !s.shortcut.isModifierOnly, code == s.shortcut.keyCode, mods == s.shortcut.modifiers else { return (false, false) }
+                if repeatKey || s.isDown { return (false, true) }   // swallow repeats, no new press
+                s.isDown = true
+                return (false, true)
             }
-            return Unmanaged.passUnretained(event)
+            if isEscape { Task { @MainActor in self.onEscape() }; return nil }
+            if matched {
+                if !repeatKey { Task { @MainActor in self.onPress() } }
+                return nil   // the host app never sees the combo
+            }
+            return pass
+
+        case .keyUp:
+            let code = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
+            let matched: Bool = shared.withLock { s in
+                guard !s.paused, !s.shortcut.isModifierOnly, code == s.shortcut.keyCode, s.isDown else { return false }
+                s.isDown = false
+                return true
+            }
+            if matched { Task { @MainActor in self.onRelease() }; return nil }
+            return pass
 
         default:
-            return Unmanaged.passUnretained(event)
+            return pass
         }
     }
 
-    private func fnChanged(isDown: Bool) {
-        guard trigger == .fn, isDown != fnDown else { return }
-        fnDown = isDown
-        isDown ? onPress() : onRelease()
-    }
-
-    // MARK: Fallback (no tap): NSEvent global monitors, cannot swallow Escape.
+    // MARK: Fallback (no tap): NSEvent global monitors. Cannot swallow keys.
 
     private func installFallbackMonitor() {
-        Log.app.warning("Using NSEvent global monitors; Escape will reach the host app")
-        if trigger == .fn {
-            let m = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] e in
-                let down = e.modifierFlags.contains(.function)
-                Task { @MainActor in self?.fnChanged(isDown: down) }
+        Log.app.warning("Using NSEvent global monitors; Escape and combos will reach the host app")
+        let f = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] e in
+            guard let self else { return }
+            let sc = self.shared.withLock { $0.shortcut }
+            guard sc.isModifierOnly, e.keyCode == sc.keyCode, let flag = Shortcut.flag(forModifierKey: sc.keyCode) else { return }
+            let down = e.modifierFlags.rawValue & UInt(flag.rawValue) != 0
+            let changed = self.shared.withLock { s -> Bool in
+                if s.paused || s.isDown == down { return false }
+                s.isDown = down; return true
             }
-            if let m { fallbackMonitors.append(m) }
+            if changed { Task { @MainActor in down ? self.onPress() : self.onRelease() } }
         }
-        let k = NSEvent.addGlobalMonitorForEvents(matching: .keyDown) { [weak self] e in
-            guard e.keyCode == UInt16(kVK_Escape) else { return }
-            Task { @MainActor in
-                guard let self, self.activeFlag.withLock({ $0 }) else { return }
-                self.onEscape()
+        if let f { fallbackMonitors.append(f) }
+        let k = NSEvent.addGlobalMonitorForEvents(matching: [.keyDown, .keyUp]) { [weak self] e in
+            guard let self else { return }
+            let sc = self.shared.withLock { $0.shortcut }
+            if e.type == .keyDown, e.keyCode == UInt16(kVK_Escape), self.shared.withLock({ $0.active }) {
+                Task { @MainActor in self.onEscape() }; return
+            }
+            guard !sc.isModifierOnly, e.keyCode == sc.keyCode else { return }
+            let mods = UInt64(e.modifierFlags.rawValue) & Shortcut.relevantFlags.rawValue
+            if e.type == .keyDown {
+                guard !e.isARepeat, mods == sc.modifiers else { return }
+                Task { @MainActor in self.onPress() }
+            } else {
+                Task { @MainActor in self.onRelease() }
             }
         }
         if let k { fallbackMonitors.append(k) }
-    }
-
-    // MARK: Custom shortcut
-
-    private func installCustomShortcut() {
-        KeyboardShortcuts.enable(.dictate)
-        KeyboardShortcuts.onKeyDown(for: .dictate) { [weak self] in self?.onPress() }
-        KeyboardShortcuts.onKeyUp(for: .dictate) { [weak self] in self?.onRelease() }
     }
 }

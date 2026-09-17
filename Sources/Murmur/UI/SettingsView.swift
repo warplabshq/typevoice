@@ -1,4 +1,3 @@
-import KeyboardShortcuts
 import ServiceManagement
 import SwiftUI
 
@@ -24,7 +23,9 @@ struct SettingsView: View {
                     Text("Custom shortcut").tag(Prefs.Trigger.custom.rawValue)
                 }
                 if trigger == Prefs.Trigger.custom.rawValue {
-                    KeyboardShortcuts.Recorder("Shortcut", name: .dictate)
+                    LabeledContent("Shortcut") { ShortcutRecorder() }
+                    Text("A lone modifier works best for holding: Right ⌘, Right ⌥ or Fn. Combos like ⌥Space work too.")
+                        .font(.callout).foregroundStyle(.secondary)
                 } else {
                     LabeledContent("") {
                         HStack(spacing: 6) {

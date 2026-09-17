@@ -1,5 +1,4 @@
 import AppKit
-import KeyboardShortcuts
 import SwiftUI
 
 /// First-run setup, also reachable from the "?" toolbar button. Four cards that
@@ -89,7 +88,7 @@ struct OnboardingView: View {
                 .labelsHidden()
                 .frame(width: 220)
                 if trigger == Prefs.Trigger.custom.rawValue {
-                    KeyboardShortcuts.Recorder("", name: .dictate).labelsHidden()
+                    ShortcutRecorder()
                 }
             }
         case 3:

@@ -48,9 +48,9 @@ final class TextInserter {
     /// Whether the captured focus looks like somewhere text can go. Conservative:
     /// only well-known non-text roles say no, so Electron/web apps still get a try.
     func hasTextTarget(_ target: Target) -> Bool {
-        // No focused element: if the app speaks Accessibility, nothing is focused;
-        // if it doesn't, we can't know, so let paste have a go.
-        guard let el = target.element else { return !target.axAvailable }
+        // No focused element reported (web editors like Mail's compose do this): we
+        // can't know, so let paste have a go rather than withholding the text.
+        guard let el = target.element else { return true }
         let role = Self.string(el, kAXRoleAttribute) ?? ""
         Log.d("focused role=\(role) subrole=\(Self.string(el, kAXSubroleAttribute) ?? "-") in \(target.appName)")
         let nonText: Set<String> = [

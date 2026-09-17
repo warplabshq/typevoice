@@ -75,6 +75,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             forName: .murmurShowOnboarding, object: nil, queue: .main
         ) { [weak self] _ in Task { @MainActor in self?.showOnboarding() } })
         observers.append(NotificationCenter.default.addObserver(
+            forName: .murmurPauseHotkey, object: nil, queue: .main
+        ) { [weak self] n in Task { @MainActor in self?.controller.hotkey.setPaused((n.object as? Bool) ?? false) } })
+        observers.append(NotificationCenter.default.addObserver(
             forName: .murmurArmHotkey, object: nil, queue: .main
         ) { [weak self] _ in Task { @MainActor in self?.controller.start() } })
         observers.append(NotificationCenter.default.addObserver(

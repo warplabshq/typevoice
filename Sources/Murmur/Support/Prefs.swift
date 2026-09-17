@@ -1,5 +1,4 @@
 import Foundation
-import KeyboardShortcuts
 import SwiftUI
 
 /// UserDefaults-backed settings. Views bind through `@AppStorage(Prefs.Key…)`,
@@ -22,6 +21,7 @@ enum Prefs {
         static let showPreview = "showPreview"         // Bool: typed text in the indicator
         static let pillLook = "pillLook"               // PillLook
         static let pillShadow = "pillShadow"           // PillShadow
+        static let customShortcut = "customShortcut"   // Shortcut (JSON)
     }
 
     enum HUDPosition: String, CaseIterable, Identifiable {
@@ -123,7 +123,7 @@ enum Prefs {
 
     /// "🌐" or the custom shortcut, for UI copy.
     static var triggerLabel: String {
-        if trigger == .custom, let sc = KeyboardShortcuts.getShortcut(for: .dictate) { return sc.description }
+        if trigger == .custom, let sc = Shortcut.stored { return sc.description }
         return "🌐"
     }
 
