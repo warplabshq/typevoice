@@ -36,6 +36,9 @@ struct MenuContent: View {
         Button("Dictionary…") { openMainWindow(.dictionary) }
         Button("Settings…") { openMainWindow(.settings) }
             .keyboardShortcut(",")
+        if Updater.isConfigured {
+            Button("Check for Updates…") { Updater.shared.check() }
+        }
         Divider()
         Button("Quit Murmur") { NSApp.terminate(nil) }
             .keyboardShortcut("q")

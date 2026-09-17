@@ -5,6 +5,8 @@ struct SettingsView: View {
     @AppStorage(Prefs.Key.trigger) private var trigger = Prefs.Trigger.fn.rawValue
     @AppStorage(Prefs.Key.smartCleanup) private var smart = true
     @AppStorage(Prefs.Key.numbersAsDigits) private var numbers = true
+    @AppStorage(Prefs.Key.voiceCommands) private var voiceCommands = true
+    @AppStorage(Prefs.Key.pauseParagraphs) private var pauseParagraphs = true
     @AppStorage(Prefs.Key.showPreview) private var showPreview = true
     @AppStorage(Prefs.Key.hudPosition) private var hudPosition = Prefs.HUDPosition.bottomCenter.rawValue
     @AppStorage(Prefs.Key.accent) private var accent = Prefs.Accent.mono.rawValue
@@ -17,6 +19,20 @@ struct SettingsView: View {
 
     var body: some View {
         Form {
+            Section("General") {
+                Toggle("Open at login", isOn: $launchAtLogin)
+                    .onChange(of: launchAtLogin) { _, on in
+                        do {
+                            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
+                        } catch {
+                            launchAtLogin = SMAppService.mainApp.status == .enabled
+                        }
+                    }
+                Toggle("Show in menu bar", isOn: $showMenuBarIcon)
+                Text(showMenuBarIcon ? "Murmur lives in the menu bar; there is no Dock icon." : "With the icon hidden, open Murmur again from Finder or Spotlight to get here.")
+                    .font(.callout).foregroundStyle(.secondary)
+                UpdatesRow()
+            }
             Section("Dictating") {
                 Picker("Hold to dictate", selection: $trigger) {
                     Text("🌐 Globe / Fn key").tag(Prefs.Trigger.fn.rawValue)
@@ -42,6 +58,12 @@ struct SettingsView: View {
                     .font(.callout).foregroundStyle(.secondary)
                 Toggle("Numbers as digits", isOn: $numbers)
                 Text("“twenty twenty four” becomes 2024, “five dollars fifty” becomes $5.50. Small numbers stay as words.")
+                    .font(.callout).foregroundStyle(.secondary)
+                Toggle("Voice commands", isOn: $voiceCommands)
+                Text("Say “new line”, “new paragraph”, “bullet …”, or “number one …, number two …” to shape the text.")
+                    .font(.callout).foregroundStyle(.secondary)
+                Toggle("Paragraph after a pause", isOn: $pauseParagraphs)
+                Text("Finish a sentence, pause a second, and the next one starts a new paragraph.")
                     .font(.callout).foregroundStyle(.secondary)
             }
 
@@ -70,18 +92,6 @@ struct SettingsView: View {
                                 shadow: Prefs.PillShadow(rawValue: pillShadow) ?? .soft)
                 }
                 Toggle("Show the text after each dictation", isOn: $showPreview)
-            }
-
-            Section("App") {
-                Toggle("Launch at login", isOn: $launchAtLogin)
-                    .onChange(of: launchAtLogin) { _, on in
-                        do {
-                            if on { try SMAppService.mainApp.register() } else { try SMAppService.mainApp.unregister() }
-                        } catch {
-                            launchAtLogin = SMAppService.mainApp.status == .enabled
-                        }
-                    }
-                Toggle("Show menu bar icon", isOn: $showMenuBarIcon)
             }
 
             Section {

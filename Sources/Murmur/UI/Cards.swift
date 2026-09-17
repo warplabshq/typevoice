@@ -43,6 +43,13 @@ enum Fmt {
         if n >= 10_000 { return String(format: "%.1fk", Double(n) / 1e3) }
         return n.formatted()
     }
+    /// "2h 14m", "38m", "45s"
+    static func durationLong(_ s: Double) -> String {
+        if s < 60 { return "\(Int(s))s" }
+        let m = Int(s / 60)
+        if m < 60 { return "\(m)m" }
+        return "\(m / 60)h \(m % 60)m"
+    }
     static func duration(_ s: Double) -> String {
         if s < 60 { return "\(Int(s))s" }
         if s < 3600 { return "\(Int(s / 60))m" }

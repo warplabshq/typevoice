@@ -21,6 +21,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let state = AppState()
     let history = HistoryStore()
     let dictionary = DictionaryStore()
+    let licensing = Licensing()
     private(set) var controller: DictationController!
     private(set) var hud: HUDController!
     private var onboarding: NSWindow?
@@ -61,6 +62,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             }
         }
         controller = DictationController(state: state, history: history, dictionary: dictionary)
+        controller.licensing = licensing
+        _ = Updater.shared
         hud = HUDController(state: state)
         hud.onCopy = { [weak self] in self?.controller.copyOffered() }
         controller.hud = hud
@@ -226,7 +229,7 @@ private struct MainRoot: View {
     let delegate: AppDelegate
     @State private var tab: MainTab = .history
     var body: some View {
-        MainView(state: delegate.state, history: delegate.history, dictionary: delegate.dictionary, tab: $tab)
+        MainView(state: delegate.state, history: delegate.history, dictionary: delegate.dictionary, licensing: delegate.licensing, tab: $tab)
             .onAppear { tab = delegate.tabBinding.wrappedValue; delegate.setMainTitle(tab) }
             .onChange(of: tab) { _, t in delegate.setMainTitle(t) }
             .onReceive(NotificationCenter.default.publisher(for: .murmurShowTab)) { n in

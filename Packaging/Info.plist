@@ -16,5 +16,10 @@
     <key>NSHighResolutionCapable</key>            <true/>
     <key>NSMicrophoneUsageDescription</key>       <string>Murmur listens only while you hold the key, and everything stays on this Mac.</string>
     <key>NSHumanReadableCopyright</key>           <string>© 2026 Priyam Raj</string>
+    <key>SUFeedURL</key>                          <string>https://REPLACE-ME.example.com/murmur/appcast.xml</string>
+    <key>SUPublicEDKey</key>                      <string>XKv8ItpvYON0SuobWGr3A1oLtVIHuwalNdLbEymYXz0=</string>
+    <key>SUEnableAutomaticChecks</key>            <true/>
+    <key>SUScheduledCheckInterval</key>           <integer>86400</integer>
+    <key>SUAutomaticallyUpdate</key>              <false/>
 </dict>
 </plist>

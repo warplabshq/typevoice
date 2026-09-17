@@ -14,6 +14,7 @@ final class DictationController {
     let smart = SmartCleaner()
     let inserter = TextInserter()
     var hud: HUDController?
+    var licensing: Licensing?
 
     private var target: TextInserter.Target?
     private var locked = false
@@ -44,6 +45,11 @@ final class DictationController {
         hotkey.onPress = { [weak self] in self?.press() }
         hotkey.onRelease = { [weak self] in self?.release() }
         hotkey.onEscape = { [weak self] in self?.cancel() }
+        hotkey.onChord = { [weak self] in
+            // ⌘C while holding ⌘ as the trigger: not a dictation. Drop it quietly.
+            guard let self, self.state.phase.isListening, !self.locked else { return }
+            self.cancel()
+        }
         watchActive()
     }
 
@@ -108,6 +114,12 @@ final class DictationController {
 
     private func press() {
         guard !state.paused else { return }
+        if let licensing, licensing.isExpired, state.phase == .idle {
+            hud?.present(for: inserter.captureTarget())
+            show(.error("Trial ended · open Murmur to continue"), for: .milliseconds(2200))
+            openMainWindow(.license)
+            return
+        }
         let now = ContinuousClock.now
 
         // Second tap inside the window → lock hands-free.

@@ -36,6 +36,35 @@ If you'd rather use your Apple ID: Xcode › Settings › Accounts › add it �
 
 If Accessibility ever looks on but Murmur doesn't react: System Settings › Privacy & Security › Accessibility, flip Murmur off and on, then relaunch.
 
+## Trial and licensing
+
+Three-day trial from first launch (the date is kept in defaults and in a hidden marker file in
+the data folder). After that, dictation pauses and the License tab offers a Dodo Payments
+checkout plus a key field. Activation calls Dodo's public `/licenses/activate` once, then
+`/licenses/validate` about weekly with a 30-day offline grace period.
+
+To go live: create the product in Dodo with **license keys enabled** (activation limit 1–2),
+then replace `Licensing.checkoutURL` in `Sources/Murmur/Support/Licensing.swift` with the
+hosted checkout link. `defaults write com.priyam.murmur dodoTest -bool true` points the app at
+Dodo's test host.
+
+## Updates
+
+Sparkle 2 is embedded. It checks `SUFeedURL` (Info.plist) daily and shows the standard
+"Check for Updates…" flow. The EdDSA public key is in Info.plist; the private key lives in the
+login keychain of the Mac that generated it (this one).
+
+Publishing a version:
+
+1. Bump `CFBundleShortVersionString` / `CFBundleVersion` in `Packaging/Info.plist`.
+2. `make release` → `dist/Murmur-<version>.zip` and `dist/appcast.xml` (signed).
+3. Upload both to the host named in `SUFeedURL` (GitHub Releases works; point the feed at the
+   raw appcast URL). Replace the `REPLACE-ME` feed URL in Info.plist once you have it.
+
+For real distribution you also need an Apple Developer ID certificate and notarization,
+otherwise Gatekeeper blocks the download on other Macs. `make SIGN_ID="Developer ID Application: …"`
+picks it up; notarize the zip with `xcrun notarytool submit` before running `generate_appcast`.
+
 ## Layout
 
 ```

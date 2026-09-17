@@ -29,17 +29,20 @@ struct HistoryView: View {
     var body: some View {
         Group {
             if history.isEmpty {
-                ContentUnavailableView {
-                    Label("No dictations yet", systemImage: "waveform")
-                } description: {
-                    Text("Hold \(Prefs.triggerLabel) anywhere, say something, and it'll show up here.")
+                VStack(spacing: 16) {
+                    statsRow.padding(.horizontal, 16).padding(.top, 8)
+                    ContentUnavailableView {
+                        Label("No dictations yet", systemImage: "waveform")
+                    } description: {
+                        Text("Hold \(Prefs.triggerLabel) anywhere, say something, and it'll show up here.")
+                    }
                 }
             } else {
                 List(selection: $selection) {
                     if query.isEmpty {
                         Section {
                             statsRow
-                                .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 10, trailing: 0))
+                                .listRowInsets(EdgeInsets(top: 6, leading: 0, bottom: 14, trailing: 0))
                                 .listRowSeparator(.hidden)
                                 .listRowBackground(Color.clear)
                         }
@@ -102,13 +105,53 @@ struct HistoryView: View {
 
     private var statsRow: some View {
         let s = history.stats
-        return HStack(spacing: 12) {
-            StatTile(value: Fmt.count(s.words), label: "Words", detail: "\(Fmt.count(s.weekWords)) this week")
-            StatTile(value: Fmt.count(s.count), label: "Dictations", detail: "\(Fmt.count(s.weekCount)) this week")
-            StatTile(value: Fmt.duration(s.seconds), label: "Time talking", detail: s.seconds > 0 ? "≈ \(Fmt.duration(s.seconds * 3.2)) of typing saved" : nil)
-            StatTile(value: s.wordsPerMinute > 0 ? "\(Int(s.wordsPerMinute))" : "–", label: "Words / min", detail: "typing is about 40")
+        let saved = max(0, s.seconds * 3.2 - s.seconds)        // typing ≈ 40 wpm vs speaking ≈ 130 wpm
+        return VStack(spacing: 12) {
+            Card(padding: 20) {
+                HStack(alignment: .firstTextBaseline, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Time saved")
+                            .font(.subheadline.weight(.semibold))
+                            .foregroundStyle(.secondary)
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(Fmt.durationLong(saved))
+                                .font(.system(size: 40, weight: .bold, design: .rounded))
+                                .monospacedDigit()
+                                .foregroundStyle(Color(red: 0.20, green: 0.78, blue: 0.45))
+                                .contentTransition(.numericText())
+                            if s.weekWords > 0 {
+                                Text("\(Fmt.durationLong(max(0, weekSeconds * 2.2))) this week")
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
+                        Text(s.count == 0
+                             ? "Hold \(Prefs.triggerLabel) anywhere and start talking."
+                             : "Compared with typing at 40 words a minute. You speak at about \(Int(s.wordsPerMinute.rounded())).")
+                            .font(.callout)
+                            .foregroundStyle(.tertiary)
+                    }
+                    Spacer()
+                    Image(systemName: "waveform")
+                        .font(.system(size: 34, weight: .medium))
+                        .foregroundStyle(Color(red: 0.20, green: 0.78, blue: 0.45).opacity(0.35))
+                }
+            }
+            HStack(spacing: 12) {
+                StatTile(value: Fmt.count(s.words), label: "Words", detail: "\(Fmt.count(s.weekWords)) this week")
+                StatTile(value: Fmt.count(s.count), label: "Dictations", detail: "\(Fmt.count(s.weekCount)) this week")
+                StatTile(value: Fmt.duration(s.seconds), label: "Time talking", detail: s.count > 0 ? "\(Int(s.seconds / Double(s.count)))s on average" : nil)
+                StatTile(value: s.wordsPerMinute > 0 ? "\(Int(s.wordsPerMinute))" : "–", label: "Words / min", detail: "typing is about 40")
+            }
+            .fixedSize(horizontal: false, vertical: true)
         }
-        .fixedSize(horizontal: false, vertical: true)
+    }
+
+    /// Seconds spoken this week, estimated from this week's words at the overall pace.
+    private var weekSeconds: Double {
+        let s = history.stats
+        guard s.wordsPerMinute > 0 else { return 0 }
+        return Double(s.weekWords) / s.wordsPerMinute * 60
     }
 
     private enum ExportFormat: String { case txt, md, csv, json }
@@ -172,7 +215,7 @@ private struct HistoryRow: View {
                     Text("·")
                     Text(d.date, style: .time)
                     Text("·")
-                    Text("\(d.words) words")
+                    Text(d.words == 1 ? "1 word" : "\(d.words) words")
                     Text("·")
                     Text(Fmt.duration(d.seconds))
                     if let l = d.latencyMs {

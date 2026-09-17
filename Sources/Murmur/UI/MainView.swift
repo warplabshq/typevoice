@@ -1,23 +1,25 @@
 import SwiftUI
 
 enum MainTab: String, CaseIterable, Identifiable, Hashable {
-    case history, dictionary, style, settings, privacy
+    case history, dictionary, style, settings, license, privacy
     var id: String { rawValue }
     var label: String {
         switch self {
-        case .history: return "History"
+        case .history: return "Summary"
         case .dictionary: return "Dictionary"
         case .style: return "Style"
         case .settings: return "Settings"
+        case .license: return "License"
         case .privacy: return "Privacy"
         }
     }
     var icon: String {
         switch self {
-        case .history: return "clock"
+        case .history: return "chart.bar.xaxis"
         case .dictionary: return "character.book.closed"
         case .style: return "textformat"
         case .settings: return "gearshape"
+        case .license: return "key"
         case .privacy: return "lock.shield"
         }
     }
@@ -28,12 +30,26 @@ struct MainView: View {
     let state: AppState
     let history: HistoryStore
     let dictionary: DictionaryStore
+    let licensing: Licensing
     @Binding var tab: MainTab
 
     var body: some View {
         NavigationSplitView {
             List(MainTab.allCases, selection: Binding(get: { Optional(tab) }, set: { tab = $0 ?? .history })) { t in
-                Label(t.label, systemImage: t.icon).tag(t)
+                HStack {
+                    Label(t.label, systemImage: t.icon)
+                    if t == .license, case .trial(let days) = licensing.state {
+                        Spacer()
+                        Text("\(days)d")
+                            .font(.caption2.weight(.semibold))
+                            .padding(.horizontal, 6).padding(.vertical, 2)
+                            .background(Color.accentColor.opacity(0.18), in: Capsule())
+                    } else if t == .license, licensing.state == .expired {
+                        Spacer()
+                        Circle().fill(.red).frame(width: 7, height: 7)
+                    }
+                }
+                .tag(t)
             }
             .navigationSplitViewColumnWidth(min: 180, ideal: 200, max: 240)
             .safeAreaInset(edge: .top) { Brand() }
@@ -45,6 +61,7 @@ struct MainView: View {
                 case .dictionary: DictionaryView(dictionary: dictionary)
                 case .style: StyleView()
                 case .settings: SettingsView()
+                case .license: LicenseView(licensing: licensing)
                 case .privacy: PrivacyView(history: history, dictionary: dictionary)
                 }
             }

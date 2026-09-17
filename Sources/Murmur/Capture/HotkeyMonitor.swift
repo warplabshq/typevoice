@@ -11,6 +11,8 @@ final class HotkeyMonitor {
     var onPress: () -> Void = {}
     var onRelease: () -> Void = {}
     var onEscape: () -> Void = {}
+    /// A key was pressed while a lone-modifier trigger is held: it's a shortcut, not dictation.
+    var onChord: () -> Void = {}
     /// True after `start()` if the global event tap could be installed.
     private(set) var tapInstalled = false
 
@@ -120,6 +122,12 @@ final class HotkeyMonitor {
             let code = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
             let repeatKey = event.getIntegerValueField(.keyboardEventAutorepeat) != 0
             let mods = event.flags.intersection(Shortcut.relevantFlags).rawValue
+            let chord: Bool = shared.withLock { s in
+                guard !s.paused, s.shortcut.isModifierOnly, s.isDown, code != UInt16(kVK_Escape) else { return false }
+                s.isDown = false          // the eventual modifier release must not finish a session
+                return true
+            }
+            if chord { Task { @MainActor in self.onChord() }; return pass }
             let (isEscape, matched): (Bool, Bool) = shared.withLock { s in
                 if s.paused { return (false, false) }
                 if code == UInt16(kVK_Escape), s.active { return (true, false) }
