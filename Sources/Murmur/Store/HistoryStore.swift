@@ -87,6 +87,19 @@ final class HistoryStore {
     }
 
     var recent: ArraySlice<Dictation> { entries.prefix(10) }
+
+    /// Everything, newest first, for export.
+    func all() -> [Dictation] {
+        var out: [Dictation] = []
+        var before: Date? = nil
+        while true {
+            let page = db.page(query: nil, before: before, limit: 2000)
+            out += page
+            if page.count < 2000 { break }
+            before = page.last?.date
+        }
+        return out
+    }
     var isEmpty: Bool { stats.count == 0 }
 
     /// One-time import of the v0 JSON file.

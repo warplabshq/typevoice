@@ -73,6 +73,18 @@ struct HistoryView: View {
         .searchable(text: $query, placement: .toolbar, prompt: "Search")
         .onChange(of: query) { _, q in history.query = q }
         .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Menu {
+                    Button("Plain text (.txt)") { export(.txt) }
+                    Button("Markdown (.md)") { export(.md) }
+                    Button("CSV (.csv)") { export(.csv) }
+                    Button("JSON (.json)") { export(.json) }
+                } label: {
+                    Label("Export", systemImage: "square.and.arrow.up")
+                }
+                .disabled(history.isEmpty)
+                .help("Export all dictations")
+            }
             ToolbarItem(placement: .destructiveAction) {
                 Button(role: .destructive) { confirmClear = true } label: {
                     Label("Clear History", systemImage: "trash")
@@ -97,6 +109,38 @@ struct HistoryView: View {
             StatTile(value: s.wordsPerMinute > 0 ? "\(Int(s.wordsPerMinute))" : "–", label: "Words / min", detail: "typing is about 40")
         }
         .fixedSize(horizontal: false, vertical: true)
+    }
+
+    private enum ExportFormat: String { case txt, md, csv, json }
+
+    private func export(_ format: ExportFormat) {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = "Murmur history.\(format.rawValue)"
+        panel.canCreateDirectories = true
+        panel.begin { resp in
+            guard resp == .OK, let url = panel.url else { return }
+            let items = history.all()
+            let data: Data
+            switch format {
+            case .txt:
+                data = items.map { "\($0.date.formatted(date: .abbreviated, time: .shortened)) · \($0.appName)\n\($0.text)\n" }
+                    .joined(separator: "\n").data(using: .utf8)!
+            case .md:
+                var md = "# Murmur history\n\n"
+                for d in items { md += "- **\(d.date.formatted(date: .abbreviated, time: .shortened))** · \(d.appName)\n\n  \(d.text)\n\n" }
+                data = md.data(using: .utf8)!
+            case .csv:
+                func q(_ s: String) -> String { "\"" + s.replacingOccurrences(of: "\"", with: "\"\"") + "\"" }
+                var csv = "date,app,seconds,words,text\n"
+                let iso = ISO8601DateFormatter()
+                for d in items { csv += "\(iso.string(from: d.date)),\(q(d.appName)),\(d.seconds),\(d.words),\(q(d.text))\n" }
+                data = csv.data(using: .utf8)!
+            case .json:
+                let enc = JSONEncoder(); enc.dateEncodingStrategy = .iso8601; enc.outputFormatting = [.prettyPrinted, .sortedKeys]
+                data = (try? enc.encode(items)) ?? Data()
+            }
+            try? data.write(to: url, options: .atomic)
+        }
     }
 
     private func copy(_ d: Dictation) {

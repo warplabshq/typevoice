@@ -7,6 +7,9 @@ import Foundation
 final class AudioRecorder: @unchecked Sendable {
     /// Normalised 0…1 loudness, delivered on the audio thread ~50×/s.
     var onLevel: (@Sendable (Float) -> Void)?
+    /// Per-band energies 0…1 (low → high), same cadence.
+    var onBands: (@Sendable ([Float]) -> Void)?
+    private var spectrum: Spectrum?
 
     private let engine = AVAudioEngine()
     private let lock = NSLock()
@@ -34,6 +37,7 @@ final class AudioRecorder: @unchecked Sendable {
         }
         converter = AVAudioConverter(from: inFormat, to: outFormat)
         converter?.sampleRateConverterQuality = .max
+        spectrum = Spectrum(bands: 10, sampleRate: inFormat.sampleRate)
         Log.d("mic: \(Self.defaultInputName() ?? "?") \(Int(inFormat.sampleRate)) Hz ×\(inFormat.channelCount)")
 
         if tapInstalled { input.removeTap(onBus: 0) }
@@ -78,6 +82,11 @@ final class AudioRecorder: @unchecked Sendable {
         let lin = min(1, max(0, (db + 56) / 50))     // -56 dB … -6 dB → 0 … 1
         let level = pow(lin, 0.65)                    // lift quiet speech so the bars breathe
         onLevel?(level)
+        if let spectrum {
+            // Gate opens quickly once there is any signal above the noise floor.
+            let gate = min(1, max(0, (db + 52) / 14))
+            onBands?(spectrum.analyze(p, count: n, gate: gate))
+        }
 
         // Resample to 16 kHz mono.
         let ratio = outFormat.sampleRate / buffer.format.sampleRate

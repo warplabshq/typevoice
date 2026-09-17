@@ -46,7 +46,8 @@ final class HUDController {
         } onChange: { [weak self] in
             Task { @MainActor in
                 guard let self else { return }
-                if case .copyOffer = self.state.phase { self.window?.setInteractive(true) } else { self.window?.setInteractive(false) }
+                // Hover and the Copy button need mouse events; idle stays click-through.
+                self.window?.setInteractive(self.state.phase.isActive)
                 self.watchPhase()
             }
         }

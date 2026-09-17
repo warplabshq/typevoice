@@ -4,6 +4,7 @@ import SwiftUI
 struct HUDView: View {
     let state: AppState
     var onCopy: () -> Void = {}
+    @State private var hovering = false
 
     private var phase: AppState.Phase { state.phase }
     private var shown: Bool { phase.isActive }
@@ -44,7 +45,8 @@ struct HUDView: View {
                 .shadow(color: .black.opacity(0.28), radius: 16, y: 6)
                 .shadow(color: .black.opacity(0.16), radius: 2, y: 1)
         }
-        .scaleEffect(shown ? 1 : 0.9, anchor: UnitPoint(x: [0.0, 0.5, 1.0][position.horizontal], y: position.isTop ? 0 : 1))
+        .scaleEffect(shown ? (hovering && phase.isListening ? 1.03 : 1) : 0.9,
+                     anchor: UnitPoint(x: [0.0, 0.5, 1.0][position.horizontal], y: position.isTop ? 0 : 1))
         .opacity(shown ? 1 : 0)
         .blur(radius: shown ? 0 : 5)
     }
@@ -59,8 +61,11 @@ struct HUDView: View {
             HStack(spacing: 10) {
                 if locked { ListeningDot(locked: true) }
                 if state.isReady {
-                    WaveformView(levels: state.levels)
-                        .frame(width: 80, height: 16)
+                    WaveformView(bands: state.bands, bars: hovering ? 32 : 18, barWidth: 2.5, gap: 2, excited: hovering)
+                        .frame(width: hovering ? 150 : 84, height: hovering ? 24 : 20)
+                    if hovering, let since = state.listeningSince {
+                        ElapsedLabel(since: since)
+                    }
                 } else {
                     HStack(spacing: 8) {
                         ProgressRing(fraction: state.warm.fraction)
@@ -77,6 +82,7 @@ struct HUDView: View {
             }
             .transition(.blurFade)
             .id("listening")
+            .onHover { h in withAnimation(Theme.spring) { hovering = h } }
 
         case .processing:
             ShimmerLine()
@@ -138,5 +144,18 @@ struct HUDView: View {
             HuggingText(text: text, maxWidth: 420)
         }
         .transition(.blurFade)
+    }
+}
+
+/// mm:ss that ticks while listening.
+struct ElapsedLabel: View {
+    let since: Date
+    var body: some View {
+        TimelineView(.periodic(from: since, by: 1)) { ctx in
+            let s = max(0, Int(ctx.date.timeIntervalSince(since)))
+            Text(String(format: "%d:%02d", s / 60, s % 60))
+                .font(.system(size: 11, weight: .medium).monospacedDigit())
+                .foregroundStyle(Theme.onGlassDim)
+        }
     }
 }

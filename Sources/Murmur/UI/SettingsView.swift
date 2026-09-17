@@ -7,8 +7,6 @@ struct SettingsView: View {
     @AppStorage(Prefs.Key.smartCleanup) private var smart = true
     @AppStorage(Prefs.Key.numbersAsDigits) private var numbers = true
     @AppStorage(Prefs.Key.showPreview) private var showPreview = true
-    @AppStorage(Prefs.Key.sounds) private var sounds = true
-    @AppStorage(Prefs.Key.haptics) private var haptics = true
     @AppStorage(Prefs.Key.hudPosition) private var hudPosition = Prefs.HUDPosition.bottomCenter.rawValue
     @AppStorage(Prefs.Key.accent) private var accent = Prefs.Accent.mono.rawValue
     @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
@@ -55,8 +53,6 @@ struct SettingsView: View {
                     PillPreview(accent: Prefs.Accent(rawValue: accent) ?? .mono)
                 }
                 Toggle("Show the text after each dictation", isOn: $showPreview)
-                Toggle("Sounds", isOn: $sounds)
-                Toggle("Haptics", isOn: $haptics)
             }
 
             Section("App") {
@@ -164,21 +160,11 @@ private struct AccentSwatches: View {
 struct PillPreview: View {
     let accent: Prefs.Accent
 
-    static func levels(at t: Double) -> [Float] {
-        var out: [Float] = []
-        for i in 0..<18 {
-            let d = Double(i)
-            let fast: Double = abs(sin(t * 2.3 + d * 0.6))
-            let slow: Double = 0.5 + 0.5 * sin(t * 0.8 + d * 0.25)
-            out.append(Float(0.2 + 0.7 * fast * slow))
-        }
-        return out
-    }
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 30)) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
-            let levels = PillPreview.levels(at: t)
-            WaveformView(levels: levels, color: Theme.color(for: accent))
+            let bands = DemoBands.at(t)
+            WaveformView(bands: bands, color: Theme.color(for: accent))
                 .frame(width: 80, height: 16)
                 .frame(height: 22)
                 .padding(.horizontal, 14)

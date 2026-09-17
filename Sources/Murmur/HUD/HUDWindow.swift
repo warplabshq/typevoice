@@ -23,6 +23,7 @@ final class HUDWindow: NSPanel {
         collectionBehavior = [.canJoinAllSpaces, .fullScreenAuxiliary, .stationary, .ignoresCycle, .transient]
         sharingType = Log.debugTimings ? .readOnly : .none   // capturable only for debugging
         ignoresMouseEvents = true
+        acceptsMouseMovedEvents = true
         isMovable = false
         hidesOnDeactivate = false
         isReleasedWhenClosed = false

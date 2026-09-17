@@ -19,8 +19,11 @@ final class AppState {
     }
 
     var phase: Phase = .idle
-    /// Ring of recent loudness samples (0…1), newest last. Drives the waveform.
+    /// Ring of recent loudness samples (0…1), newest last.
     var levels: [Float] = Array(repeating: 0, count: 40)
+    /// Current band energies (low → high). Drives the waveform.
+    var bands: [Float] = Array(repeating: 0, count: 10)
+    var listeningSince: Date?
     var paused = false
     var warm: WarmProgress = .init(phase: .checking, fraction: 0)
     var isReady: Bool { warm.phase == .ready }
@@ -35,5 +38,6 @@ final class AppState {
 
     func resetLevels() {
         levels = Array(repeating: 0, count: levels.count)
+        bands = Array(repeating: 0, count: bands.count)
     }
 }

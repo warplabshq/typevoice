@@ -41,11 +41,11 @@ If Accessibility ever looks on but Murmur doesn't react: System Settings › Pri
 ```
 Sources/Murmur/
   App/      entry point, AppState, DictationController (the pipeline)
-  Capture/  Fn/shortcut monitor, microphone → 16 kHz
+  Capture/  Fn/shortcut monitor, microphone → 16 kHz, FFT band analysis for the waveform
   Engine/   Transcriber protocol, Parakeet implementation
   Text/     deterministic Cleaner, SmartCleaner (Foundation Models)
   Insert/   Accessibility insertion with paste fallback
-  HUD/      the glass pill: window, controller, waveform, type-on text, sounds
+  HUD/      the glass pill: window, controller, voice-reactive waveform, type-on text
   Store/    history and dictionary (plain JSON in ~/Library/Application Support/Murmur)
   UI/       main window (history, dictionary, style, settings, privacy), onboarding, menu bar
 Tools/      latency.sh, wer.py

@@ -13,7 +13,6 @@ final class DictationController {
     let transcriber: any Transcriber = ParakeetTranscriber()
     let smart = SmartCleaner()
     let inserter = TextInserter()
-    let sounds = Sounds()
     var hud: HUDController?
 
     private var target: TextInserter.Target?
@@ -35,6 +34,12 @@ final class DictationController {
         self.dictionary = dictionary
         recorder.onLevel = { [weak self] l in
             Task { @MainActor in self?.level(l) }
+        }
+        recorder.onBands = { [weak self] b in
+            Task { @MainActor in
+                guard let self, self.state.phase.isListening else { return }
+                self.state.bands = b
+            }
         }
         hotkey.onPress = { [weak self] in self?.press() }
         hotkey.onRelease = { [weak self] in self?.release() }
@@ -101,7 +106,6 @@ final class DictationController {
             lockWindow?.cancel(); lockWindow = nil
             locked = true
             state.phase = .listening(locked: true)
-            haptic()
             return
         }
         // Tap while locked → finish.
@@ -123,9 +127,9 @@ final class DictationController {
             return
         }
         locked = false
+        state.listeningSince = .now
         state.phase = .listening(locked: false)
         hud?.present(for: target)
-        sounds.start()
         Log.app.info("listening → \(self.target?.appName ?? "?")")
         Log.d("listening → \(target?.appName ?? "?") ax=\(target?.element != nil) ctx=\(target?.context.textBeforeCaret?.suffix(20).description ?? "nil")")
     }
@@ -163,12 +167,13 @@ final class DictationController {
         guard state.phase == .idle, let samples = try? PipelineTest.load16k(wav) else { return }
         target = inserter.captureTarget()
         state.resetLevels()
+        state.listeningSince = .now
         state.phase = .listening(locked: false)
         hud?.present(for: target)
         Task { @MainActor in
-            for i in 0..<30 {
-                state.pushLevel(Float(0.3 + 0.5 * abs(sin(Double(i) * 0.7))))
-                try? await Task.sleep(for: .milliseconds(30))
+            for i in 0..<60 {
+                state.bands = DemoBands.at(Double(i) * 0.05)
+                try? await Task.sleep(for: .milliseconds(50))
             }
             finish(with: AudioRecorder.Recording(samples: samples, peak: 0.5))
         }
@@ -231,8 +236,7 @@ final class DictationController {
                     Log.d("no text target in \(target.appName); offering copy")
                     history.add(Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
                                           bundleID: target.bundleID, seconds: rec.seconds, latencyMs: Int((ContinuousClock.now - t0).ms)))
-                    sounds.done()
-                    show(.copyOffer(text.trimmingCharacters(in: .whitespaces), copied: false), for: .seconds(8))
+                        show(.copyOffer(text.trimmingCharacters(in: .whitespaces), copied: false), for: .seconds(8))
                     return
                 }
                 let method = try await inserter.insert(text, into: target)
@@ -243,8 +247,6 @@ final class DictationController {
                 let latency = Int((ContinuousClock.now - t0).ms)
                 history.add(Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
                                       bundleID: target.bundleID, seconds: rec.seconds, latencyMs: latency))
-                sounds.done()
-                haptic()
                 if Prefs.showPreview {
                     let ms = min(2600, 700 + text.count * 12)
                     show(.done(text.trimmingCharacters(in: .whitespaces)), for: .milliseconds(ms))
@@ -271,7 +273,6 @@ final class DictationController {
     func copyOffered() {
         guard case .copyOffer(let text, _) = state.phase else { return }
         inserter.copyToClipboard(text)
-        haptic()
         show(.copyOffer(text, copied: true), for: .milliseconds(900))
     }
 
@@ -294,8 +295,4 @@ final class DictationController {
         if state.phase.isListening { state.pushLevel(levelSmoother) }
     }
 
-    private func haptic() {
-        guard Prefs.haptics else { return }
-        NSHapticFeedbackManager.defaultPerformer.perform(.levelChange, performanceTime: .now)
-    }
 }

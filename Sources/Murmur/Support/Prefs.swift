@@ -8,8 +8,6 @@ enum Prefs {
     enum Key {
         static let trigger = "trigger"                 // "fn" | "custom"
         static let smartCleanup = "smartCleanup"       // Bool
-        static let sounds = "sounds"                   // Bool
-        static let haptics = "haptics"                 // Bool
         static let showMenuBarIcon = "showMenuBarIcon" // Bool
         static let hasOnboarded = "hasOnboarded"       // Bool
         static let insertion = "insertion"             // "auto" | "paste"
@@ -71,8 +69,6 @@ enum Prefs {
         UserDefaults.standard.register(defaults: [
             Key.trigger: Trigger.fn.rawValue,
             Key.smartCleanup: true,
-            Key.sounds: true,
-            Key.haptics: true,
             Key.showMenuBarIcon: true,
             Key.hasOnboarded: false,
             Key.insertion: Insertion.auto.rawValue,
@@ -92,8 +88,6 @@ enum Prefs {
 
     static var trigger: Trigger { Trigger(rawValue: d.string(forKey: Key.trigger) ?? "") ?? .fn }
     static var smartCleanup: Bool { d.bool(forKey: Key.smartCleanup) }
-    static var sounds: Bool { d.bool(forKey: Key.sounds) }
-    static var haptics: Bool { d.bool(forKey: Key.haptics) }
     static var showMenuBarIcon: Bool { d.bool(forKey: Key.showMenuBarIcon) }
     static var hasOnboarded: Bool { d.bool(forKey: Key.hasOnboarded) }
     static var insertion: Insertion { Insertion(rawValue: d.string(forKey: Key.insertion) ?? "") ?? .auto }
