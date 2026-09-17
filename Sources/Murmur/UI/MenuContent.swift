@@ -14,7 +14,7 @@ struct MenuContent: View {
             } else if state.paused {
                 Text("Paused")
             } else {
-                Text("Hold 🌐 to dictate")
+                Text("Hold \(Prefs.triggerLabel) to dictate")
             }
         }
         Divider()

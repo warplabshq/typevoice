@@ -6,6 +6,7 @@ struct SettingsView: View {
     @AppStorage(Prefs.Key.trigger) private var trigger = Prefs.Trigger.fn.rawValue
     @AppStorage(Prefs.Key.smartCleanup) private var smart = true
     @AppStorage(Prefs.Key.numbersAsDigits) private var numbers = true
+    @AppStorage(Prefs.Key.showPreview) private var showPreview = true
     @AppStorage(Prefs.Key.sounds) private var sounds = true
     @AppStorage(Prefs.Key.haptics) private var haptics = true
     @AppStorage(Prefs.Key.hudPosition) private var hudPosition = Prefs.HUDPosition.bottomCenter.rawValue
@@ -53,6 +54,7 @@ struct SettingsView: View {
                 LabeledContent("Preview") {
                     PillPreview(accent: Prefs.Accent(rawValue: accent) ?? .mono)
                 }
+                Toggle("Show the text after each dictation", isOn: $showPreview)
                 Toggle("Sounds", isOn: $sounds)
                 Toggle("Haptics", isOn: $haptics)
             }
@@ -83,7 +85,6 @@ struct SettingsView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Settings")
         .onChange(of: trigger) { _, _ in
             NotificationCenter.default.post(name: .murmurTriggerChanged, object: nil)
         }
@@ -177,19 +178,15 @@ struct PillPreview: View {
         TimelineView(.animation(minimumInterval: 1 / 30)) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
             let levels = PillPreview.levels(at: t)
-            ZStack {
-                RoundedRectangle(cornerRadius: 10, style: .continuous)
-                    .fill(LinearGradient(colors: [Color(red: 0.16, green: 0.18, blue: 0.24), Color(red: 0.08, green: 0.09, blue: 0.12)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                WaveformView(levels: levels, color: Theme.color(for: accent))
-                    .frame(width: 80, height: 16)
-                    .frame(height: 22)
-                    .padding(.horizontal, 14)
-                    .padding(.vertical, 8)
-                    .glassEffect(.regular.tint(Color.black.opacity(0.45)), in: .capsule)
-                    .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 0.6))
-                    .shadow(color: .black.opacity(0.3), radius: 8, y: 3)
-            }
-            .frame(width: 220, height: 64)
+            WaveformView(levels: levels, color: Theme.color(for: accent))
+                .frame(width: 80, height: 16)
+                .frame(height: 22)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .glassEffect(.regular.tint(Color.black.opacity(0.45)), in: .capsule)
+                .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 0.6))
+                .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
+                .padding(.vertical, 4)
         }
     }
 }

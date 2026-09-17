@@ -11,6 +11,8 @@ final class AppState {
         case done(String)
         case notHeard
         case error(String)
+        /// Nothing to type into: offer the text for copying.
+        case copyOffer(String, copied: Bool)
 
         var isListening: Bool { if case .listening = self { return true } else { return false } }
         var isActive: Bool { self != .idle }

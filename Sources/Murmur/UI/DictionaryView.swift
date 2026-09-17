@@ -53,7 +53,6 @@ struct DictionaryView: View {
                 .padding(.horizontal, 16)
                 .padding(.vertical, 10)
         }
-        .navigationTitle("Dictionary")
         .onAppear { focused = true }
     }
 

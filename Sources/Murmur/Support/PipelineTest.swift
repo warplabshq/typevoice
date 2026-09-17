@@ -78,7 +78,7 @@ enum PipelineTest {
         for c in cases { print("\(c)\n  → \(Vocabulary.apply(terms, to: c))") }
     }
 
-    private static func load16k(_ url: URL) throws -> [Float] {
+    static func load16k(_ url: URL) throws -> [Float] {
         let file = try AVAudioFile(forReading: url)
         let out = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false)!
         let conv = AVAudioConverter(from: file.processingFormat, to: out)!

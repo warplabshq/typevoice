@@ -79,12 +79,14 @@ struct ShimmerLine: View {
 /// Ring used while the model downloads / compiles on first run.
 struct ProgressRing: View {
     let fraction: Double
+    var tint: Color = Theme.accent
+    var track: Color = Color.white.opacity(0.12)
     var body: some View {
         ZStack {
-            Circle().stroke(Color.white.opacity(0.12), lineWidth: 2)
+            Circle().stroke(track, lineWidth: 2)
             Circle()
                 .trim(from: 0, to: max(0.02, fraction))
-                .stroke(Theme.accent, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+                .stroke(tint, style: StrokeStyle(lineWidth: 2, lineCap: .round))
                 .rotationEffect(.degrees(-90))
                 .animation(.easeOut(duration: 0.3), value: fraction)
         }

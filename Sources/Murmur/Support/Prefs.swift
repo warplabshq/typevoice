@@ -1,4 +1,5 @@
 import Foundation
+import KeyboardShortcuts
 import SwiftUI
 
 /// UserDefaults-backed settings. Views bind through `@AppStorage(Prefs.Key…)`,
@@ -16,9 +17,11 @@ enum Prefs {
         static let punctuation = "style.punctuation"
         static let tone = "style.tone"
         static let removeFillers = "style.removeFillers"
+        static let fixStutters = "style.fixStutters"
         static let hudPosition = "hudPosition"         // HUDPosition
         static let accent = "accent"                   // Accent
         static let numbersAsDigits = "numbersAsDigits" // Bool
+        static let showPreview = "showPreview"         // Bool: typed text in the indicator
     }
 
     enum HUDPosition: String, CaseIterable, Identifiable {
@@ -77,9 +80,11 @@ enum Prefs {
             Key.punctuation: Style.Punctuation.full.rawValue,
             Key.tone: Style.Tone.natural.rawValue,
             Key.removeFillers: true,
+            Key.fixStutters: true,
             Key.hudPosition: HUDPosition.bottomCenter.rawValue,
             Key.accent: Accent.mono.rawValue,
             Key.numbersAsDigits: true,
+            Key.showPreview: true,
         ])
     }
 
@@ -96,9 +101,17 @@ enum Prefs {
     static var punctuation: Style.Punctuation { Style.Punctuation(rawValue: d.string(forKey: Key.punctuation) ?? "") ?? .full }
     static var tone: Style.Tone { Style.Tone(rawValue: d.string(forKey: Key.tone) ?? "") ?? .natural }
     static var removeFillers: Bool { d.bool(forKey: Key.removeFillers) }
+    static var fixStutters: Bool { d.bool(forKey: Key.fixStutters) }
     static var hudPosition: HUDPosition { HUDPosition(rawValue: d.string(forKey: Key.hudPosition) ?? "") ?? .bottomCenter }
     static var accent: Accent { Accent(rawValue: d.string(forKey: Key.accent) ?? "") ?? .mono }
     static var numbersAsDigits: Bool { d.bool(forKey: Key.numbersAsDigits) }
+    static var showPreview: Bool { d.bool(forKey: Key.showPreview) }
+
+    /// "🌐" or the custom shortcut, for UI copy.
+    static var triggerLabel: String {
+        if trigger == .custom, let sc = KeyboardShortcuts.getShortcut(for: .dictate) { return sc.description }
+        return "🌐"
+    }
 
     /// Wipes every preference. Used by "Delete everything".
     static func reset() {

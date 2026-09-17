@@ -57,9 +57,12 @@ struct Style: Sendable, Equatable {
     var punctuation: Punctuation = .full
     var tone: Tone = .natural
     var removeFillers = true
+    /// "the the" → "the". Only function words, so "very very" and "no no" survive.
+    var fixStutters = true
 
     static var current: Style {
-        Style(casing: Prefs.casing, punctuation: Prefs.punctuation, tone: Prefs.tone, removeFillers: Prefs.removeFillers)
+        Style(casing: Prefs.casing, punctuation: Prefs.punctuation, tone: Prefs.tone,
+              removeFillers: Prefs.removeFillers, fixStutters: Prefs.fixStutters)
     }
 
     /// Deterministic finishing pass, applied last so the LLM cannot undo it.
@@ -98,6 +101,9 @@ struct Style: Sendable, Equatable {
         }
         if casing == .lowercase { out.append("Write everything in lowercase, including 'i' and names.") }
         if !removeFillers { out.append("Keep filler words like um and uh exactly as spoken.") }
+        out.append(fixStutters
+            ? "Intentional repetition for emphasis (\"very very\", \"no no\") stays; only stutters like \"the the\" are fixed."
+            : "Never remove repeated words; every repetition is intentional.")
         return out
     }
 }

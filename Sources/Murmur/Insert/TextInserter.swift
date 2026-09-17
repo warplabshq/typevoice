@@ -14,6 +14,8 @@ final class TextInserter {
         let context: Cleaner.Context
         /// Cocoa-space frame of the focused window, for choosing the HUD's screen.
         let windowFrame: CGRect?
+        /// Whether the app answers Accessibility queries at all.
+        let axAvailable: Bool
     }
 
     enum Method: String, Sendable { case accessibility, paste }
@@ -40,7 +42,34 @@ final class TextInserter {
         let context = element.map(Self.readContext) ?? .unknown
         let frame = Self.focusedWindowFrame(pid: pid)
         return Target(pid: pid, appName: app.localizedName ?? "app", bundleID: app.bundleIdentifier,
-                      element: element, context: context, windowFrame: frame)
+                      element: element, context: context, windowFrame: frame, axAvailable: frame != nil || element != nil)
+    }
+
+    /// Whether the captured focus looks like somewhere text can go. Conservative:
+    /// only well-known non-text roles say no, so Electron/web apps still get a try.
+    func hasTextTarget(_ target: Target) -> Bool {
+        // No focused element: if the app speaks Accessibility, nothing is focused;
+        // if it doesn't, we can't know, so let paste have a go.
+        guard let el = target.element else { return !target.axAvailable }
+        let role = Self.string(el, kAXRoleAttribute) ?? ""
+        Log.d("focused role=\(role) subrole=\(Self.string(el, kAXSubroleAttribute) ?? "-") in \(target.appName)")
+        let nonText: Set<String> = [
+            kAXButtonRole, kAXCheckBoxRole, kAXRadioButtonRole, kAXStaticTextRole, kAXImageRole,
+            kAXRowRole, kAXCellRole, kAXOutlineRole, kAXTableRole, kAXListRole, kAXMenuRole, kAXMenuItemRole,
+            kAXMenuBarRole, kAXWindowRole, kAXScrollBarRole, kAXSliderRole, kAXTabGroupRole, kAXToolbarRole,
+            kAXPopUpButtonRole, kAXDisclosureTriangleRole, "AXLink", kAXScrollAreaRole,
+        ]
+        if nonText.contains(role) { return false }
+        let subrole = Self.string(el, kAXSubroleAttribute) ?? ""
+        if subrole == "AXDesktop" { return false }
+        if role == kAXGroupRole || role == "AXWebArea" {
+            // Containers count as text only if they behave like a text view.
+            var r: CFTypeRef?, n: CFTypeRef?
+            let hasRange = AXUIElementCopyAttributeValue(el, kAXSelectedTextRangeAttribute as CFString, &r) == .success
+            let hasCount = AXUIElementCopyAttributeValue(el, kAXNumberOfCharactersAttribute as CFString, &n) == .success
+            return hasRange && hasCount
+        }
+        return true
     }
 
     // MARK: Insert

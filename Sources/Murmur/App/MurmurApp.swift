@@ -40,14 +40,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         if Log.debugTimings {
             DistributedNotificationCenter.default().addObserver(
                 forName: Notification.Name("murmur.debug.showTab"), object: nil, queue: .main
-            ) { n in
+            ) { [weak self] n in
                 Task { @MainActor in
                     if let raw = n.object as? String, let t = MainTab(rawValue: raw) { openMainWindow(t) }
+                    else if (n.object as? String) == "onboarding" { self?.showOnboarding() }
+                    else if let raw = n.object as? String, raw.hasPrefix("dictate:") {
+                        self?.controller.simulate(wav: URL(fileURLWithPath: String(raw.dropFirst(8))))
+                    }
                 }
             }
         }
         controller = DictationController(state: state, history: history, dictionary: dictionary)
         hud = HUDController(state: state)
+        hud.onCopy = { [weak self] in self?.controller.copyOffered() }
         controller.hud = hud
 
         observers.append(NotificationCenter.default.addObserver(
@@ -56,6 +61,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         observers.append(NotificationCenter.default.addObserver(
             forName: .murmurOnboardingDone, object: nil, queue: .main
         ) { [weak self] _ in Task { @MainActor in self?.finishOnboarding() } })
+        observers.append(NotificationCenter.default.addObserver(
+            forName: .murmurShowOnboarding, object: nil, queue: .main
+        ) { [weak self] _ in Task { @MainActor in self?.showOnboarding() } })
+        observers.append(NotificationCenter.default.addObserver(
+            forName: .murmurArmHotkey, object: nil, queue: .main
+        ) { [weak self] _ in Task { @MainActor in self?.controller.start() } })
         observers.append(NotificationCenter.default.addObserver(
             forName: .murmurRetryWarm, object: nil, queue: .main
         ) { [weak self] _ in Task { @MainActor in self?.controller.warm() } })
@@ -92,6 +103,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             w.isReleasedWhenClosed = false
             w.setFrameAutosaveName("MurmurMain")
             w.delegate = self
+            w.title = mainTab.label
             main = w
         }
         NSApp.activate(ignoringOtherApps: true)
@@ -133,6 +145,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     @objc private func showSettingsFromMenu() { showMain(tab: .settings) }
 
+    func setMainTitle(_ t: MainTab) { main?.title = t.label }
+
     /// Shared with `MainRoot` so the menu can pick a tab before the window exists.
     lazy var tabBinding = Binding<MainTab>(
         get: { [weak self] in self?.mainTab ?? .history },
@@ -148,14 +162,13 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func showOnboarding() {
         Log.d("showOnboarding")
         if let onboarding { onboarding.makeKeyAndOrderFront(nil); NSApp.activate(); return }
-        let view = OnboardingView(state: state)
-        let w = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 520, height: 560),
+        let view = OnboardingView(state: state, revisiting: Prefs.hasOnboarded)
+        let w = NSWindow(contentRect: CGRect(x: 0, y: 0, width: 560, height: 540),
                          styleMask: [.titled, .closable, .fullSizeContentView],
                          backing: .buffered, defer: false)
         w.titleVisibility = .hidden
         w.titlebarAppearsTransparent = true
         w.isMovableByWindowBackground = true
-        w.backgroundColor = .black
         w.contentView = NSHostingView(rootView: view)
         w.center()
         w.isReleasedWhenClosed = false
@@ -166,17 +179,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     private func finishOnboarding() {
+        let first = !Prefs.hasOnboarded
         UserDefaults.standard.set(true, forKey: Prefs.Key.hasOnboarded)
         onboarding?.close()
         onboarding = nil
         controller.start()
-        showMain(tab: .history)
+        if first { showMain(tab: .history) }
     }
 }
 
 extension Notification.Name {
     static let murmurTriggerChanged = Notification.Name("murmur.triggerChanged")
     static let murmurOnboardingDone = Notification.Name("murmur.onboardingDone")
+    static let murmurShowOnboarding = Notification.Name("murmur.showOnboarding")
 }
 
 /// Bridges the AppKit-owned tab selection into SwiftUI.
@@ -185,7 +200,8 @@ private struct MainRoot: View {
     @State private var tab: MainTab = .history
     var body: some View {
         MainView(state: delegate.state, history: delegate.history, dictionary: delegate.dictionary, tab: $tab)
-            .onAppear { tab = delegate.tabBinding.wrappedValue }
+            .onAppear { tab = delegate.tabBinding.wrappedValue; delegate.setMainTitle(tab) }
+            .onChange(of: tab) { _, t in delegate.setMainTitle(t) }
             .onReceive(NotificationCenter.default.publisher(for: .murmurShowTab)) { n in
                 if let t = n.object as? MainTab { tab = t }
             }

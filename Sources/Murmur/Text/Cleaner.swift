@@ -14,9 +14,11 @@ enum Cleaner {
         return try! NSRegularExpression(pattern: pattern)
     }()
 
-    private static let repeatedWord: NSRegularExpression = {
-        // "the the", "I I" → single. Case-insensitive, word-bounded.
-        try! NSRegularExpression(pattern: #"(?i)\b(\w+)(?:[,\s]+\1\b)+"#)
+    private static let stutter: NSRegularExpression = {
+        // Function words doubled are almost always stutters: "the the", "I I", "to to".
+        // Content words ("very very", "no no", "really really") are left alone.
+        let words = "the|a|an|i|to|of|in|it|is|and|that|this|we|you|they|he|she|was|were|on|at|for|with|my|our|your|so|but|if|as|be|are|have|has|had|do|did|can|will|would|just|not"
+        return try! NSRegularExpression(pattern: #"(?i)\b("# + words + #")(?:[,\s]+\1\b)+"#)
     }()
 
     static func clean(_ raw: String, style: Style = .current) -> String {
@@ -26,7 +28,9 @@ enum Cleaner {
         if style.removeFillers {
             s = fillers.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: "")
         }
-        s = repeatedWord.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: "$1")
+        if style.fixStutters {
+            s = stutter.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: "$1")
+        }
 
         // Whitespace and punctuation hygiene.
         s = s.replacingOccurrences(of: #"\s+"#, with: " ", options: .regularExpression)

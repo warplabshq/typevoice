@@ -1,50 +1,57 @@
 import AppKit
+import KeyboardShortcuts
 import SwiftUI
 
-/// Four cards. Each one polls its permission and moves on by itself.
+/// First-run setup, also reachable from the "?" toolbar button. Four cards that
+/// check themselves off; the same visual language as the main window.
 struct OnboardingView: View {
     let state: AppState
+    var revisiting = false
     @State private var step = 0
     @State private var mic = Permissions.mic
     @State private var ax = Permissions.accessibility
     @State private var poll: Task<Void, Never>?
     @State private var askedAX: Date?
+    @AppStorage(Prefs.Key.trigger) private var trigger = Prefs.Trigger.fn.rawValue
 
-    private let steps = ["Microphone", "Accessibility", "Globe key", "Model"]
+    private var steps: [String] { ["Microphone", "Accessibility", "Shortcut", "Model", "Try it"] }
+    @State private var tryText = ""
+    @State private var tried = false
+    @FocusState private var tryFocused: Bool
 
     var body: some View {
         VStack(spacing: 0) {
-            header
-            Spacer(minLength: 0)
+            hero
+                .padding(.top, 22)
+                .padding(.bottom, 20)
+            StepBar(titles: steps, current: step, done: [mic == .granted, ax, false, state.isReady, tried])
+                .padding(.horizontal, 32)
+                .padding(.bottom, 16)
             card
                 .id(step)
                 .transition(.blurFade)
-                .frame(maxWidth: .infinity)
-            Spacer(minLength: 0)
+                .padding(.horizontal, 32)
+            Spacer(minLength: 16)
             footer
+                .padding(.horizontal, 32)
+                .padding(.bottom, 22)
         }
-        .padding(36)
-        .frame(width: 520, height: 560)
-        .background(
-            LinearGradient(colors: [Color(white: 0.11), Color(white: 0.04)], startPoint: .top, endPoint: .bottom)
-        )
-        .preferredColorScheme(.dark)
+        .frame(width: 560, height: 540)
+        .background(.background)
         .animation(Theme.springSoft, value: step)
         .onAppear(perform: startPolling)
         .onDisappear { poll?.cancel() }
     }
 
-    private var header: some View {
+    private var hero: some View {
         VStack(spacing: 14) {
-            MiniPill()
+            PillPreview(accent: Prefs.accent)
             Text("Murmur")
-                .font(.system(size: 26, weight: .semibold))
-                .foregroundStyle(Theme.onGlass)
-            Text("Hold a key. Talk. Release. It's typed.")
+                .font(.system(size: 26, weight: .bold))
+            Text("Hold a key. Talk. Release. It's typed. All on this Mac.")
                 .font(.system(size: 14))
-                .foregroundStyle(Theme.onGlassDim)
+                .foregroundStyle(.secondary)
         }
-        .padding(.top, 12)
     }
 
     @ViewBuilder
@@ -52,16 +59,14 @@ struct OnboardingView: View {
         switch step {
         case 0:
             StepCard(
-                icon: "mic.fill",
-                title: "Microphone",
-                text: "Murmur listens only while you hold the key. Audio never leaves this Mac.",
+                icon: "mic.fill", title: "Microphone",
+                text: "Murmur listens only while you hold the key. Audio never leaves this Mac and is never written to disk.",
                 done: mic == .granted,
                 action: micAction
             )
         case 1:
             StepCard(
-                icon: "hand.raised.fill",
-                title: "Accessibility",
+                icon: "hand.raised.fill", title: "Accessibility",
                 text: axHint,
                 done: ax,
                 action: ("Allow accessibility", { askedAX = .now; Permissions.requestAccessibility(); Permissions.openAccessibilityPane() }),
@@ -69,36 +74,65 @@ struct OnboardingView: View {
             )
         case 2:
             StepCard(
-                icon: "globe",
-                title: "Free the Globe key",
-                text: "In System Settings › Keyboard, set “Press 🌐 key to” to Do Nothing. Otherwise macOS opens the emoji picker every time you hold it.",
+                icon: "keyboard", title: "Your shortcut",
+                text: trigger == Prefs.Trigger.fn.rawValue
+                    ? "Hold 🌐 (the Globe/Fn key) to dictate. So macOS doesn't open the emoji picker every time, set “Press 🌐 key to” to Do Nothing in Keyboard settings."
+                    : "Hold your shortcut to dictate. Tap it twice to keep listening hands-free; Esc cancels.",
                 done: false,
-                action: ("Open Keyboard settings", { Permissions.openKeyboardPane() }),
-                secondary: ("I've done this", { step = 3 })
-            )
-        default:
+                action: trigger == Prefs.Trigger.fn.rawValue ? ("Open Keyboard settings", { Permissions.openKeyboardPane() }) : nil
+            ) {
+                Picker("Trigger", selection: $trigger) {
+                    Text("🌐 Globe / Fn").tag(Prefs.Trigger.fn.rawValue)
+                    Text("Custom").tag(Prefs.Trigger.custom.rawValue)
+                }
+                .pickerStyle(.segmented)
+                .labelsHidden()
+                .frame(width: 220)
+                if trigger == Prefs.Trigger.custom.rawValue {
+                    KeyboardShortcuts.Recorder("", name: .dictate).labelsHidden()
+                }
+            }
+        case 3:
             StepCard(
-                icon: "cpu",
-                title: "Speech model",
-                text: state.warmError ?? (state.isReady ? "Ready. Everything runs on the Neural Engine." : "One-time download and optimisation for this Mac. About a minute."),
+                icon: "cpu", title: "Speech model",
+                text: state.warmError ?? (state.isReady
+                    ? "Ready. Recognition runs on the Neural Engine; nothing is sent anywhere."
+                    : "One-time download and optimisation for this Mac. About a minute."),
                 done: state.isReady,
                 progress: state.isReady ? nil : state.warm,
                 action: retryAction
             )
+        default:
+            StepCard(
+                icon: tried ? "checkmark.seal.fill" : "waveform", title: tried ? "That's it" : "Say something",
+                text: tried
+                    ? "Murmur lives in your menu bar now (the small waveform, top right). Hold \(Prefs.triggerLabel) in any app to dictate. History, dictionary and settings are one click away."
+                    : "Click the box below, hold \(Prefs.triggerLabel), say a sentence, and let go.",
+                done: tried
+            ) {
+                TextField("Your words will land here", text: $tryText, axis: .vertical)
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 15))
+                    .lineLimit(3...5)
+                    .padding(12)
+                    .background(.background, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+                    .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(tryFocused ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.separator), lineWidth: tryFocused ? 1.5 : 1))
+                    .focused($tryFocused)
+                    .onChange(of: tryText) { _, t in if !t.trimmingCharacters(in: .whitespaces).isEmpty { tried = true } }
+                    .onAppear { tryFocused = true; NotificationCenter.default.post(name: .murmurArmHotkey, object: nil) }
+            }
         }
     }
 
     private var axHint: String {
         if let t = askedAX, Date.now.timeIntervalSince(t) > 8, !ax {
-            return "Switched it on but still stuck? macOS sometimes only notices after a relaunch. If Murmur is already listed, flip it off and on again, then relaunch."
+            return "Still not on? If Murmur is already listed in the Accessibility pane, flip it off and on, or remove it with − and allow again. A relaunch fixes the rest."
         }
-        return "Needed to notice the 🌐 key and to type into the app you're using. Murmur never reads what's on your screen."
+        return "Needed to notice the key and to type into the app you're using. Murmur never reads what's on your screen."
     }
 
     private var micAction: (String, () -> Void) {
-        if mic == .denied {
-            return ("Open Settings", { Permissions.openMicPane() })
-        }
+        if mic == .denied { return ("Open Settings", { Permissions.openMicPane() }) }
         return ("Allow microphone", { Task { await Permissions.requestMic(); mic = Permissions.mic } })
     }
 
@@ -109,21 +143,16 @@ struct OnboardingView: View {
 
     private var footer: some View {
         HStack {
-            HStack(spacing: 6) {
-                ForEach(0..<4, id: \.self) { i in
-                    Capsule()
-                        .fill(i == step ? Theme.accent : Color.white.opacity(0.15))
-                        .frame(width: i == step ? 18 : 6, height: 6)
-                }
+            if step > 0 {
+                Button("Back") { step -= 1 }.buttonStyle(.glass)
             }
             Spacer()
-            if step == 3 {
-                Button("Start dictating") {
+            if step == 4 {
+                Button(tried || revisiting ? "Done" : "Skip") {
                     NotificationCenter.default.post(name: .murmurOnboardingDone, object: nil)
                 }
-                .buttonStyle(.glassProminent)
-                .disabled(!state.isReady)
-                .keyboardShortcut(.defaultAction)
+                .buttonStyle(tried ? AnyPrimitiveButtonStyle(.glassProminent) : AnyPrimitiveButtonStyle(.glass))
+                .keyboardShortcut(tried ? .defaultAction : .cancelAction)
             } else {
                 Button("Continue") { step += 1 }
                     .buttonStyle(.glassProminent)
@@ -131,12 +160,14 @@ struct OnboardingView: View {
                     .keyboardShortcut(.defaultAction)
             }
         }
+        .onChange(of: trigger) { _, _ in NotificationCenter.default.post(name: .murmurTriggerChanged, object: nil) }
     }
 
     private var canContinue: Bool {
         switch step {
         case 0: return mic == .granted
         case 1: return ax
+        case 3: return state.isReady
         default: return true
         }
     }
@@ -148,16 +179,50 @@ struct OnboardingView: View {
                 let m = Permissions.mic, a = Permissions.accessibility
                 if m != mic { mic = m }
                 if a != ax { ax = a }
-                if let t = askedAX, !a, Date.now.timeIntervalSince(t) > 8 { askedAX = t }   // nudge re-render
-                if step == 0, m == .granted { try? await Task.sleep(for: .milliseconds(500)); step = 1 }
-                else if step == 1, a { try? await Task.sleep(for: .milliseconds(500)); step = 2 }
-                try? await Task.sleep(for: .milliseconds(700))
+                if let t = askedAX, !a, Date.now.timeIntervalSince(t) > 8 { askedAX = t }
+                if step == 0, m == .granted { try? await Task.sleep(for: .milliseconds(450)); step = 1 }
+                else if step == 1, a { try? await Task.sleep(for: .milliseconds(450)); step = 2 }
+                try? await Task.sleep(for: .milliseconds(600))
             }
         }
     }
 }
 
-private struct StepCard: View {
+private struct StepBar: View {
+    let titles: [String]
+    let current: Int
+    let done: [Bool]
+    var body: some View {
+        HStack(spacing: 8) {
+            ForEach(titles.indices, id: \.self) { i in
+                let complete = i < current && done[i]
+                HStack(spacing: 6) {
+                    ZStack {
+                        Circle()
+                            .fill(i == current ? Color.accentColor : (complete ? Color.green : Color.secondary.opacity(0.18)))
+                            .frame(width: 18, height: 18)
+                        if complete {
+                            Image(systemName: "checkmark").font(.system(size: 9, weight: .bold)).foregroundStyle(.white)
+                        } else {
+                            Text("\(i + 1)").font(.system(size: 10, weight: .bold)).foregroundStyle(i == current ? .white : .secondary)
+                        }
+                    }
+                    Text(titles[i])
+                        .font(.system(size: 12, weight: i == current ? .semibold : .regular))
+                        .foregroundStyle(i == current ? .primary : .secondary)
+                        .lineLimit(1)
+                        .fixedSize()
+                }
+                if i < titles.count - 1 {
+                    Rectangle().fill(.separator).frame(height: 1).frame(minWidth: 10, maxWidth: .infinity)
+                }
+            }
+        }
+        .animation(.snappy(duration: 0.25), value: current)
+    }
+}
+
+private struct StepCard<Extra: View>: View {
     let icon: String
     let title: String
     let text: String
@@ -165,86 +230,60 @@ private struct StepCard: View {
     var progress: WarmProgress? = nil
     var action: (String, () -> Void)? = nil
     var secondary: (String, () -> Void)? = nil
+    @ViewBuilder var extra: Extra
 
+    init(icon: String, title: String, text: String, done: Bool, progress: WarmProgress? = nil,
+         action: (String, () -> Void)? = nil, secondary: (String, () -> Void)? = nil,
+         @ViewBuilder extra: () -> Extra = { EmptyView() }) {
+        self.icon = icon; self.title = title; self.text = text; self.done = done
+        self.progress = progress; self.action = action; self.secondary = secondary; self.extra = extra()
+    }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(spacing: 12) {
-                ZStack {
-                    Circle().fill(Color.white.opacity(0.08)).frame(width: 40, height: 40)
-                    Image(systemName: done ? "checkmark" : icon)
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(done ? Theme.accent : Theme.onGlass)
-                        .contentTransition(.symbolEffect(.replace))
-                }
-                Text(title)
-                    .font(.system(size: 17, weight: .semibold))
-                    .foregroundStyle(Theme.onGlass)
-                Spacer()
-            }
-            Text(text)
-                .font(.system(size: 13))
-                .foregroundStyle(Theme.onGlassDim)
-                .fixedSize(horizontal: false, vertical: true)
-            if let progress {
-                HStack(spacing: 10) {
-                    ProgressRing(fraction: progress.fraction)
-                    Text(progress.label)
-                        .font(.system(size: 12, weight: .medium))
-                        .foregroundStyle(Theme.onGlassDim)
-                }
-                .padding(.top, 2)
-            }
-            if !done, action != nil || secondary != nil {
-                HStack(spacing: 10) {
-                    if let action {
-                        Button(action.0, action: action.1).buttonStyle(.glassProminent)
+        Card(padding: 22) {
+            VStack(alignment: .leading, spacing: 14) {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle().fill(done ? Color.green.opacity(0.18) : Color.accentColor.opacity(0.14)).frame(width: 40, height: 40)
+                        Image(systemName: done ? "checkmark" : icon)
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundStyle(done ? Color.green : Color.accentColor)
+                            .contentTransition(.symbolEffect(.replace))
                     }
-                    if let secondary {
-                        Button(secondary.0, action: secondary.1).buttonStyle(.glass)
+                    Text(title).font(.system(size: 17, weight: .semibold))
+                    Spacer()
+                }
+                Text(text)
+                    .font(.system(size: 13))
+                    .foregroundStyle(.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+                extra
+                if let progress {
+                    HStack(spacing: 10) {
+                        ProgressRing(fraction: progress.fraction, tint: .accentColor, track: .secondary.opacity(0.2))
+                        Text(progress.label).font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
                     }
                 }
-                .padding(.top, 4)
+                if !done, action != nil || secondary != nil {
+                    HStack(spacing: 10) {
+                        if let action { Button(action.0, action: action.1).buttonStyle(.glassProminent) }
+                        if let secondary { Button(secondary.0, action: secondary.1).buttonStyle(.glass) }
+                    }
+                    .padding(.top, 2)
+                }
             }
         }
-        .padding(22)
-        .background(Color.white.opacity(0.06), in: RoundedRectangle(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(Color.white.opacity(0.08)))
     }
 }
 
-/// The pill, as the onboarding hero.
-private struct MiniPill: View {
-    static func levels(at time: Double) -> [Float] {
-        var out: [Float] = []
-        out.reserveCapacity(26)
-        for i in 0..<26 {
-            let d = Double(i)
-            let fast: Double = abs(sin(time * 2.1 + d * 0.55))
-            let slow: Double = 0.5 + 0.5 * sin(time * 0.7 + d * 0.2)
-            let v: Double = 0.25 + 0.6 * fast * slow
-            out.append(Float(v))
-        }
-        return out
-    }
-    var body: some View {
-        TimelineView(.animation(minimumInterval: 1 / 30)) { ctx in
-            let levels = MiniPill.levels(at: ctx.date.timeIntervalSinceReferenceDate)
-            HStack(spacing: 12) {
-                ListeningDot(locked: false)
-                WaveformView(levels: levels).frame(width: 150)
-            }
-            .frame(height: 30)
-            .padding(.horizontal, 16)
-            .padding(.vertical, 9)
-            .glassEffect(.regular.tint(Color.black.opacity(0.42)), in: .capsule)
-            .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 0.75))
-            .shadow(color: .black.opacity(0.35), radius: 16, y: 8)
-        }
-        .frame(height: 64)
-    }
+/// Type-erased primitive button style so a Button can switch between glass styles.
+struct AnyPrimitiveButtonStyle: PrimitiveButtonStyle {
+    private let make: (Configuration) -> AnyView
+    init<S: PrimitiveButtonStyle>(_ s: S) { make = { AnyView(s.makeBody(configuration: $0)) } }
+    func makeBody(configuration: Configuration) -> some View { make(configuration) }
 }
 
 extension Notification.Name {
     static let murmurRetryWarm = Notification.Name("murmur.retryWarm")
+    static let murmurArmHotkey = Notification.Name("murmur.armHotkey")
 }

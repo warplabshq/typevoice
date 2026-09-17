@@ -10,19 +10,38 @@ enum Log {
     static let insert = Logger(subsystem: "com.priyam.murmur", category: "insert")
     static let hud = Logger(subsystem: "com.priyam.murmur", category: "hud")
 
-    static let debugTimings = ProcessInfo.processInfo.environment["MURMUR_DEBUG"] == "1"
+    /// `MURMUR_DEBUG=1` in the environment, or `defaults write com.priyam.murmur debugLog -bool true`.
+    static let debugTimings: Bool =
+        ProcessInfo.processInfo.environment["MURMUR_DEBUG"] == "1" || UserDefaults.standard.bool(forKey: "debugLog")
 
-    /// Human-readable line on stderr when debugging is on (unified log needs FDA to read).
+    /// ~/Library/Logs/Murmur/murmur.log, also mirrored to stderr.
+    static let logFile: FileHandle? = {
+        guard debugTimings else { return nil }
+        let dir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0].appendingPathComponent("Logs/Murmur")
+        try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
+        let url = dir.appendingPathComponent("murmur.log")
+        if !FileManager.default.fileExists(atPath: url.path) { FileManager.default.createFile(atPath: url.path, contents: nil) }
+        let h = try? FileHandle(forWritingTo: url)
+        h?.seekToEndOfFile()
+        return h
+    }()
+
+    /// Human-readable line on stderr and in the log file when debugging is on.
     static func d(_ msg: @autoclosure () -> String) {
         guard debugTimings else { return }
-        FileHandle.standardError.write(("[murmur] " + msg() + "\n").data(using: .utf8)!)
+        let stamp = ISO8601DateFormatter().string(from: .now)
+        let line = "[\(stamp)] " + msg() + "\n"
+        FileHandle.standardError.write(line.data(using: .utf8)!)
+        logFile?.write(line.data(using: .utf8)!)
     }
 
     /// Prints `stage=<name> ms=<n>` lines when debugging is on.
     static func timing(_ stage: String, since start: ContinuousClock.Instant) {
         guard debugTimings else { return }
         let ms = (ContinuousClock.now - start).ms
-        print("stage=\(stage) ms=\(String(format: "%.1f", ms))")
+        let line = "stage=\(stage) ms=\(String(format: "%.1f", ms))"
+        print(line)
+        logFile?.write((line + "\n").data(using: .utf8)!)
     }
 }
 

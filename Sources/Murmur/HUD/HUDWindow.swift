@@ -7,6 +7,8 @@ import SwiftUI
 final class HUDWindow: NSPanel {
     static let canvas = CGSize(width: 720, height: 120)
 
+    var onCopy: () -> Void = {}
+
     init(state: AppState) {
         super.init(
             contentRect: CGRect(origin: .zero, size: Self.canvas),
@@ -26,8 +28,11 @@ final class HUDWindow: NSPanel {
         isReleasedWhenClosed = false
         animationBehavior = .none
         isFloatingPanel = true
-        contentView = NSHostingView(rootView: HUDView(state: state))
+        contentView = NSHostingView(rootView: HUDView(state: state, onCopy: { [weak self] in self?.onCopy() }))
     }
+
+    /// The pill is click-through except when it has a button to press.
+    func setInteractive(_ on: Bool) { ignoresMouseEvents = !on }
 
     override var canBecomeKey: Bool { false }
     override var canBecomeMain: Bool { false }

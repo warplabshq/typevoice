@@ -5,15 +5,16 @@ struct StyleView: View {
     @AppStorage(Prefs.Key.punctuation) private var punctuation = Style.Punctuation.full.rawValue
     @AppStorage(Prefs.Key.tone) private var tone = Style.Tone.natural.rawValue
     @AppStorage(Prefs.Key.removeFillers) private var removeFillers = true
+    @AppStorage(Prefs.Key.fixStutters) private var fixStutters = true
     @AppStorage(Prefs.Key.smartCleanup) private var smart = true
 
-    private static let sample = "okay so um the launch is Tuesday, no wait, Wednesday, and I think we're gonna need like two more days for QA"
+    private static let sample = "okay so um the the launch is Tuesday, no wait, Wednesday, and I think we're gonna need like two more days for QA, it's very very close"
 
     private var style: Style {
         Style(casing: .init(rawValue: casing) ?? .sentence,
               punctuation: .init(rawValue: punctuation) ?? .full,
               tone: .init(rawValue: tone) ?? .natural,
-              removeFillers: removeFillers)
+              removeFillers: removeFillers, fixStutters: fixStutters)
     }
 
     var body: some View {
@@ -62,10 +63,12 @@ struct StyleView: View {
                 Toggle("Remove filler words", isOn: $removeFillers)
                 Text("um, uh, hmm. “like” and “so” are left alone because they're often real words.")
                     .font(.caption).foregroundStyle(.secondary)
+                Toggle("Fix stutters", isOn: $fixStutters)
+                Text("“the the” becomes “the”. Repeats for emphasis like “very very” or “no no” are always kept. Turn off to keep every repeat.")
+                    .font(.caption).foregroundStyle(.secondary)
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Style")
     }
 
     /// A faithful preview of the deterministic layers, plus a hand-written

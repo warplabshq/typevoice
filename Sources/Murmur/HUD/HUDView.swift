@@ -3,6 +3,7 @@ import SwiftUI
 /// The pill. Liquid Glass capsule whose width and contents follow `state.phase`.
 struct HUDView: View {
     let state: AppState
+    var onCopy: () -> Void = {}
 
     private var phase: AppState.Phase { state.phase }
     private var shown: Bool { phase.isActive }
@@ -84,9 +85,40 @@ struct HUDView: View {
                 .id("processing")
 
         case .done(let text):
-            TypeOnText(text: text, maxWidth: 440)
-                .transition(.blurFade)
-                .id("done-\(text.hashValue)")
+            if text.isEmpty {
+                Image(systemName: "checkmark")
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundStyle(Theme.accent)
+                    .frame(width: 80)
+                    .transition(.blurFade)
+                    .id("done-check")
+            } else {
+                TypeOnText(text: text, maxWidth: 440)
+                    .transition(.blurFade)
+                    .id("done-\(text.hashValue)")
+            }
+
+        case .copyOffer(let text, let copied):
+            HStack(spacing: 12) {
+                HuggingText(text: text, maxWidth: 360)
+                Button(action: onCopy) {
+                    HStack(spacing: 5) {
+                        Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                            .font(.system(size: 11, weight: .semibold))
+                            .contentTransition(.symbolEffect(.replace))
+                        Text(copied ? "Copied" : "Copy")
+                            .font(.system(size: 12, weight: .semibold))
+                    }
+                    .foregroundStyle(copied ? Theme.onGlassDim : .black)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 5)
+                    .background(copied ? Color.white.opacity(0.14) : Color.white, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .keyboardShortcut("c", modifiers: .command)
+            }
+            .transition(.blurFade)
+            .id("copy")
 
         case .notHeard:
             message("Didn't catch that", icon: "waveform.slash")

@@ -32,7 +32,7 @@ struct HistoryView: View {
                 ContentUnavailableView {
                     Label("No dictations yet", systemImage: "waveform")
                 } description: {
-                    Text("Hold 🌐 anywhere, say something, and it'll show up here.")
+                    Text("Hold \(Prefs.triggerLabel) anywhere, say something, and it'll show up here.")
                 }
             } else {
                 List(selection: $selection) {
@@ -70,11 +70,10 @@ struct HistoryView: View {
                 }
             }
         }
-        .navigationTitle("History")
         .searchable(text: $query, placement: .toolbar, prompt: "Search")
         .onChange(of: query) { _, q in history.query = q }
         .toolbar {
-            ToolbarItem(placement: .primaryAction) {
+            ToolbarItem(placement: .destructiveAction) {
                 Button(role: .destructive) { confirmClear = true } label: {
                     Label("Clear History", systemImage: "trash")
                 }

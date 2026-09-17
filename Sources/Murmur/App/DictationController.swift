@@ -158,10 +158,31 @@ final class DictationController {
 
     // MARK: Pipeline
 
+    /// Debug: run a full session with audio from a file instead of the microphone.
+    func simulate(wav: URL) {
+        guard state.phase == .idle, let samples = try? PipelineTest.load16k(wav) else { return }
+        target = inserter.captureTarget()
+        state.resetLevels()
+        state.phase = .listening(locked: false)
+        hud?.present(for: target)
+        Task { @MainActor in
+            for i in 0..<30 {
+                state.pushLevel(Float(0.3 + 0.5 * abs(sin(Double(i) * 0.7))))
+                try? await Task.sleep(for: .milliseconds(30))
+            }
+            finish(with: AudioRecorder.Recording(samples: samples, peak: 0.5))
+        }
+    }
+
     private func finish() {
         guard state.phase.isListening else { return }
-        let t0 = ContinuousClock.now
         let rec = recorder.stop()
+        finish(with: rec)
+    }
+
+    private func finish(with rec: AudioRecorder.Recording) {
+        guard state.phase.isListening else { return }
+        let t0 = ContinuousClock.now
         locked = false
         state.phase = .processing
 
@@ -206,6 +227,14 @@ final class DictationController {
                 }
 
                 guard let target else { throw TextInserter.InsertError.noFocusedApp }
+                guard inserter.hasTextTarget(target) else {
+                    Log.d("no text target in \(target.appName); offering copy")
+                    history.add(Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
+                                          bundleID: target.bundleID, seconds: rec.seconds, latencyMs: Int((ContinuousClock.now - t0).ms)))
+                    sounds.done()
+                    show(.copyOffer(text.trimmingCharacters(in: .whitespaces), copied: false), for: .seconds(8))
+                    return
+                }
                 let method = try await inserter.insert(text, into: target)
                 Log.timing("total.release_to_insert", since: t0)
                 Log.insert.info("inserted via \(method.rawValue) into \(target.appName)")
@@ -216,8 +245,12 @@ final class DictationController {
                                       bundleID: target.bundleID, seconds: rec.seconds, latencyMs: latency))
                 sounds.done()
                 haptic()
-                let ms = min(2600, 700 + text.count * 12)
-                show(.done(text.trimmingCharacters(in: .whitespaces)), for: .milliseconds(ms))
+                if Prefs.showPreview {
+                    let ms = min(2600, 700 + text.count * 12)
+                    show(.done(text.trimmingCharacters(in: .whitespaces)), for: .milliseconds(ms))
+                } else {
+                    show(.done(""), for: .milliseconds(650))
+                }
             } catch is CancellationError {
                 // cancelled by user
             } catch {
@@ -232,6 +265,14 @@ final class DictationController {
                 }
             }
         }
+    }
+
+    /// Called from the pill's Copy button.
+    func copyOffered() {
+        guard case .copyOffer(let text, _) = state.phase else { return }
+        inserter.copyToClipboard(text)
+        haptic()
+        show(.copyOffer(text, copied: true), for: .milliseconds(900))
     }
 
     private func show(_ phase: AppState.Phase, for d: Duration) {

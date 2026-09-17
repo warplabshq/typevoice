@@ -34,7 +34,6 @@ struct PrivacyView: View {
             }
         }
         .formStyle(.grouped)
-        .navigationTitle("Privacy")
         .confirmationDialog("Delete all Murmur data on this Mac?", isPresented: $confirmWipe, titleVisibility: .visible) {
             Button("Delete Everything", role: .destructive) {
                 history.clear(); dictionary.clear(); Prefs.reset()

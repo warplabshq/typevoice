@@ -39,12 +39,24 @@ struct MainView: View {
             .safeAreaInset(edge: .top) { Brand() }
             .safeAreaInset(edge: .bottom) { StatusFooter(state: state) }
         } detail: {
-            switch tab {
-            case .history: HistoryView(history: history)
-            case .dictionary: DictionaryView(dictionary: dictionary)
-            case .style: StyleView()
-            case .settings: SettingsView()
-            case .privacy: PrivacyView(history: history, dictionary: dictionary)
+            Group {
+                switch tab {
+                case .history: HistoryView(history: history)
+                case .dictionary: DictionaryView(dictionary: dictionary)
+                case .style: StyleView()
+                case .settings: SettingsView()
+                case .privacy: PrivacyView(history: history, dictionary: dictionary)
+                }
+            }
+            .navigationTitle(tab.label)
+            // Every tab carries a toolbar so the title bar keeps one height.
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Button { NotificationCenter.default.post(name: .murmurShowOnboarding, object: nil) } label: {
+                        Label("How to use", systemImage: "questionmark.circle")
+                    }
+                    .help("How to use Murmur")
+                }
             }
         }
         .frame(minWidth: 800, minHeight: 520)
