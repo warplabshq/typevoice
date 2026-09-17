@@ -26,7 +26,14 @@ struct PrivacyView: View {
             }
             Section("Your data") {
                 LabeledContent("Location") {
-                    Button("Reveal in Finder") { NSWorkspace.shared.activateFileViewerSelecting([Paths.history]) }
+                    HStack(spacing: 10) {
+                        Text(Paths.support.path.replacingOccurrences(of: NSHomeDirectory(), with: "~"))
+                            .font(.callout.monospaced())
+                            .foregroundStyle(.secondary)
+                            .lineLimit(1)
+                            .truncationMode(.middle)
+                        Button("Reveal in Finder") { reveal() }
+                    }
                 }
                 LabeledContent("History") { Text("\(history.entries.count) dictations").foregroundStyle(.secondary) }
                 LabeledContent("Dictionary") { Text("\(dictionary.terms.count) terms").foregroundStyle(.secondary) }
@@ -40,6 +47,15 @@ struct PrivacyView: View {
             }
         } message: {
             Text("History, dictionary and settings are removed. The downloaded speech model stays so you don't have to fetch it again.")
+        }
+    }
+
+    private func reveal() {
+        let files = [Paths.historyDB, Paths.dictionary].filter { FileManager.default.fileExists(atPath: $0.path) }
+        if files.isEmpty {
+            NSWorkspace.shared.open(Paths.support)
+        } else {
+            NSWorkspace.shared.activateFileViewerSelecting(files)
         }
     }
 

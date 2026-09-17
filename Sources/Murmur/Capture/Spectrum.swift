@@ -77,7 +77,7 @@ final class Spectrum {
             var v = mag / ceiling[b]                      // 0…1 relative to recent loudness
             v = pow(v, 0.8) * gate                        // gate by overall level so silence is calm
             // Fast attack, slower release.
-            smoothed[b] = v > smoothed[b] ? smoothed[b] + (v - smoothed[b]) * 0.7 : smoothed[b] * 0.72
+            smoothed[b] = v > smoothed[b] ? smoothed[b] + (v - smoothed[b]) * 0.5 : smoothed[b] * 0.8
             out[b] = smoothed[b]
         }
         return out
