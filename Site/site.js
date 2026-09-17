@@ -52,13 +52,10 @@ document.addEventListener("DOMContentLoaded", () => {
                      "Groceries: milk, eggs, bread. Also call the dentist on Monday."];
     let pi = 0;
     const sleep = ms => new Promise(r => setTimeout(r, ms));
-    const keycap = document.getElementById("keycap");
     (async function loop() {
       while (true) {
         typed.textContent = ""; pill.classList.remove("done"); pill.style.width = "";
-        keycap.classList.add("down");
         await sleep(3400);                                  // listening
-        keycap.classList.remove("down");
         const text = phrases[pi++ % phrases.length];
         pill.classList.add("done");
         await sleep(350);

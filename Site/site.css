@@ -53,12 +53,6 @@ h3 { font-size: 17px; font-weight: 600; }
   border: 0.6px solid rgba(255,255,255,.14); box-shadow: 0 6px 16px rgba(0,0,0,.28), 0 1px 2px rgba(0,0,0,.16); transition: opacity .4s ease, transform .45s cubic-bezier(.2,.8,.2,1); }
 .pill.done { opacity: 0; transform: translateY(14px) scale(.92); }
 .pill-text { display: none; }
-.keycap { display: inline-flex; flex-direction: column; align-items: center; justify-content: center; width: 56px; height: 56px; border-radius: 12px;
-  background: linear-gradient(180deg, var(--card2), var(--card)); border: 1px solid var(--line2); box-shadow: 0 6px 0 rgba(0,0,0,.35), 0 10px 24px rgba(0,0,0,.35);
-  transition: transform .28s ease, box-shadow .28s ease; color: var(--text); font-size: 20px; }
-.keycap small { font-size: 9px; color: var(--faint); letter-spacing: .06em; text-transform: uppercase; margin-top: -2px; }
-.keycap.down { transform: translateY(5px); box-shadow: 0 1px 0 rgba(0,0,0,.35), 0 4px 12px rgba(0,0,0,.3); }
-@media (prefers-color-scheme: light) { .keycap { box-shadow: 0 6px 0 rgba(0,0,0,.12), 0 10px 24px rgba(0,0,0,.12); } .keycap.down { box-shadow: 0 1px 0 rgba(0,0,0,.12); } }
 .field { width: min(520px, 92vw); text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-height: 66px; box-shadow: var(--shadow); font-size: 15px; color: var(--text); }
 .field-label { display: block; color: var(--faint); font-size: 12px; margin-bottom: 4px; }
 .caret { display: inline-block; width: 1.5px; height: 17px; background: var(--accent); vertical-align: -3px; margin-left: 1px; animation: blink 1s steps(2) infinite; }
