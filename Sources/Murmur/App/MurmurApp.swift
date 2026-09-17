@@ -8,8 +8,11 @@ struct MurmurApp: App {
     @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
 
     var body: some Scene {
-        MenuBarExtra(Brand.name, systemImage: "waveform", isInserted: $showMenuBarIcon) {
+        MenuBarExtra(isInserted: $showMenuBarIcon) {
             MenuContent(state: delegate.state, history: delegate.history)
+        } label: {
+            Image(nsImage: MenuBarIcon.image)
+                .accessibilityLabel(Brand.name)
         }
     }
 }
@@ -38,6 +41,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         Log.d("didFinishLaunching ax=\(Permissions.accessibility) mic=\(Permissions.mic) onboarded=\(Prefs.hasOnboarded)")
         Self.shared = self
         installMainMenu()
+        RecordingStore.cleanDragLinks()
         if Log.debugTimings {
             DistributedNotificationCenter.default().addObserver(
                 forName: Notification.Name("murmur.debug.showTab"), object: nil, queue: .main

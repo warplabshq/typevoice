@@ -7,8 +7,8 @@ window.SITE = {
   domain: "https://REPLACE-ME.example",    // where this site is hosted
   appStoreURL: "https://apps.apple.com/app/idREPLACE-ME",
   updated: "September 18, 2026",
-  price: "One-time",         // e.g. "$19" once the App Store price is set
-  priceNote: "purchase",     // e.g. "once, forever"
+  price: "No subscription",  // e.g. "$19" once the App Store price is set
+  priceNote: "buy it once",  // e.g. "once, forever"
   jurisdiction: "India",
 };
 document.addEventListener("DOMContentLoaded", () => {
@@ -32,7 +32,9 @@ document.addEventListener("DOMContentLoaded", () => {
     function targets(bs) { const half = (n - 1) / 2, raw = []; for (let i = 0; i < n; i++) { const d = Math.abs(i - half) / half, pos = d * 9, lo = Math.floor(pos), hi = Math.min(lo + 1, 9), f = pos - lo; let v = bs[lo] * (1 - f) + bs[hi] * f; if (i % 2) v = v * 0.85 + bs[Math.min(hi + 1, 9)] * 0.15; raw.push(v); }
       const out = raw.slice(); for (let i = 1; i < n - 1; i++) out[i] = raw[i-1] * 0.25 + raw[i] * 0.5 + raw[i+1] * 0.25; return out; }
     let last = performance.now();
-    function frame(now) { const dt = Math.min(0.05, (now - last) / 1000); last = now; const t = now / 1000, tg = targets(bands(t));
+    function frame(now) { const dt = Math.min(0.05, (now - last) / 1000); last = now; const t = now / 1000;
+      const boost = Math.max(0, (window.__boost || 0) - 0.02 * (dt * 60)); window.__boost = boost;
+      const tg = targets(bands(t)).map(v => Math.min(1, v * (0.55 + boost * 1.2) + boost * 0.35));
       const up = 1 - Math.pow(0.001, dt * 3.2), down = 1 - Math.pow(0.001, dt * 1.6);
       ctx.clearRect(0, 0, W, H); const total = n * (bw + gap) - gap; let x = (W - total) / 2; const half = (n - 1) / 2;
       for (let i = 0; i < n; i++) { disp[i] += (tg[i] - disp[i]) * (tg[i] > disp[i] ? up : down); const h = Math.max(2, disp[i] * H * 0.82);
@@ -45,24 +47,43 @@ document.addEventListener("DOMContentLoaded", () => {
   const c = document.getElementById("wave");
   if (c) {
     startBars(c);
-    // Product loop: listen → type the sentence into the field → clear → repeat.
-    const pill = c.parentElement, typed = document.getElementById("typed"), caret = document.getElementById("caret");
-    const phrases = ["Can we move the launch review to Wednesday at 3? Wednesday works better for the design team.",
-                     "Shipped the new export flow to VidAI. Two things to watch: cold start, and the retry logic.",
-                     "Groceries: milk, eggs, bread. Also call the dentist on Monday."];
+    // Product loop: spoken words sink into the pill, clean text types out below.
+    const pill = c.parentElement, typed = document.getElementById("typed"), spoken = document.getElementById("spoken");
+    const pairs = [
+      ["um so can we move the launch review to wednesday at 3 wednesday works better for the design team", "Can we move the launch review to Wednesday at 3? Wednesday works better for the design team."],
+      ["shipped the new export flow to vid ai two things to watch cold start and the retry logic", "Shipped the new export flow to VidAI. Two things to watch: cold start, and the retry logic."],
+      ["groceries milk eggs bread also um call the dentist on monday", "Groceries: milk, eggs, bread. Also call the dentist on Monday."],
+    ];
     let pi = 0;
     const sleep = ms => new Promise(r => setTimeout(r, ms));
     (async function loop() {
       while (true) {
-        typed.textContent = ""; pill.classList.remove("done"); pill.style.width = "";
-        await sleep(3400);                                  // listening
-        const text = phrases[pi++ % phrases.length];
+        typed.textContent = ""; pill.classList.remove("done"); spoken.innerHTML = "";
+        const [raw, clean] = pairs[pi++ % pairs.length];
+        const words = raw.split(" ");
+        // Words stream in as a plain line of speech, then sink one by one into the pill.
+        for (const w of words) {
+          const el = document.createElement("span"); el.textContent = w; spoken.appendChild(el);
+          requestAnimationFrame(() => el.classList.add("in"));
+          await sleep(95);
+        }
+        await sleep(320);
+        const pr = pill.getBoundingClientRect(), els = [...spoken.children];
+        for (const el of els) {
+          const r = el.getBoundingClientRect();
+          el.style.setProperty("--dx", (pr.left + pr.width / 2 - (r.left + r.width / 2)) + "px");
+          el.style.setProperty("--dy", (pr.top + pr.height / 2 - (r.top + r.height / 2)) + "px");
+          el.classList.remove("in"); el.classList.add("sink");
+          window.__boost = Math.min(1, (window.__boost || 0) + 0.5);
+          await sleep(70);
+        }
+        await sleep(700);
         pill.classList.add("done");
-        await sleep(350);
-        for (let i = 1; i <= text.length; i++) { typed.textContent = text.slice(0, i); await sleep(text.length > 60 ? 22 : 28); }
-        await sleep(3200);
-        pill.classList.remove("done");
-        await sleep(900);
+        await sleep(300);
+        for (let i = 1; i <= clean.length; i++) { typed.textContent = clean.slice(0, i); await sleep(clean.length > 60 ? 14 : 18); }
+        await sleep(2600);
+        pill.classList.remove("done"); spoken.innerHTML = "";
+        await sleep(700);
       }
     })();
   }

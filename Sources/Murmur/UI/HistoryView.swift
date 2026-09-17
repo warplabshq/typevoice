@@ -233,11 +233,14 @@ private struct HistoryRow: View {
                         }
                         .buttonStyle(.plain)
                         .foregroundStyle(Color.accentColor)
-                        Image(systemName: "waveform")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .onDrag { NSItemProvider(contentsOf: url) ?? NSItemProvider() }
-                            .help("Drag into a message to send the recording")
+                        RecordingDrag(url: url, fileName: RecordingStore.fileName(for: d.text)) {
+                            Image(systemName: "waveform")
+                                .font(.caption)
+                                .foregroundStyle(.secondary)
+                                .padding(.horizontal, 2)
+                        }
+                        .fixedSize()
+                        .help("Drag into a message to send the recording")
                     }
                 }
                 .font(.caption)

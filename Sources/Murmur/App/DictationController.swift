@@ -299,6 +299,7 @@ final class DictationController {
                 if Prefs.keepRecordings {
                     let samples = rec.samples
                     let url = try? await Task.detached(priority: .utility) { try RecordingStore.save(samples: samples, id: entry.id) }.value
+                    state.lastAudioName = RecordingStore.fileName(for: entry.text)
                     state.lastAudio = url
                 }
                 if Prefs.showPreview || state.lastAudio != nil {
@@ -338,6 +339,8 @@ final class DictationController {
         dismiss?.cancel()
         dismiss = Task { [weak self] in
             try? await Task.sleep(for: d)
+            // Someone is dragging the audio chip: keep the pill until they let go.
+            while DragSourceView.isDragging, !Task.isCancelled { try? await Task.sleep(for: .milliseconds(200)) }
             guard let self, !Task.isCancelled else { return }
             if self.state.phase == phase {
                 self.state.phase = .idle

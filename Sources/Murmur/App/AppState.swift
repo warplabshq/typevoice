@@ -26,6 +26,8 @@ final class AppState {
     var listeningSince: Date?
     /// Audio of the last dictation, when "Keep recordings" is on. Shown as a draggable chip.
     var lastAudio: URL?
+    /// File name other apps see when the chip is dragged.
+    var lastAudioName = "Voice note.m4a"
     var paused = false
     var warm: WarmProgress = .init(phase: .checking, fraction: 0)
     var isReady: Bool { warm.phase == .ready }

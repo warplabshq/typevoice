@@ -84,7 +84,7 @@ struct HUDView: View {
                     TypeOnText(text: text, maxWidth: 400)
                 }
                 if let url = state.lastAudio {
-                    AudioChip(url: url)
+                    AudioChip(url: url, name: state.lastAudioName)
                 }
             }
             .transition(.blurFade)
@@ -149,20 +149,22 @@ struct ElapsedLabel: View {
 /// Drag this into any chat to send the voice instead of the words.
 struct AudioChip: View {
     let url: URL
+    let name: String
     @State private var hover = false
     var body: some View {
-        HStack(spacing: 6) {
-            Image(systemName: "waveform.circle.fill")
-                .font(.system(size: 13, weight: .semibold))
-            Text("Drag audio")
-                .font(.system(size: 12, weight: .semibold))
+        RecordingDrag(url: url, fileName: name, onHover: { h in hover = h }) {
+            HStack(spacing: 6) {
+                Image(systemName: "waveform.circle.fill")
+                    .font(.system(size: 13, weight: .semibold))
+                Text("Drag audio")
+                    .font(.system(size: 12, weight: .semibold))
+            }
+            .foregroundStyle(hover ? Color.black : Theme.onGlass)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 5)
+            .background(hover ? Color.white : Color.white.opacity(0.14), in: Capsule())
         }
-        .foregroundStyle(hover ? Color.black : Theme.onGlass)
-        .padding(.horizontal, 10)
-        .padding(.vertical, 5)
-        .background(hover ? Color.white : Color.white.opacity(0.14), in: Capsule())
-        .onHover { hover = $0 }
-        .onDrag { NSItemProvider(contentsOf: url) ?? NSItemProvider() }
+        .fixedSize()
         .help("Drag into a message to send the recording")
     }
 }

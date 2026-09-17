@@ -7,6 +7,7 @@
 
   <section class="hero">
     <div class="demo" id="demo">
+      <div class="spoken" id="spoken" aria-hidden="true"></div>
       <div class="pill"><canvas id="wave"></canvas><span class="pill-text" id="pill-text"></span></div>
       <div class="field"><span class="field-label">To: Sam</span><span class="typed" id="typed"></span><span class="caret" id="caret"></span></div>
     </div>
@@ -17,12 +18,18 @@
       <a class="cta" data-store href="#"><svg width="16" height="18" viewBox="0 0 16 18" fill="currentColor" aria-hidden="true"><path d="M13.1 9.5c0-2 1.6-2.9 1.7-3-1-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7C4.9 4.9 3.6 5.7 2.9 7c-1.5 2.6-.4 6.4 1.1 8.5.7 1 1.5 2.2 2.6 2.1 1-.1 1.4-.7 2.7-.7s1.6.7 2.7.6c1.1 0 1.8-1 2.5-2 .8-1.2 1.1-2.3 1.1-2.4 0 0-2.1-.8-2.1-3.2zM11.1 3.6c.6-.7.9-1.6.8-2.6-.8 0-1.8.5-2.4 1.2-.5.6-1 1.6-.9 2.5.9.1 1.9-.4 2.5-1.1z"/></svg> Download</a>
       <a class="ghost" href="#how">See how it works</a>
     </div>
-    <p class="sub">Free for 3 days, then one purchase. No subscription. macOS 26 or later, Apple silicon.</p>
+    <p class="sub">Free for 3 days. No subscription. macOS 26 or later, Apple silicon.</p>
     <ul class="strip" aria-label="Key facts">
-      <li><b>0.3 s</b><span>from release to text</span></li>
-      <li><b>0</b><span>bytes sent anywhere</span></li>
+      <li><b>0.3 s</b><span>to text</span></li>
+      <li class="fact-net"><svg class="netglyph" viewBox="0 0 64 20" width="64" height="20" aria-hidden="true">
+          <rect x="1.5" y="3" width="17" height="11" rx="2.5"/><path d="M0 16.5h20"/>
+          <path class="dash" d="M25 10h22"/>
+          <path class="wall" d="M33 4.5v11"/>
+          <circle class="pkt" cx="20" cy="10" r="1.6"/>
+          <path class="cloud" d="M52 14.5h8.5a3.5 3.5 0 0 0 .4-7 5 5 0 0 0-9.6-1.3A4.2 4.2 0 0 0 52 14.5z"/>
+        </svg><b>0 bytes</b><span>leave your Mac</span></li>
       <li><b>4×</b><span>faster than typing</span></li>
-      <li><b>1</b><span>purchase, yours forever</span></li>
+      <li><b>No subscription</b><span>buy it once</span></li>
     </ul>
   </section>
 
@@ -142,17 +149,17 @@
     <p class="eyebrow">Pricing</p>
     <div class="price-card">
       <div class="price-left">
-        <h2>One purchase. Yours forever.</h2>
-        <p class="muted">Try everything free for three days, no card and no account. If it earns its place, buy it once on the App Store and use it on every Mac signed in to your Apple ID. No subscription, no renewal, nothing to cancel.</p>
+        <h2>No subscription.</h2>
+        <p class="muted">Try everything free for three days, no card and no account. If it earns its place, buy it on the App Store and use it on every Mac signed in to your Apple ID. No renewal, nothing to cancel.</p>
         <ul class="ticks">
           <li>3-day free trial, full app</li>
-          <li>One-time purchase, no subscription</li>
+          <li>No subscription, no renewal</li>
           <li>All your Macs, via the App Store</li>
           <li>Updates included</li>
         </ul>
       </div>
       <div class="price-right">
-        <div class="price-tag"><span data-brand="price">One-time</span><small data-brand="priceNote">purchase</small></div>
+        <div class="price-tag"><span data-brand="price">No subscription</span><small data-brand="priceNote">buy it once</small></div>
         <a class="cta" data-store href="#">Download</a>
         <small class="faint">Free for 3 days. Billed by Apple after that, if you keep it.</small>
       </div>
@@ -170,12 +177,12 @@
         </defs>
         <rect class="mac" x="40" y="40" width="680" height="190" rx="22" fill="url(#g-mac)"/>
         <text class="lbl-title" x="64" y="72">Your Mac</text>
-        <g class="node" transform="translate(120 150)"><circle r="26"/><text y="5" text-anchor="middle" class="ico">🎙</text><text y="52" text-anchor="middle" class="lbl">Your voice</text></g>
-        <g class="node" transform="translate(300 150)"><rect x="-52" y="-24" width="104" height="48" rx="12"/><text y="5" text-anchor="middle" class="lbl-strong">Neural Engine</text><text y="52" text-anchor="middle" class="lbl">recognition</text></g>
-        <g class="node" transform="translate(480 150)"><rect x="-60" y="-24" width="120" height="48" rx="12"/><text y="5" text-anchor="middle" class="lbl-strong">Apple Intelligence</text><text y="52" text-anchor="middle" class="lbl">cleanup</text></g>
-        <g class="node" transform="translate(660 150)"><circle r="26"/><text y="5" text-anchor="middle" class="ico">✎</text><text y="52" text-anchor="middle" class="lbl">Your app</text></g>
         <use href="#p-in" class="wire"/>
         <circle class="dot" r="5"><animateMotion dur="4.5s" repeatCount="indefinite" keyPoints="0;1" keyTimes="0;1" calcMode="linear"><mpath href="#p-in"/></animateMotion></circle>
+        <g class="node" transform="translate(120 150)"><circle r="26"/><text y="5" text-anchor="middle" class="ico">🎙</text><text y="52" text-anchor="middle" class="lbl">Your voice</text></g>
+        <g class="node" transform="translate(300 150)"><rect x="-62" y="-24" width="124" height="48" rx="12"/><text y="5" text-anchor="middle" class="lbl-strong">Neural Engine</text><text y="52" text-anchor="middle" class="lbl">recognition</text></g>
+        <g class="node" transform="translate(480 150)"><rect x="-72" y="-24" width="144" height="48" rx="12"/><text y="5" text-anchor="middle" class="lbl-strong">Apple Intelligence</text><text y="52" text-anchor="middle" class="lbl">cleanup</text></g>
+        <g class="node" transform="translate(660 150)"><circle r="26"/><text y="5" text-anchor="middle" class="ico">✎</text><text y="52" text-anchor="middle" class="lbl">Your app</text></g>
         <line class="wire-out" x1="720" y1="135" x2="800" y2="135"/>
         <g transform="translate(838 135)"><circle class="cloud" r="30"/><text y="6" text-anchor="middle" class="ico">☁︎</text><text y="56" text-anchor="middle" class="lbl">Internet</text></g>
         <g class="badge-out" transform="translate(760 135)"><rect x="-36" y="-14" width="72" height="28" rx="14"/><text y="5" text-anchor="middle" class="lbl-strong">0 bytes</text></g>
@@ -208,7 +215,7 @@
     <div class="pill mini"><canvas id="wave2"></canvas></div>
     <h2>Say it. It's typed.</h2>
     <a class="cta" data-store href="#">Download</a>
-    <p class="sub">Free for 3 days · One-time purchase · Runs entirely on your Mac</p>
+    <p class="sub">Free for 3 days · No subscription · Runs entirely on your Mac</p>
   </section>
 </main>
 <footer><div class="wrap">
