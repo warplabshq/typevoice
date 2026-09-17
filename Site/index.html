@@ -6,19 +6,20 @@
 <main class="wrap">
 
   <section class="hero">
-    <div class="demo" id="demo">
-      <div class="spoken" id="spoken" aria-hidden="true"></div>
-      <div class="pill"><canvas id="wave"></canvas><span class="pill-text" id="pill-text"></span></div>
-      <div class="field"><span class="field-label">To: Sam</span><span class="typed" id="typed"></span><span class="caret" id="caret"></span></div>
-    </div>
-    <p class="eyebrow">Local dictation for Mac</p>
+    <p class="eyebrow tag">Local dictation for Mac</p>
     <h1>Hold a key. Talk.<br>It's typed.</h1>
-    <p class="lede"><span data-brand="name">Murmur</span> turns your voice into clean, punctuated text in any app, on your Mac and nowhere else.</p>
+    <p class="lede">Your voice becomes clean, punctuated text in any app. On your Mac, and nowhere else.</p>
     <div class="cta-row">
       <a class="cta" data-store href="#"><svg width="16" height="18" viewBox="0 0 16 18" fill="currentColor" aria-hidden="true"><path d="M13.1 9.5c0-2 1.6-2.9 1.7-3-1-1.4-2.4-1.6-2.9-1.6-1.2-.1-2.4.7-3 .7s-1.6-.7-2.6-.7C4.9 4.9 3.6 5.7 2.9 7c-1.5 2.6-.4 6.4 1.1 8.5.7 1 1.5 2.2 2.6 2.1 1-.1 1.4-.7 2.7-.7s1.6.7 2.7.6c1.1 0 1.8-1 2.5-2 .8-1.2 1.1-2.3 1.1-2.4 0 0-2.1-.8-2.1-3.2zM11.1 3.6c.6-.7.9-1.6.8-2.6-.8 0-1.8.5-2.4 1.2-.5.6-1 1.6-.9 2.5.9.1 1.9-.4 2.5-1.1z"/></svg> Download</a>
       <a class="ghost" href="#how">See how it works</a>
     </div>
     <p class="sub">Free for 3 days. No subscription. macOS 26 or later, Apple silicon.</p>
+    <div class="tape" id="tape" aria-hidden="true">
+      <div class="tape-raw"><div class="track" id="track-raw"></div></div>
+      <div class="tape-clean"><div class="track" id="track-clean"></div></div>
+      <div class="tape-badge" id="badge"><span>removed “um”</span></div>
+      <div class="pill"><canvas id="wave"></canvas></div>
+    </div>
     <ul class="strip" aria-label="Key facts">
       <li><b>0.3 s</b><span>to text</span></li>
       <li class="fact-net"><svg class="netglyph" viewBox="0 0 64 20" width="64" height="20" aria-hidden="true">

@@ -38,7 +38,7 @@ nav .navcta:hover { background: var(--card2); transform: translateY(-1px); }
 
 /* ---------- type ---------- */
 .eyebrow { color: var(--faint); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 var(--s2); }
-h1 { font-size: clamp(40px, 6.4vw, 64px); line-height: 1.02; font-weight: 700; letter-spacing: -0.025em; margin: 0 0 var(--s3); }
+h1 { font-size: clamp(44px, 7vw, 76px); line-height: 0.98; font-weight: 700; letter-spacing: -0.035em; margin: 0 0 var(--s3); }
 h2 { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.12; font-weight: 700; margin: 0 0 var(--s2); }
 h3 { font-size: 17px; font-weight: 600; }
 .lede { color: var(--dim); font-size: clamp(17px, 2vw, 20px); max-width: 600px; margin: 0 auto var(--s4); line-height: 1.5; }
@@ -47,19 +47,29 @@ h3 { font-size: 17px; font-weight: 600; }
 .sub { color: var(--faint); font-size: 13px; margin: var(--s2) 0 0; }
 
 /* ---------- hero ---------- */
-.hero { text-align: center; padding: var(--s6) 0 var(--s5); }
-.demo { display: flex; flex-direction: column; align-items: center; gap: 14px; margin-bottom: var(--s5); }
-.spoken { display: flex; flex-wrap: wrap; justify-content: center; align-content: flex-end; gap: 4px 10px; width: min(560px, 92vw); min-height: 56px; pointer-events: none; }
-.spoken span { --dx: 0px; --dy: 70px; color: var(--dim); font-size: 15px; font-style: italic; line-height: 1.4; white-space: nowrap; opacity: 0;
-  transform: translate(0, -8px); filter: blur(0); will-change: transform, opacity; transition: opacity .3s ease, transform .3s ease; }
-.spoken span.in { opacity: .8; transform: translate(0, 0); }
-.spoken span.sink { opacity: 0; transform: translate(var(--dx), var(--dy)) scale(.3); filter: blur(1.5px); transition: transform .7s cubic-bezier(.5,0,.7,.6), opacity .62s ease-in .04s, filter .7s ease; }
+.hero { text-align: center; padding: var(--s6) 0 var(--s5); overflow: visible; }
+/* Ticker tape: what you said flows in from the left, what got typed rolls out on a ribbon. */
+:root { --ribbon-bg: #f4f4f6; --ribbon-fg: #111114; }
+@media (prefers-color-scheme: light) { :root { --ribbon-bg: #111114; --ribbon-fg: #f4f4f6; } }
+.tape { position: relative; width: 112vw; margin: var(--s6) 0 var(--s3) calc(50% - 56vw); height: 96px; transform: rotate(-2deg); pointer-events: none; }
+.tape-raw, .tape-clean { position: absolute; top: 34px; height: 44px; overflow: hidden; display: flex; align-items: center; }
+.tape-raw { left: 0; right: 50%; -webkit-mask-image: linear-gradient(90deg, transparent 8%, #000 42%, #000); mask-image: linear-gradient(90deg, transparent 8%, #000 42%, #000); }
+.tape-clean { left: 50%; right: 0; background: var(--ribbon-bg); box-shadow: 0 10px 30px rgba(0,0,0,.25);
+  -webkit-mask-image: linear-gradient(90deg, #000, #000 58%, transparent 92%); mask-image: linear-gradient(90deg, #000, #000 58%, transparent 92%); }
+.tape-clean::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 110px; pointer-events: none; }
+.track { display: flex; white-space: nowrap; will-change: transform; animation: tape 60s linear infinite; }
+.track > span { padding-right: 1.4em; }
+.tape-raw .track { color: var(--dim); font-size: 15px; font-style: italic; padding-right: 100px; }
+.tape-clean .track { color: var(--ribbon-fg); font-size: 15px; font-weight: 500; padding-left: 110px; }
+@keyframes tape { from { transform: translateX(-50%); } to { transform: translateX(0); } }
+.tape .pill { position: absolute; left: 50%; top: 34px; transform: translateX(-50%); z-index: 2; height: 44px; }
+.tape-badge { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); font-size: 12px; color: var(--dim); white-space: nowrap; }
+.tape-badge span { display: inline-block; opacity: 0; transform: translateY(4px); transition: opacity .45s ease, transform .45s ease; }
+.tape-badge span.on { opacity: 1; transform: translateY(0); }
+@media (prefers-reduced-motion: reduce) { .track { animation: none; } }
+.eyebrow.tag { display: inline-block; background: var(--ribbon-bg); color: var(--ribbon-fg); border-radius: 999px; padding: 6px 12px; font-size: 11px; letter-spacing: .1em; margin-bottom: var(--s3); }
 .pill { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 14px; border-radius: 999px; background: #0a0a0a;
   border: 0.6px solid rgba(255,255,255,.14); box-shadow: 0 6px 16px rgba(0,0,0,.28), 0 1px 2px rgba(0,0,0,.16); transition: opacity .4s ease, transform .45s cubic-bezier(.2,.8,.2,1); }
-.pill.done { opacity: 0; transform: translateY(14px) scale(.92); }
-.pill-text { display: none; }
-.field { width: min(520px, 92vw); text-align: left; background: var(--card); border: 1px solid var(--line); border-radius: 12px; padding: 12px 14px; min-height: 112px; box-shadow: var(--shadow); font-size: 15px; line-height: 1.5; color: var(--text); }
-.field-label { display: block; color: var(--faint); font-size: 12px; margin-bottom: 4px; }
 .caret { display: inline-block; width: 1.5px; height: 17px; background: var(--accent); vertical-align: -3px; margin-left: 1px; animation: blink 1s steps(2) infinite; }
 @keyframes blink { 50% { opacity: 0; } }
 .cta-row { display: flex; gap: 14px; justify-content: center; align-items: center; flex-wrap: wrap; }
@@ -201,7 +211,7 @@ kbd { font: 13px -apple-system, BlinkMacSystemFont, sans-serif; background: var(
 @media (max-width: 760px) {
   :root { --s7: 56px; --s8: 72px; }
   nav { gap: 14px; } nav a:not(.navcta) { display: none; }
-  .strip { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 0; } .strip li { padding: 0 12px; justify-content: center; } .strip li:nth-child(odd) { border-left: 0; } .steps { grid-template-columns: 1fr; }
+  .strip { display: grid; grid-template-columns: 1fr; gap: 10px 0; } .strip li { padding: 0; justify-content: center; border-left: 0; } .steps { grid-template-columns: 1fr; }
   .window .body { grid-template-columns: 1fr; } .side { display: none; } .tiles { grid-template-columns: repeat(2, 1fr); } .titlebar .title { margin-left: 8px; }
   .bento { grid-template-columns: 1fr; } .tile-b, .tile-b.span2, .tile-b.small { grid-column: span 1; }
   .pair { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); justify-self: center; }

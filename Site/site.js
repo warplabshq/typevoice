@@ -47,50 +47,23 @@ document.addEventListener("DOMContentLoaded", () => {
   const c = document.getElementById("wave");
   if (c) {
     startBars(c);
-    // Product loop: spoken words sink into the pill, clean text types out below.
-    const pill = c.parentElement, typed = document.getElementById("typed"), spoken = document.getElementById("spoken");
-    const pairs = [
-      ["um so can we move the launch review to wednesday at 3 wednesday works better for the design team", "Can we move the launch review to Wednesday at 3? Wednesday works better for the design team."],
-      ["shipped the new export flow to vid ai two things to watch cold start and the retry logic", "Shipped the new export flow to VidAI. Two things to watch: cold start, and the retry logic."],
-      ["groceries milk eggs bread also um call the dentist on monday", "Groceries: milk, eggs, bread. Also call the dentist on Monday."],
-    ];
-    const sleep = ms => new Promise(r => setTimeout(r, ms));
-    // Never idle: while one sentence types out below, the next one is already being
-    // spoken into the pill. The field keeps the last two sentences, like a message.
-    const speak = async (raw) => {
-      spoken.innerHTML = "";
-      for (const w of raw.split(" ")) {
-        const el = document.createElement("span"); el.textContent = w; spoken.appendChild(el);
-        requestAnimationFrame(() => el.classList.add("in"));
-        await sleep(95);
-      }
-      await sleep(320);
-      const pr = pill.getBoundingClientRect();
-      for (const el of [...spoken.children]) {
-        const r = el.getBoundingClientRect();
-        el.style.setProperty("--dx", (pr.left + pr.width / 2 - (r.left + r.width / 2)) + "px");
-        el.style.setProperty("--dy", (pr.top + pr.height / 2 - (r.top + r.height / 2)) + "px");
-        el.classList.remove("in"); el.classList.add("sink");
-        window.__boost = Math.min(1, (window.__boost || 0) + 0.5);
-        await sleep(70);
-      }
-      await sleep(600);
-    };
-    const lines = [];
-    const type = async (clean) => {
-      if (lines.length >= 2) lines.shift();
-      const prefix = lines.length ? lines.join(" ") + " " : "";
-      lines.push(clean);
-      for (let i = 1; i <= clean.length; i++) { typed.textContent = prefix + clean.slice(0, i); await sleep(clean.length > 60 ? 14 : 18); }
-    };
-    (async function loop() {
-      let i = 0;
-      await speak(pairs[0][0]);
-      while (true) {
-        const clean = pairs[i % pairs.length][1], nextRaw = pairs[(i + 1) % pairs.length][0]; i++;
-        await Promise.all([type(clean), (async () => { await sleep(500); await speak(nextRaw); })()]);
-      }
-    })();
+    // Ticker tape: what was said flows in from the left, what got typed flows out to the right.
+    const raw = "um so can we move the launch review to wednesday at 3 wednesday works better for the design team   shipped the new export flow to vid ai two things to watch cold start and the retry logic   groceries milk eggs bread also um call the dentist on monday   hey uh quick one the invoice for march is still open can you nudge them   i think we should uh hold the release till the crash on intel is fixed   ";
+    const clean = "Can we move the launch review to Wednesday at 3? Wednesday works better for the design team.   Shipped the new export flow to VidAI. Two things to watch: cold start, and the retry logic.   Groceries: milk, eggs, bread. Also call the dentist on Monday.   Hey, quick one: the invoice for March is still open, can you nudge them?   I think we should hold the release till the crash on Intel is fixed.   ";
+    const speed = 42; // px per second, same on both sides
+    for (const [id, text] of [["track-raw", raw], ["track-clean", clean]]) {
+      const track = document.getElementById(id);
+      track.innerHTML = `<span>${text}</span><span>${text}</span>`;
+      const fit = () => { track.style.animationDuration = (track.scrollWidth / 2 / speed) + "s"; };
+      fit(); addEventListener("resize", fit);
+    }
+    // A quiet note above the pill about what just got fixed.
+    const notes = ["removed “um”", "wednesday → Wednesday", "added the comma", "vid ai → VidAI", "3 → at 3?", "monday → Monday"];
+    const badge = document.getElementById("badge").firstElementChild;
+    let ni = 0;
+    const cycle = () => { badge.classList.remove("on"); setTimeout(() => { badge.textContent = notes[ni++ % notes.length]; badge.classList.add("on"); }, 500); };
+    setTimeout(() => { badge.classList.add("on"); }, 400);
+    setInterval(cycle, 4200);
   }
   // Sticky header shadow.
   const hdr = document.querySelector("header.nav");

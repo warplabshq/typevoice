@@ -1,12 +1,11 @@
 import AppKit
 import SwiftUI
-import UniformTypeIdentifiers
 
 /// Makes its content a drag source for one recording.
 ///
-/// SwiftUI's `.onDrag` with a file item provider puts a file URL on the pasteboard that
-/// other sandboxed apps can't read. This goes through AppKit; see `RecordingWriter`
-/// for what is offered instead.
+/// SwiftUI's `.onDrag` with a file item provider offers bytes, a promise and a temp
+/// copy that vanishes when the drag ends; WhatsApp ends up with a 0 KB file. This goes
+/// through AppKit and offers one thing: a file URL. See `RecordingWriter`.
 struct RecordingDrag<Content: View>: NSViewRepresentable {
     let url: URL
     let fileName: String
@@ -86,7 +85,8 @@ final class DragSourceView: NSView, NSDraggingSource {
         guard d > 4 else { return }
         self.downAt = nil
 
-        let item = NSDraggingItem(pasteboardWriter: RecordingWriter(url: url, fileName: fileName))
+        guard let writer = RecordingWriter(url: url, fileName: fileName) else { return }
+        let item = NSDraggingItem(pasteboardWriter: writer)
         item.setDraggingFrame(bounds, contents: snapshot())
         DragSourceView.isDragging = true
         let session = beginDraggingSession(with: [item], event: event, source: self)
@@ -117,63 +117,32 @@ final class DragSourceView: NSView, NSDraggingSource {
     }
 }
 
-/// What lands on the drag pasteboard for one recording: the raw bytes, then a file
-/// promise. Deliberately no `public.file-url`. The recording lives inside this app's
-/// sandbox container, and a Catalyst app such as WhatsApp takes the URL first, can't
-/// read the path, and shows a 0 B file. With a promise the receiver hands us a folder
-/// it can read and we write the file there ourselves, the way Photos and Mail do.
-final class RecordingWriter: NSFilePromiseProvider, NSFilePromiseProviderDelegate {
-    private let source: URL
-    private let name: String
-    private let bytes: Data?
-    private let queue: OperationQueue = {
-        let q = OperationQueue(); q.qualityOfService = .userInitiated; return q
-    }()
+/// What lands on the drag pasteboard for one recording: a file URL, and nothing else.
+///
+/// Measured against a sandboxed Catalyst receiver (what WhatsApp is): it loads the item
+/// "in place" and reads it later. Given a file URL it gets the real file, readable
+/// afterwards thanks to the sandbox extension the pasteboard attaches. Given audio bytes
+/// or a file promise, UIKit prefers those, hands over a temp copy named
+/// `.com.apple.Foundation.NSItemProvider.XXXX.m4a`, and deletes it before the app copies
+/// it, which is the 0 KB file. So this is exactly what Finder puts on the pasteboard.
+final class RecordingWriter: NSObject, NSPasteboardWriting {
+    private let linkURL: URL
 
-    init(url: URL, fileName: String) {
-        source = url
-        name = fileName
-        bytes = try? Data(contentsOf: url)
+    init?(url: URL, fileName: String) {
+        guard let link = RecordingStore.dragLink(for: url, named: fileName) else { return nil }
+        linkURL = link
         super.init()
-        fileType = UTType.m4a.identifier
-        delegate = self
     }
 
-    private static let audioType = NSPasteboard.PasteboardType(UTType.m4a.identifier)
-
-    override func writableTypes(for pasteboard: NSPasteboard) -> [NSPasteboard.PasteboardType] {
-        var types = super.writableTypes(for: pasteboard)
-        if bytes != nil { types.insert(Self.audioType, at: 0) }
-        return types
+    func writableTypes(for pasteboard: NSPasteboard) -> [NSPasteboard.PasteboardType] {
+        (linkURL as NSURL).writableTypes(for: pasteboard)
     }
 
-    override func writingOptions(forType type: NSPasteboard.PasteboardType, pasteboard: NSPasteboard) -> NSPasteboard.WritingOptions {
-        type == Self.audioType ? [] : super.writingOptions(forType: type, pasteboard: pasteboard)
+    func writingOptions(forType type: NSPasteboard.PasteboardType, pasteboard: NSPasteboard) -> NSPasteboard.WritingOptions {
+        (linkURL as NSURL).writingOptions(forType: type, pasteboard: pasteboard)
     }
 
-    override func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
-        type == Self.audioType ? bytes : super.pasteboardPropertyList(forType: type)
+    func pasteboardPropertyList(forType type: NSPasteboard.PasteboardType) -> Any? {
+        (linkURL as NSURL).pasteboardPropertyList(forType: type)
     }
-
-    // MARK: NSFilePromiseProviderDelegate
-
-    func filePromiseProvider(_ p: NSFilePromiseProvider, fileNameForType fileType: String) -> String {
-        name
-    }
-
-    func filePromiseProvider(_ p: NSFilePromiseProvider, writePromiseTo url: URL, completionHandler: @escaping (Error?) -> Void) {
-        do {
-            try FileManager.default.copyItem(at: source, to: url)
-            completionHandler(nil)
-        } catch {
-            Log.d("file promise failed: \(error)")
-            completionHandler(error)
-        }
-    }
-
-    func operationQueue(for p: NSFilePromiseProvider) -> OperationQueue { queue }
-}
-
-extension UTType {
-    static let m4a = UTType("com.apple.m4a-audio") ?? .mpeg4Audio
 }
