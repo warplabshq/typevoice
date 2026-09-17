@@ -7,8 +7,8 @@ window.SITE = {
   domain: "https://REPLACE-ME.example",    // where this site is hosted
   appStoreURL: "https://apps.apple.com/app/idREPLACE-ME",
   updated: "September 18, 2026",
-  price: "No subscription",  // e.g. "$19" once the App Store price is set
-  priceNote: "buy it once",  // e.g. "once, forever"
+  price: "3 days free",      // e.g. "$19" once the App Store price is set
+  priceNote: "then buy it once",
   jurisdiction: "India",
 };
 document.addEventListener("DOMContentLoaded", () => {
@@ -22,11 +22,11 @@ document.addEventListener("DOMContentLoaded", () => {
   document.title = document.title.replace("Murmur", SITE.name);
   const y = document.querySelector("[data-year]"); if (y) y.textContent = new Date().getFullYear();
   // Pill bars: calm, voice-like, on a canvas (hero + final).
-  function startBars(c) {
+  function startBars(c, opt = {}) {
     if (!c) return;
     const ctx = c.getContext("2d"), dpr = window.devicePixelRatio || 1;
-    const W = 168, H = 40; c.width = W * dpr; c.height = H * dpr; c.style.width = W + "px"; c.style.height = H + "px"; ctx.scale(dpr, dpr);
-    const n = 18, bw = 2.5, gap = 2; let disp = new Array(n).fill(0);
+    const W = opt.w || 168, H = opt.h || 40; c.width = W * dpr; c.height = H * dpr; c.style.width = W + "px"; c.style.height = H + "px"; ctx.scale(dpr, dpr);
+    const n = opt.n || 18, bw = opt.bw || 2.5, gap = opt.gap || 2; let disp = new Array(n).fill(0);
     function bands(t) { const out = []; const syl = (0.35 + 0.65 * Math.max(0, Math.sin(t * 4.2))) * (0.7 + 0.3 * Math.sin(t * 0.9));
       for (let b = 0; b < 10; b++) { const f = 0.55 + 0.45 * Math.sin(t * 2.7 + b * 1.1); out.push(Math.min(1, Math.max(0, (0.15 + 0.85 * syl * f) * (1 - b * 0.055)))); } return out; }
     function targets(bs) { const half = (n - 1) / 2, raw = []; for (let i = 0; i < n; i++) { const d = Math.abs(i - half) / half, pos = d * 9, lo = Math.floor(pos), hi = Math.min(lo + 1, 9), f = pos - lo; let v = bs[lo] * (1 - f) + bs[hi] * f; if (i % 2) v = v * 0.85 + bs[Math.min(hi + 1, 9)] * 0.15; raw.push(v); }
@@ -46,14 +46,18 @@ document.addEventListener("DOMContentLoaded", () => {
   startBars(document.getElementById("wave2"));
   const c = document.getElementById("wave");
   if (c) {
-    startBars(c);
+    startBars(c, { w: 236, h: 56, n: 26, bw: 3, gap: 3 });
     // Ticker tape: what was said flows in from the left, what got typed flows out to the right.
     const raw = "um so can we move the launch review to wednesday at 3 wednesday works better for the design team   shipped the new export flow to vid ai two things to watch cold start and the retry logic   groceries milk eggs bread also um call the dentist on monday   hey uh quick one the invoice for march is still open can you nudge them   i think we should uh hold the release till the crash on intel is fixed   ";
     const clean = "Can we move the launch review to Wednesday at 3? Wednesday works better for the design team.   Shipped the new export flow to VidAI. Two things to watch: cold start, and the retry logic.   Groceries: milk, eggs, bread. Also call the dentist on Monday.   Hey, quick one: the invoice for March is still open, can you nudge them?   I think we should hold the release till the crash on Intel is fixed.   ";
     const speed = 42; // px per second, same on both sides
+    const clumsy = (text) => text.trim().split(/\s+/).map((w, i) => {
+      const r = ((i * 7) % 11 - 5) * 0.55, y = ((i * 5) % 7 - 3) * 0.9, d = 2.6 + (i * 3) % 5 * 0.4, dl = -((i * 11) % 9) * 0.35, o = 0.42 + ((i * 13) % 5) * 0.09;
+      return `<i class="w" style="--r:${r}deg;--y:${y}px;--d:${d}s;--dl:${dl}s;--o:${o}">${w}</i>`;
+    }).join(" ");
     for (const [id, text] of [["track-raw", raw], ["track-clean", clean]]) {
-      const track = document.getElementById(id);
-      track.innerHTML = `<span>${text}</span><span>${text}</span>`;
+      const track = document.getElementById(id), html = id === "track-raw" ? clumsy(text) : text;
+      track.innerHTML = `<span>${html}</span><span>${html}</span>`;
       const fit = () => { track.style.animationDuration = (track.scrollWidth / 2 / speed) + "s"; };
       fit(); addEventListener("resize", fit);
     }

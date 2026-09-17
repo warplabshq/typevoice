@@ -17,6 +17,9 @@ body { margin: 0; background: var(--bg); color: var(--text);
   font: 16px/1.55 -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Helvetica, Arial, sans-serif; -webkit-font-smoothing: antialiased; }
 a { color: var(--accent); text-decoration: none; } a:hover { text-decoration: underline; }
 h1, h2, h3, h4 { margin: 0; letter-spacing: -0.015em; }
+/* Display type: an editorial serif, regular weight, with an italic for the payoff. */
+h1, .section > h2, .price-left h2, .final h2, .split h2 { font-family: "Instrument Serif", "Iowan Old Style", "Times New Roman", serif; font-weight: 400; letter-spacing: -0.015em; -webkit-font-smoothing: antialiased; }
+h1 em, h2 em { font-style: italic; color: var(--text); }
 .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 var(--s4); }
 .glow { position: fixed; inset: -20% 0 auto 0; height: 70vh; pointer-events: none; z-index: 0;
   background: radial-gradient(60% 60% at 50% 0%, rgba(120,140,190,.18), transparent 70%); animation: drift 24s ease-in-out infinite alternate; }
@@ -38,8 +41,9 @@ nav .navcta:hover { background: var(--card2); transform: translateY(-1px); }
 
 /* ---------- type ---------- */
 .eyebrow { color: var(--faint); font-size: 12px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; margin: 0 0 var(--s2); }
-h1 { font-size: clamp(44px, 7vw, 76px); line-height: 0.98; font-weight: 700; letter-spacing: -0.035em; margin: 0 0 var(--s3); }
+h1 { font-size: clamp(56px, 9vw, 104px); line-height: 0.94; margin: 0 0 var(--s3); }
 h2 { font-size: clamp(26px, 3.4vw, 36px); line-height: 1.12; font-weight: 700; margin: 0 0 var(--s2); }
+.section > h2, .price-left h2, .final h2, .split h2 { font-size: clamp(36px, 4.8vw, 56px); line-height: 1.02; }
 h3 { font-size: 17px; font-weight: 600; }
 .lede { color: var(--dim); font-size: clamp(17px, 2vw, 20px); max-width: 600px; margin: 0 auto var(--s4); line-height: 1.5; }
 .lede-left { color: var(--dim); font-size: 17px; max-width: 640px; margin: 0 0 var(--s4); }
@@ -51,22 +55,24 @@ h3 { font-size: 17px; font-weight: 600; }
 /* Ticker tape: what you said flows in from the left, what got typed rolls out on a ribbon. */
 :root { --ribbon-bg: #f4f4f6; --ribbon-fg: #111114; }
 @media (prefers-color-scheme: light) { :root { --ribbon-bg: #111114; --ribbon-fg: #f4f4f6; } }
-.tape { position: relative; width: 112vw; margin: var(--s6) 0 var(--s3) calc(50% - 56vw); height: 96px; transform: rotate(-2deg); pointer-events: none; }
-.tape-raw, .tape-clean { position: absolute; top: 34px; height: 44px; overflow: hidden; display: flex; align-items: center; }
+.tape { position: relative; width: 112vw; margin: var(--s6) 0 var(--s3) calc(50% - 56vw); height: 120px; transform: rotate(-2deg); pointer-events: none; }
+.tape-raw, .tape-clean { position: absolute; top: 40px; height: 44px; overflow: hidden; display: flex; align-items: center; }
 .tape-raw { left: 0; right: 50%; -webkit-mask-image: linear-gradient(90deg, transparent 8%, #000 42%, #000); mask-image: linear-gradient(90deg, transparent 8%, #000 42%, #000); }
 .tape-clean { left: 50%; right: 0; background: var(--ribbon-bg); box-shadow: 0 10px 30px rgba(0,0,0,.25);
   -webkit-mask-image: linear-gradient(90deg, #000, #000 58%, transparent 92%); mask-image: linear-gradient(90deg, #000, #000 58%, transparent 92%); }
-.tape-clean::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 110px; pointer-events: none; }
 .track { display: flex; white-space: nowrap; will-change: transform; animation: tape 60s linear infinite; }
 .track > span { padding-right: 1.4em; }
-.tape-raw .track { color: var(--dim); font-size: 15px; font-style: italic; padding-right: 100px; }
-.tape-clean .track { color: var(--ribbon-fg); font-size: 15px; font-weight: 500; padding-left: 110px; }
+.tape-raw .track { color: var(--dim); font-size: 15px; font-weight: 300; font-style: italic; padding-right: 140px; }
+.tape-raw .w { display: inline-block; opacity: var(--o); transform: rotate(var(--r)) translateY(var(--y)); animation: wobble var(--d) ease-in-out var(--dl) infinite alternate; }
+@keyframes wobble { to { transform: rotate(calc(var(--r) * -1)) translateY(calc(var(--y) * -1)); } }
+.tape-clean .track { color: var(--ribbon-fg); font-size: 15px; font-weight: 500; padding-left: 150px; }
 @keyframes tape { from { transform: translateX(-50%); } to { transform: translateX(0); } }
-.tape .pill { position: absolute; left: 50%; top: 34px; transform: translateX(-50%); z-index: 2; height: 44px; }
-.tape-badge { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); font-size: 12px; color: var(--dim); white-space: nowrap; }
+.tape .pill { position: absolute; left: 50%; top: 28px; transform: translateX(-50%); z-index: 2; height: 68px; padding: 0 22px; border: 0; background: #000;
+  box-shadow: 0 14px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05); }
+.tape-badge { position: absolute; left: 50%; top: 2px; transform: translateX(-50%); font-size: 12px; color: var(--dim); white-space: nowrap; }
 .tape-badge span { display: inline-block; opacity: 0; transform: translateY(4px); transition: opacity .45s ease, transform .45s ease; }
 .tape-badge span.on { opacity: 1; transform: translateY(0); }
-@media (prefers-reduced-motion: reduce) { .track { animation: none; } }
+@media (prefers-reduced-motion: reduce) { .track, .tape-raw .w { animation: none; } }
 .eyebrow.tag { display: inline-block; background: var(--ribbon-bg); color: var(--ribbon-fg); border-radius: 999px; padding: 6px 12px; font-size: 11px; letter-spacing: .1em; margin-bottom: var(--s3); }
 .pill { display: inline-flex; align-items: center; justify-content: center; height: 40px; padding: 0 14px; border-radius: 999px; background: #0a0a0a;
   border: 0.6px solid rgba(255,255,255,.14); box-shadow: 0 6px 16px rgba(0,0,0,.28), 0 1px 2px rgba(0,0,0,.16); transition: opacity .4s ease, transform .45s cubic-bezier(.2,.8,.2,1); }
