@@ -8,6 +8,7 @@ final class HUDController {
     let state: AppState
     var onCopy: () -> Void = {}
     private var window: HUDWindow?
+    var debugWindow: NSWindow? { window }
     private var hideTask: Task<Void, Never>?
 
     init(state: AppState) {

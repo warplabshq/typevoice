@@ -37,3 +37,49 @@ struct BlurFade: ViewModifier {
 extension AnyTransition {
     static let blurFade = AnyTransition.modifier(active: BlurFade(amount: 1), identity: BlurFade(amount: 0))
 }
+
+/// The pill's material, rim and shadow. Used by the real HUD and every preview,
+/// so what you see in Settings is exactly what appears on screen.
+struct PillChrome: ViewModifier {
+    var look: Prefs.PillLook = Prefs.pillLook
+    var shadow: Prefs.PillShadow = Prefs.pillShadow
+
+    func body(content: Content) -> some View {
+        content
+            .frame(height: 22)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 8)
+            .background {
+                ZStack {
+                    // Glass underneath for refraction; its inactive-window lightening is
+                    // covered by the explicit black layer above it. "Black" skips the glass
+                    // altogether so it is truly black on any wallpaper.
+                    if look != .black {
+                        Capsule().fill(.clear).glassEffect(.regular, in: .capsule)
+                    }
+                    Capsule().fill(Color.black.opacity(look.tint))
+                }
+            }
+            .overlay(
+                Capsule().strokeBorder(
+                    LinearGradient(colors: [.white.opacity(look == .glass ? 0.22 : 0.14), .white.opacity(0.03)],
+                                   startPoint: .top, endPoint: .bottom),
+                    lineWidth: 0.6
+                )
+            )
+            .shadow(color: .black.opacity(shadowAlpha(0.28, 0.45)), radius: shadowRadius, y: shadowY)
+            .shadow(color: .black.opacity(shadowAlpha(0.16, 0.25)), radius: shadow == .none ? 0 : 2, y: shadow == .none ? 0 : 1)
+    }
+
+    private func shadowAlpha(_ soft: Double, _ strong: Double) -> Double {
+        switch shadow { case .none: return 0; case .soft: return soft; case .strong: return strong }
+    }
+    private var shadowRadius: CGFloat { switch shadow { case .none: return 0; case .soft: return 16; case .strong: return 26 } }
+    private var shadowY: CGFloat { switch shadow { case .none: return 0; case .soft: return 6; case .strong: return 10 } }
+}
+
+extension View {
+    func pillChrome(look: Prefs.PillLook = Prefs.pillLook, shadow: Prefs.PillShadow = Prefs.pillShadow) -> some View {
+        modifier(PillChrome(look: look, shadow: shadow))
+    }
+}

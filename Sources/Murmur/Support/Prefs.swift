@@ -20,6 +20,8 @@ enum Prefs {
         static let accent = "accent"                   // Accent
         static let numbersAsDigits = "numbersAsDigits" // Bool
         static let showPreview = "showPreview"         // Bool: typed text in the indicator
+        static let pillLook = "pillLook"               // PillLook
+        static let pillShadow = "pillShadow"           // PillShadow
     }
 
     enum HUDPosition: String, CaseIterable, Identifiable {
@@ -37,6 +39,20 @@ enum Prefs {
             case .bottomRight: return "Bottom right"
             }
         }
+    }
+
+    enum PillLook: String, CaseIterable, Identifiable {
+        case glass, dark, black
+        var id: String { rawValue }
+        var label: String { switch self { case .glass: return "Glass"; case .dark: return "Dark"; case .black: return "Black" } }
+        /// How much black sits in the glass.
+        var tint: Double { switch self { case .glass: return 0.30; case .dark: return 0.62; case .black: return 0.96 } }
+    }
+
+    enum PillShadow: String, CaseIterable, Identifiable {
+        case none, soft, strong
+        var id: String { rawValue }
+        var label: String { switch self { case .none: return "None"; case .soft: return "Soft"; case .strong: return "Strong" } }
     }
 
     enum Accent: String, CaseIterable, Identifiable {
@@ -81,6 +97,8 @@ enum Prefs {
             Key.accent: Accent.mono.rawValue,
             Key.numbersAsDigits: true,
             Key.showPreview: true,
+            Key.pillLook: PillLook.black.rawValue,
+            Key.pillShadow: PillShadow.soft.rawValue,
         ])
     }
 
@@ -100,6 +118,8 @@ enum Prefs {
     static var accent: Accent { Accent(rawValue: d.string(forKey: Key.accent) ?? "") ?? .mono }
     static var numbersAsDigits: Bool { d.bool(forKey: Key.numbersAsDigits) }
     static var showPreview: Bool { d.bool(forKey: Key.showPreview) }
+    static var pillLook: PillLook { PillLook(rawValue: d.string(forKey: Key.pillLook) ?? "") ?? .black }
+    static var pillShadow: PillShadow { PillShadow(rawValue: d.string(forKey: Key.pillShadow) ?? "") ?? .soft }
 
     /// "🌐" or the custom shortcut, for UI copy.
     static var triggerLabel: String {

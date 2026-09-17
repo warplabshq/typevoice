@@ -44,6 +44,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 Task { @MainActor in
                     if let raw = n.object as? String, let t = MainTab(rawValue: raw) { openMainWindow(t) }
                     else if (n.object as? String) == "onboarding" { self?.showOnboarding() }
+                    else if (n.object as? String) == "dump" {
+                        func dump(_ v: NSView?, _ depth: Int) {
+                            guard let v else { return }
+                            let ve = (v as? NSVisualEffectView).map { " state=\($0.state.rawValue) material=\($0.material.rawValue)" } ?? ""
+                            Log.d(String(repeating: "  ", count: depth) + String(describing: type(of: v)) + ve)
+                            for s in v.subviews { dump(s, depth + 1) }
+                        }
+                        Log.d("=== HUD window ==="); dump(self?.hud.debugWindow?.contentView, 0)
+                        Log.d("=== main window ==="); dump(self?.main?.contentView, 0)
+                    }
                     else if let raw = n.object as? String, raw.hasPrefix("dictate:") {
                         self?.controller.simulate(wav: URL(fileURLWithPath: String(raw.dropFirst(8))))
                     }
@@ -92,7 +102,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     func showMain(tab: MainTab? = nil) {
         if let tab { mainTab = tab }
         if main == nil {
-            let host = NSHostingController(rootView: MainRoot(delegate: self))
+            let host = NSHostingController(rootView: MainRoot(delegate: self).environment(\.controlActiveState, .key))
             let w = NSWindow(contentViewController: host)
             w.styleMask = [.titled, .closable, .miniaturizable, .resizable, .fullSizeContentView]
             w.titlebarAppearsTransparent = false
@@ -109,6 +119,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         NSApp.activate(ignoringOtherApps: true)
         main?.makeKeyAndOrderFront(nil)
         tabBinding.wrappedValue = mainTab
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(150))
+            self.freezeVibrancy(in: self.main?.contentView)
+        }
     }
 
     /// Accessory apps have no visible menu bar, but key equivalents still route
@@ -146,6 +160,16 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc private func showSettingsFromMenu() { showMain(tab: .settings) }
 
     func setMainTitle(_ t: MainTab) { main?.title = t.label }
+
+    /// macOS lightens vibrancy when a window is inactive; keep ours looking the same.
+    private func freezeVibrancy(in view: NSView?) {
+        guard let view else { return }
+        if let v = view as? NSVisualEffectView { v.state = .active }
+        for sub in view.subviews { freezeVibrancy(in: sub) }
+    }
+
+    func windowDidBecomeKey(_ notification: Notification) { freezeVibrancy(in: main?.contentView) }
+    func windowDidResignKey(_ notification: Notification) { freezeVibrancy(in: main?.contentView) }
 
     /// Shared with `MainRoot` so the menu can pick a tab before the window exists.
     lazy var tabBinding = Binding<MainTab>(

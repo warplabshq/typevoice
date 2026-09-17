@@ -31,19 +31,7 @@ struct HUDView: View {
 
     private var pill: some View {
         GlassEffectContainer(spacing: 0) {
-            content
-                .frame(height: 22)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .glassEffect(.regular.tint(Color.black.opacity(0.45)), in: .capsule)
-                .overlay(
-                    Capsule().strokeBorder(
-                        LinearGradient(colors: [.white.opacity(0.22), .white.opacity(0.03)], startPoint: .top, endPoint: .bottom),
-                        lineWidth: 0.6
-                    )
-                )
-                .shadow(color: .black.opacity(0.28), radius: 16, y: 6)
-                .shadow(color: .black.opacity(0.16), radius: 2, y: 1)
+            content.pillChrome()
         }
         .scaleEffect(shown ? (hovering && phase.isListening ? 1.03 : 1) : 0.9,
                      anchor: UnitPoint(x: [0.0, 0.5, 1.0][position.horizontal], y: position.isTop ? 0 : 1))

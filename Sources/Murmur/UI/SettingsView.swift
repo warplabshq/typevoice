@@ -9,6 +9,8 @@ struct SettingsView: View {
     @AppStorage(Prefs.Key.showPreview) private var showPreview = true
     @AppStorage(Prefs.Key.hudPosition) private var hudPosition = Prefs.HUDPosition.bottomCenter.rawValue
     @AppStorage(Prefs.Key.accent) private var accent = Prefs.Accent.mono.rawValue
+    @AppStorage(Prefs.Key.pillLook) private var pillLook = Prefs.PillLook.black.rawValue
+    @AppStorage(Prefs.Key.pillShadow) private var pillShadow = Prefs.PillShadow.soft.rawValue
     @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
     @AppStorage(Prefs.Key.insertion) private var insertion = Prefs.Insertion.auto.rawValue
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
@@ -46,11 +48,25 @@ struct SettingsView: View {
                 LabeledContent("Position") {
                     PositionGrid(selection: $hudPosition)
                 }
+                LabeledContent("Look") {
+                    Picker("Look", selection: $pillLook) {
+                        ForEach(Prefs.PillLook.allCases) { Text($0.label).tag($0.rawValue) }
+                    }
+                    .pickerStyle(.segmented).labelsHidden().frame(width: 220)
+                }
+                LabeledContent("Shadow") {
+                    Picker("Shadow", selection: $pillShadow) {
+                        ForEach(Prefs.PillShadow.allCases) { Text($0.label).tag($0.rawValue) }
+                    }
+                    .pickerStyle(.segmented).labelsHidden().frame(width: 220)
+                }
                 LabeledContent("Accent") {
                     AccentSwatches(selection: $accent)
                 }
                 LabeledContent("Preview") {
-                    PillPreview(accent: Prefs.Accent(rawValue: accent) ?? .mono)
+                    PillPreview(accent: Prefs.Accent(rawValue: accent) ?? .mono,
+                                look: Prefs.PillLook(rawValue: pillLook) ?? .black,
+                                shadow: Prefs.PillShadow(rawValue: pillShadow) ?? .soft)
                 }
                 Toggle("Show the text after each dictation", isOn: $showPreview)
             }
@@ -159,20 +175,17 @@ private struct AccentSwatches: View {
 /// The pill exactly as it will look, on a dark swatch so the glass reads.
 struct PillPreview: View {
     let accent: Prefs.Accent
+    var look: Prefs.PillLook = Prefs.pillLook
+    var shadow: Prefs.PillShadow = Prefs.pillShadow
 
     var body: some View {
         TimelineView(.animation(minimumInterval: 1 / 30)) { ctx in
             let t = ctx.date.timeIntervalSinceReferenceDate
             let bands = DemoBands.at(t)
-            WaveformView(bands: bands, color: Theme.color(for: accent))
-                .frame(width: 80, height: 16)
-                .frame(height: 22)
-                .padding(.horizontal, 14)
-                .padding(.vertical, 8)
-                .glassEffect(.regular.tint(Color.black.opacity(0.45)), in: .capsule)
-                .overlay(Capsule().strokeBorder(Color.white.opacity(0.18), lineWidth: 0.6))
-                .shadow(color: .black.opacity(0.25), radius: 8, y: 3)
-                .padding(.vertical, 4)
+            WaveformView(bands: bands, barWidth: 2.5, gap: 2, color: Theme.color(for: accent))
+                .frame(width: 84, height: 20)
+                .pillChrome(look: look, shadow: shadow)
+                .padding(.vertical, 6)
         }
     }
 }
