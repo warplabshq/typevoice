@@ -242,14 +242,14 @@ kbd { font: 13px -apple-system, BlinkMacSystemFont, sans-serif; background: var(
 .chip.big { font-size: 12px; padding: 5px 11px; flex: none; }
 @media (max-width: 900px) { .split { grid-template-columns: 1fr; } .vstage { height: 400px; } .msgwin { width: 100%; } .vtext { max-width: 150px; } }
 /* ---------- privacy flow ---------- */
-.flow { margin: var(--s4) 0 var(--s2); background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 14px 18px 6px; }
+.flow { margin: var(--s4) 0 var(--s2); background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px 22px 8px; }
 .flow .mac { stroke: color-mix(in srgb, var(--green) 55%, var(--line)); stroke-width: 1.5; }
 .flow .node circle, .flow .node rect { fill: var(--bg2); stroke: var(--line2); stroke-width: 1; }
-.flow .ico { font-size: 20px; fill: var(--text); } .flow .lbl { font-size: 12px; fill: var(--dim); } .flow .lbl-strong { font-size: 12px; font-weight: 600; fill: var(--text); }
+.flow .icon { fill: none; stroke: var(--text); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; } .flow .icon.faint { stroke: var(--faint); } .flow .lbl { font-size: 12px; fill: var(--dim); } .flow .lbl-strong { font-size: 12px; font-weight: 600; fill: var(--text); }
 .flow .lbl-title { font-size: 12px; font-weight: 700; fill: var(--green); letter-spacing: .08em; text-transform: uppercase; } .flow .lbl-small { font-size: 11px; fill: var(--faint); }
 .flow .wire { fill: none; stroke: var(--line2); stroke-width: 1.5; }
 .flow .dot { fill: var(--green); filter: drop-shadow(0 0 6px color-mix(in srgb, var(--green) 70%, transparent)); }
 .flow .wire-out { stroke: var(--line2); stroke-width: 1.5; stroke-dasharray: 3 6; }
-.flow .cloud { fill: var(--bg2); stroke: var(--line); stroke-dasharray: 4 4; } .flow .cloud + .ico { fill: var(--faint); }
+.flow .cloud { fill: var(--bg2); stroke: var(--line); stroke-dasharray: 4 4; }
 .flow .badge-out rect { fill: var(--card2); stroke: var(--line2); } .flow .badge-out text { fill: var(--green); }
 @media (max-width: 600px) { .flow { padding: 6px; } }
