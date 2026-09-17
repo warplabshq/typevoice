@@ -106,6 +106,63 @@ document.addEventListener("DOMContentLoaded", () => {
       if (wordsEl && wordsEl.dataset.done) { words += w; dicts += 1; wordsEl.textContent = words.toLocaleString(); dictEl.textContent = dicts.toLocaleString(); }
     }, 7000);
   }
+  // Tour scenes.
+  const mp = document.querySelector(".mini-pill");
+  if (mp) {
+    const spots = [["50%","-50%",74],["8%","0",74],["92%","-100%",74],["50%","-50%",11],["92%","-100%",11],["8%","0",11]];
+    const looks = ["", "glass", "dark"], accents = ["#ffffff","#4d9cff","#b28cff","#ff80b3","#66d98c"];
+    let si = 0, li = 0, ai = 0; const sw = document.querySelectorAll(".swatches span");
+    const place = () => { const [x, tx, y] = spots[si]; mp.style.left = x; mp.style.top = y + "%"; mp.style.transform = `translateX(${tx})`; };
+    place();
+    setInterval(() => { si = (si + 1) % spots.length; place(); if (si === 0) { li = (li + 1) % looks.length; mp.className = "mini-pill " + looks[li]; ai = (ai + 1) % accents.length; mp.style.setProperty("--accent", accents[ai]); sw.forEach((e, k) => e.classList.toggle("on", k === ai)); } }, 3200);
+  }
+  const chip = document.getElementById("chip");
+  if (chip) {
+    const voice = document.getElementById("voice"), input = document.querySelector(".chat-input"), dpill = document.getElementById("dpill");
+    (async function dragLoop() {
+      const sleep = ms => new Promise(r => setTimeout(r, ms));
+      while (true) {
+        chip.className = "chip"; chip.style.transform = ""; voice.classList.remove("show"); input.classList.remove("hot");
+        await sleep(1800);
+        chip.classList.add("lift");
+        const from = chip.getBoundingClientRect(), to = input.getBoundingClientRect();
+        chip.style.transform = `translate(${to.left + 40 - from.left}px, ${to.top + 6 - from.top}px)`;
+        await sleep(900); input.classList.add("hot");
+        await sleep(700); chip.classList.add("gone"); input.classList.remove("hot");
+        await sleep(300); voice.classList.add("show");
+        await sleep(3200);
+      }
+    })();
+  }
+  const prev = document.getElementById("style-prev");
+  if (prev) {
+    const state = { case: 0, punct: 0, tone: 0 };
+    const base = [["The launch is Wednesday, and we'll need two more days for QA.", "The launch is Wednesday, and we will need two more days for QA."],
+                  ["The launch is Wednesday, and we'll need two more days for QA", "The launch is Wednesday, and we will need two more days for QA"]];
+    const render = () => { let t = base[state.punct][state.tone]; if (state.case) t = t.toLowerCase(); prev.style.opacity = 0; setTimeout(() => { prev.textContent = t; prev.style.opacity = 1; }, 250); };
+    render();
+    const keys = ["case", "punct", "tone"]; let k = 0;
+    setInterval(() => { const key = keys[k++ % keys.length]; state[key] = 1 - state[key];
+      const seg = document.querySelector(`.seg[data-seg="${key}"]`); seg.querySelectorAll("b").forEach((b, i) => b.classList.toggle("sel", i === state[key])); render(); }, 2600);
+  }
+  const dt = document.getElementById("dict-text");
+  if (dt) {
+    const chipEl = document.querySelector(".dict-chip");
+    const heard = ["vid ai", "Vidai", "video eye"];
+    let hi = 0;
+    (async function dictLoop() {
+      const sleep = ms => new Promise(r => setTimeout(r, ms));
+      while (true) {
+        const h = heard[hi++ % heard.length], sentence = "Send the export notes to the team at ";
+        dt.textContent = "";
+        for (let i = 1; i <= sentence.length; i++) { dt.textContent = sentence.slice(0, i); await sleep(26); }
+        for (let i = 1; i <= h.length; i++) { dt.textContent = sentence + h.slice(0, i); await sleep(60); }
+        await sleep(700);
+        chipEl.classList.add("pulse"); dt.innerHTML = sentence + "<mark>VidAI</mark>.";
+        await sleep(2600); chipEl.classList.remove("pulse");
+      }
+    })();
+  }
   // Reveal on scroll, count-up numbers.
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.12 });
   document.querySelectorAll(".reveal").forEach(el => io.observe(el));
