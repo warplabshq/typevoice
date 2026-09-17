@@ -97,7 +97,9 @@ h3 { font-size: 17px; font-weight: 600; }
 @media (prefers-reduced-motion: reduce) { .netglyph .pkt { animation: none; transform: translateX(11px); } }
 
 /* ---------- sections ---------- */
-.section { padding: var(--s7) 0 0; }
+.section { padding: var(--s7) 0 0; scroll-margin-top: 72px; }
+::selection { background: color-mix(in srgb, var(--text) 18%, transparent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; border-radius: 6px; }
 .section:last-of-type { padding-bottom: var(--s7); }
 .steps { display: grid; grid-template-columns: repeat(3, 1fr); gap: var(--s2); margin-top: var(--s4); }
 .step { background: var(--card); border: 1px solid var(--line); border-radius: var(--r); padding: 22px; }
@@ -133,8 +135,10 @@ h3 { font-size: 17px; font-weight: 600; }
 .tile-b { background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); overflow: hidden; display: flex; flex-direction: column; grid-column: span 2; min-height: 300px;
   transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease; }
 .tile-b:hover { transform: translateY(-3px); border-color: var(--line2); box-shadow: var(--shadow); }
+.tile-b { transition: transform .35s cubic-bezier(.2,.8,.2,1), border-color .35s ease; } .tile-b:hover { transform: translateY(-2px); border-color: var(--line2); }
 .tile-b.span2 { grid-column: span 2; } .tile-b.small { grid-column: span 1; min-height: 0; padding: 20px; }
 .tile-b.small h3 { margin: 0 0 6px; font-size: 15px; } .tile-b.small p { margin: 0; color: var(--dim); font-size: 13.5px; line-height: 1.45; }
+.ic svg { width: 17px; height: 17px; fill: none; stroke: var(--text); stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; }
 .ic { width: 32px; height: 32px; border-radius: 9px; display: grid; place-items: center; background: linear-gradient(180deg, rgba(255,255,255,.12), rgba(255,255,255,.04)); border: 1px solid var(--line); font-weight: 700; font-size: 13px; margin-bottom: 12px; }
 .scene-cap { padding: 14px 18px 18px; margin-top: auto; } .scene-cap h3 { margin-bottom: 4px; font-size: 15.5px; } .scene-cap p { margin: 0; color: var(--dim); font-size: 13.5px; line-height: 1.45; }
 .swatches { display: flex; gap: 8px; margin-top: 12px; } .swatches span { width: 14px; height: 14px; border-radius: 50%; background: var(--c, #fff); border: 1px solid var(--line); opacity: .5; transition: opacity .4s, transform .4s; }
@@ -199,7 +203,7 @@ h3 { font-size: 17px; font-weight: 600; }
 .faq p { color: var(--dim); margin: 10px 0 0; max-width: 720px; }
 #faq .muted { margin-top: var(--s3); font-size: 14px; }
 .final { text-align: center; padding: var(--s8) 0 var(--s7); }
-.final .pill.mini { margin-bottom: var(--s4); } .final h2 { margin-bottom: var(--s4); }
+.final .pill.mini { margin-bottom: var(--s4); height: 56px; padding: 0 18px; border: 0; background: #000; box-shadow: 0 14px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05); } .final h2 { margin-bottom: var(--s4); }
 
 /* ---------- footer ---------- */
 footer { border-top: 1px solid var(--line); padding: var(--s6) 0 var(--s5); color: var(--faint); font-size: 13px; }
@@ -222,6 +226,7 @@ kbd { font: 13px -apple-system, BlinkMacSystemFont, sans-serif; background: var(
 @media (max-width: 760px) {
   :root { --s7: 56px; --s8: 72px; }
   nav { gap: 14px; } nav a:not(.navcta) { display: none; }
+  .tape .pill { height: 56px; padding: 0 16px; } .tape .pill canvas { width: 180px !important; height: 43px !important; } .tape { margin-top: var(--s5); }
   .strip { display: grid; grid-template-columns: 1fr; gap: 10px 0; } .strip li { padding: 0; justify-content: center; border-left: 0; } .steps { grid-template-columns: 1fr; }
   .stage { padding: 24px 14px 0; border-radius: 16px; } .stage .window { margin-bottom: -20px; } .window .body { grid-template-columns: 1fr; } .side { display: none; } .tiles { grid-template-columns: repeat(2, 1fr); } .titlebar .title { margin-left: 8px; }
   .bento { grid-template-columns: 1fr; } .tile-b, .tile-b.span2, .tile-b.small { grid-column: span 1; }
@@ -247,17 +252,48 @@ kbd { font: 13px -apple-system, BlinkMacSystemFont, sans-serif; background: var(
 .chip.big { font-size: 12px; padding: 5px 11px; flex: none; }
 @media (max-width: 900px) { .split { grid-template-columns: 1fr; } .vstage { height: 400px; } .msgwin { width: 100%; } .vtext { max-width: 150px; } }
 /* ---------- privacy flow ---------- */
-.flow { margin: var(--s4) 0 var(--s2); background: var(--card); border: 1px solid var(--line); border-radius: var(--r-lg); padding: 18px 22px 8px; }
-.flow .mac { stroke: color-mix(in srgb, var(--green) 55%, var(--line)); stroke-width: 1.5; }
-.flow .node circle, .flow .node rect { fill: var(--bg2); stroke: var(--line2); stroke-width: 1; }
-.flow .icon { fill: none; stroke: var(--text); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; } .flow .icon.faint { stroke: var(--faint); } .flow .lbl { font-size: 12px; fill: var(--dim); } .flow .lbl-strong { font-size: 12px; font-weight: 600; fill: var(--text); }
-.flow .lbl-title { font-size: 12px; font-weight: 700; fill: var(--green); letter-spacing: .08em; text-transform: uppercase; } .flow .lbl-small { font-size: 11px; fill: var(--faint); }
-.flow .wire { fill: none; stroke: var(--line2); stroke-width: 1.5; }
-.flow .bars rect { fill: var(--text); }
-.flow .fly.wave rect { fill: var(--green); }
-.flow .fly.rough rect { fill: var(--bg2); stroke: var(--line2); } .flow .fly.rough text { font-size: 10px; font-style: italic; fill: var(--dim); }
-.flow .fly.clean rect { fill: var(--text); } .flow .fly.clean text { font-size: 10px; font-weight: 600; fill: var(--bg); }
-.flow .wire-out { stroke: var(--line2); stroke-width: 1.5; stroke-dasharray: 3 6; }
-.flow .cloud { fill: var(--bg2); stroke: var(--line); stroke-dasharray: 4 4; }
-.flow .badge-out rect { fill: var(--card2); stroke: var(--line2); } .flow .badge-out text { fill: var(--green); }
-@media (max-width: 600px) { .flow { padding: 6px; } }
+/* Privacy diagram: the pipeline lives inside the Mac; the only wire out ends at 0 bytes. */
+.flow { margin: var(--s4) 0 var(--s2); display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: center; gap: 0 4px; padding: 24px; border-radius: var(--r-lg); border: 1px solid var(--line);
+  background: radial-gradient(60% 70% at 50% 0%, rgba(120,140,210,.12), transparent 70%), var(--card); }
+.flow .mac { position: relative; padding: 40px 22px 22px; border-radius: 22px; border: 1px solid color-mix(in srgb, var(--green) 45%, var(--line)); background: linear-gradient(rgba(255,255,255,.035), rgba(255,255,255,.01));
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--green) 6%, transparent); }
+.flow .mac-title { position: absolute; left: 22px; top: 14px; font-size: 11px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--green); }
+.flow .pipe { display: flex; align-items: flex-start; }
+.flow .node { display: flex; flex-direction: column; align-items: center; gap: 10px; flex: 0 0 auto; }
+.flow .node small { font-size: 12px; color: var(--dim); white-space: nowrap; }
+.flow .node em { font-style: normal; font-size: 11px; color: var(--faint); text-align: center; line-height: 1.4; margin-top: -4px; }
+.flow .wire { position: relative; flex: 1 1 60px; min-width: 30px; height: 44px; }
+.flow .wire::before { content: ""; position: absolute; left: 0; right: 0; top: 50%; border-top: 1.5px solid var(--line2); }
+.flow .wire.dashed::before { border-top-style: dashed; }
+.flow .mpill { height: 44px; padding: 0 14px; border-radius: 999px; background: #000; display: flex; align-items: center; gap: 2.5px; box-shadow: 0 10px 26px rgba(0,0,0,.45), inset 0 0 0 1px rgba(255,255,255,.06); }
+.flow .mpill i { width: 2.5px; height: 30%; border-radius: 2px; background: #fff; animation: mbar 1.1s ease-in-out infinite; }
+.flow .mpill i:nth-child(1) { --h: 28%; animation-delay: -.2s } .flow .mpill i:nth-child(2) { --h: 45%; animation-delay: -.5s } .flow .mpill i:nth-child(3) { --h: 70%; animation-delay: -.1s } .flow .mpill i:nth-child(4) { --h: 95%; animation-delay: -.7s } .flow .mpill i:nth-child(5) { --h: 60%; animation-delay: -.3s }
+.flow .mpill i:nth-child(6) { --h: 80%; animation-delay: -.9s } .flow .mpill i:nth-child(7) { --h: 50%; animation-delay: -.4s } .flow .mpill i:nth-child(8) { --h: 72%; animation-delay: -.6s } .flow .mpill i:nth-child(9) { --h: 40%; animation-delay: -.15s } .flow .mpill i:nth-child(10) { --h: 26%; animation-delay: -.8s }
+@keyframes mbar { 0%, 100% { height: 22%; } 50% { height: var(--h); } }
+.flow .tile-n { height: 44px; padding: 0 15px; display: flex; align-items: center; border-radius: 12px; background: var(--bg2); border: 1px solid var(--line2); box-shadow: 0 6px 18px rgba(0,0,0,.25); }
+.flow .tile-n b { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; }
+.flow .tile-n.ai { position: relative; border-color: transparent; background: var(--bg2); }
+.flow .tile-n.ai::before { content: ""; position: absolute; inset: -1px; border-radius: 13px; padding: 1px; background: linear-gradient(120deg, #ff8a5b, #ff5c8a, #8a6bff, #4fb8ff, #ff8a5b); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: .85; }
+.flow .mfield { height: 44px; min-width: 132px; padding: 0 12px; display: flex; align-items: center; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line2); font-size: 13px; color: var(--text); white-space: nowrap; }
+.flow .mfield .caret { width: 1.5px; height: 16px; background: var(--accent); margin-left: 1px; animation: blink 1s steps(2) infinite; }
+.flow .fly { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); opacity: 0; white-space: nowrap; }
+.flow .fly.wave { display: flex; align-items: center; gap: 2px; height: 16px; animation: fly1 6s linear infinite; }
+.flow .fly.wave i { width: 2px; border-radius: 1px; background: var(--green); height: 40%; animation: mbar .6s ease-in-out infinite; }
+.flow .fly.wave i:nth-child(1) { --h: 50% } .flow .fly.wave i:nth-child(2) { --h: 90%; animation-delay: -.2s } .flow .fly.wave i:nth-child(3) { --h: 100%; animation-delay: -.4s } .flow .fly.wave i:nth-child(4) { --h: 75%; animation-delay: -.1s } .flow .fly.wave i:nth-child(5) { --h: 45%; animation-delay: -.3s }
+.flow .fly.rough { font-size: 11px; font-style: italic; color: var(--dim); padding: 3px 9px; border-radius: 999px; background: var(--bg2); border: 1px solid var(--line2); animation: fly2 6s linear infinite; }
+.flow .fly.clean { font-size: 11px; font-weight: 600; color: var(--bg); padding: 3px 9px; border-radius: 999px; background: var(--text); animation: fly3 6s linear infinite; }
+@keyframes fly1 { 0% { left: 0; opacity: 0 } 4% { opacity: 1 } 28% { left: 100%; opacity: 1 } 32% { left: 100%; opacity: 0 } 100% { left: 100%; opacity: 0 } }
+@keyframes fly2 { 0%, 33% { left: 0; opacity: 0 } 37% { opacity: 1 } 61% { left: 100%; opacity: 1 } 65% { left: 100%; opacity: 0 } 100% { left: 100%; opacity: 0 } }
+@keyframes fly3 { 0%, 66% { left: 0; opacity: 0 } 70% { opacity: 1 } 94% { left: 100%; opacity: 1 } 98% { left: 100%; opacity: 0 } 100% { left: 100%; opacity: 0 } }
+.flow .out { display: flex; align-items: flex-start; padding-top: 40px; }
+.flow .out .wire { flex: 0 0 110px; }
+.flow .out .node { min-width: 150px; }
+.flow .node em { white-space: nowrap; }
+.flow .barrier { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; font-size: 12px; font-weight: 600; color: var(--green); padding: 5px 12px; border-radius: 999px; background: var(--card2); border: 1px solid color-mix(in srgb, var(--green) 40%, var(--line2)); }
+.flow .cloud-n { width: 56px; height: 44px; border-radius: 999px; border: 1px dashed var(--line2); display: grid; place-items: center; }
+.flow .cloud-n svg { fill: none; stroke: var(--faint); stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+@media (prefers-reduced-motion: reduce) { .flow .fly, .flow .mpill i, .flow .fly.wave i { animation: none; } .flow .fly { opacity: 1; left: 50%; } }
+@media (max-width: 900px) { .flow { grid-template-columns: 1fr; gap: 12px; padding: 18px; } .flow .out { padding-top: 0; justify-content: center; } .flow .out .wire { flex-basis: 90px; } }
+@media (max-width: 700px) { .flow .pipe { flex-direction: column; align-items: center; gap: 16px; } .flow .pipe .wire { display: none; } .flow .mac { padding: 44px 20px 22px; }
+  .flow .out { flex-direction: column; align-items: center; gap: 10px; } .flow .out .wire { flex: 0 0 auto; width: 60px; height: 64px; min-width: 0; }
+  .flow .out .wire::before { left: 50%; right: auto; top: 0; bottom: 0; border-top: 0; border-left: 1.5px dashed var(--line2); } }

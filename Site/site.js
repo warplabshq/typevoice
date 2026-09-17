@@ -48,7 +48,7 @@ document.addEventListener("DOMContentLoaded", () => {
       requestAnimationFrame(frame); }
     requestAnimationFrame(frame);
   }
-  startBars(document.getElementById("wave2"));
+  startBars(document.getElementById("wave2"), { w: 200, h: 48, n: 24, bw: 2.8, gap: 2.6 });
   const c = document.getElementById("wave");
   if (c) {
     startBars(c, { w: 236, h: 56, n: 26, bw: 3, gap: 3 });
@@ -191,6 +191,18 @@ document.addEventListener("DOMContentLoaded", () => {
         await sleep(2600); chipEl.classList.remove("pulse");
       }
     })();
+  }
+  // Privacy diagram: the clean chip lands in the field and the sentence types out, every cycle.
+  const flowTyped = document.getElementById("flow-typed"), flyClean = document.querySelector(".flow .fly.clean");
+  if (flowTyped && flyClean) {
+    const sentence = "Can we move the launch…";
+    let timers = [];
+    const cycle = () => {
+      timers.forEach(clearTimeout); timers = [];
+      timers.push(setTimeout(() => { flowTyped.textContent = ""; }, 200));
+      for (let i = 1; i <= sentence.length; i++) timers.push(setTimeout(() => { flowTyped.textContent = sentence.slice(0, i); }, 5600 + i * 22));
+    };
+    cycle(); flyClean.addEventListener("animationiteration", cycle);
   }
   // Reveal on scroll, count-up numbers.
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.02, rootMargin: "0px 0px -8% 0px" });
