@@ -37,8 +37,11 @@ struct SettingsView: View {
                 Text(showMenuBarIcon ? "\(Brand.name) lives in the menu bar; there is no Dock icon." : "With the icon hidden, open \(Brand.name) again from Finder or Spotlight to get here.")
                     .font(.callout).foregroundStyle(.secondary)
                 LabeledContent("Version") {
-                    Text(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "?")
-                        .foregroundStyle(.secondary)
+                    HStack(spacing: 12) {
+                        Text(Brand.version).foregroundStyle(.secondary)
+                        Button("Help") { NSWorkspace.shared.open(Brand.supportURL) }.buttonStyle(.link)
+                        Button("Website") { NSWorkspace.shared.open(Brand.website) }.buttonStyle(.link)
+                    }
                 }
             }
             Section("Dictating") {

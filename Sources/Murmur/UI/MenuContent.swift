@@ -36,6 +36,7 @@ struct MenuContent: View {
         Button("Dictionary…") { openMainWindow(.dictionary) }
         Button("Settings…") { openMainWindow(.settings) }
             .keyboardShortcut(",")
+        Button("Help…") { NSWorkspace.shared.open(Brand.supportURL) }
         Divider()
         Button("Quit \(Brand.name)") { NSApp.terminate(nil) }
             .keyboardShortcut("q")

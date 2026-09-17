@@ -51,6 +51,12 @@ struct LicenseView: View {
                         .disabled(!Licensing.isConfigured || licensing.busy)
                     Text("Billed by Apple through the App Store. No account with \(Brand.name), ever.")
                         .font(.callout).foregroundStyle(.secondary)
+                    HStack(spacing: 14) {
+                        Button("Terms of Use") { NSWorkspace.shared.open(Brand.eulaURL) }
+                        Button("Privacy Policy") { NSWorkspace.shared.open(Brand.privacyURL) }
+                    }
+                    .buttonStyle(.link)
+                    .font(.callout)
                 }
             }
         }

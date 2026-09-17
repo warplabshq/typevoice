@@ -156,6 +156,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         edit.addItem(withTitle: "Select All", action: #selector(NSText.selectAll(_:)), keyEquivalent: "a")
         editItem.submenu = edit
 
+        let helpItem = NSMenuItem(); menu.addItem(helpItem)
+        let help = NSMenu(title: "Help")
+        help.addItem(withTitle: "\(Brand.name) Help", action: #selector(openHelp), keyEquivalent: "?")
+        helpItem.submenu = help
+
         let windowItem = NSMenuItem(); menu.addItem(windowItem)
         let window = NSMenu(title: "Window")
         window.addItem(withTitle: "Close", action: #selector(NSWindow.performClose(_:)), keyEquivalent: "w")
@@ -165,6 +170,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     @objc private func showSettingsFromMenu() { showMain(tab: .settings) }
+    @objc private func openHelp() { NSWorkspace.shared.open(Brand.supportURL) }
 
     func setMainTitle(_ t: MainTab) { main?.title = t.label }
 

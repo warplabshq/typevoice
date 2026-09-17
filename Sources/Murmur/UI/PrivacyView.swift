@@ -24,7 +24,18 @@ struct PrivacyView: View {
                 row("cpu", "Speech recognition runs on the Neural Engine using NVIDIA's Parakeet model. No audio is ever sent anywhere.")
                 row("sparkles", "Smart cleanup uses Apple Intelligence's on-device model. Text stays on this Mac.")
                 row("network", "Network use is limited to the one-time model download from huggingface.co and App Store purchase validation through RevenueCat. No analytics, no accounts.")
-                row("internaldrive", "History and your dictionary are plain JSON files you can read, back up or delete.")
+                row("internaldrive", "History is a small database and your dictionary a text file, both on this Mac, both yours to open, back up or delete.")
+            }
+            Section("Legal") {
+                LabeledContent("Privacy Policy") { Button("Read online") { NSWorkspace.shared.open(Brand.privacyURL) } }
+                LabeledContent("Terms of Use") { Button("Read online") { NSWorkspace.shared.open(Brand.termsURL) } }
+                LabeledContent("License Agreement") { Button("Read online") { NSWorkspace.shared.open(Brand.eulaURL) } }
+                LabeledContent("Support") {
+                    HStack(spacing: 10) {
+                        Button("Help & FAQ") { NSWorkspace.shared.open(Brand.supportURL) }
+                        Button("Email") { NSWorkspace.shared.open(URL(string: "mailto:\(Brand.supportEmail)?subject=\(Brand.name)%20\(Brand.version)")!) }
+                    }
+                }
             }
             Section("Your data") {
                 LabeledContent("Location") {
