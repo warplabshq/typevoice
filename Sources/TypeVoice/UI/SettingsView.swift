@@ -92,7 +92,7 @@ struct SettingsView: View {
                         Text(aiStatus.title).font(.callout.weight(.medium))
                         Text(aiStatus.detail).font(.callout).foregroundStyle(.secondary)
                         if aiStatus.canOpenSettings {
-                            Button("Open Apple Intelligence settings") { Permissions.openAppleIntelligencePane() }
+                            Button("Open Siri & Apple Intelligence settings") { Permissions.openAppleIntelligencePane() }
                                 .buttonStyle(.link).font(.callout).padding(.top, 2)
                         }
                     }

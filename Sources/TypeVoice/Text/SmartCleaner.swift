@@ -61,8 +61,8 @@ final class SmartCleaner {
         var detail: String {
             switch self {
             case .ready: "Sentences are tidied by Apple's on-device model. Nothing is sent anywhere."
-            case .off: "Turn it on in System Settings › Apple Intelligence & Siri. Until then, cleanup uses the built-in rules."
-            case .downloading: "macOS is on it, but downloads the model only while the Mac is on power and Wi-Fi. This turns green by itself when it's done; until then, cleanup uses the built-in rules."
+            case .off: "Turn it on in System Settings › Siri (the pane is called Apple Intelligence & Siri on some Macs). Until then, cleanup uses the built-in rules."
+            case .downloading: "macOS downloads the model only once Apple Intelligence is switched on, while the Mac is on power and Wi-Fi. If the Siri pane shows no Apple Intelligence switch at all, set Siri › Language to the same language as the Mac (both English (United States), say): Apple requires them to match. This turns green by itself when it's done; until then, cleanup uses the built-in rules."
             case .notEligible: "Cleanup uses the built-in rules, which do most of the work."
             case .other(let r): "\(r). Cleanup uses the built-in rules meanwhile."
             }
