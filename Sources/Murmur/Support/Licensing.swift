@@ -18,6 +18,9 @@ final class Licensing {
     static let apiKey = "appl_REPLACE-ME"
     static let entitlement = "pro"
     static var isConfigured: Bool { !apiKey.contains("REPLACE-ME") }
+    /// The random identifier RevenueCat knows this Mac by. Shown in the License tab so a
+    /// user can ask for their (anonymous) purchase records to be deleted.
+    static var supportID: String? { isConfigured ? Purchases.shared.appUserID : nil }
 
     private(set) var state: State = .trial(daysLeft: Licensing.trialDays)
     private(set) var packages: [Package] = []

@@ -10,6 +10,7 @@ window.SITE = {
   price: "3 days free",      // e.g. "$19" once the App Store price is set
   priceNote: "then buy it once",
   jurisdiction: "India",
+  address: "",              // postal address (Apple's EULA terms ask for one); shown after the company name once set
 };
 document.addEventListener("DOMContentLoaded", () => {
   for (const el of document.querySelectorAll("[data-brand]")) {
@@ -18,6 +19,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (el.tagName === "A" && el.dataset.href !== undefined) el.href = v; else el.textContent = v;
   }
   for (const a of document.querySelectorAll("a[data-mail]")) { a.href = "mailto:" + SITE.email; a.textContent = SITE.email; }
+  for (const el of document.querySelectorAll("[data-brand=\"address-line\"]")) el.textContent = SITE.address ? ", " + SITE.address : "";
   for (const a of document.querySelectorAll("a[data-store]")) a.href = SITE.appStoreURL;
   document.title = document.title.replace("Murmur", SITE.name);
   const y = document.querySelector("[data-year]"); if (y) y.textContent = new Date().getFullYear();

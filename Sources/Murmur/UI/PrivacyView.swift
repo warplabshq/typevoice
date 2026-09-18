@@ -19,7 +19,7 @@ struct PrivacyView: View {
             }
             Section("How it works") {
                 row("mic", Prefs.keepRecordings
-                    ? "Audio is captured only while you hold the key. Because “Keep recordings” is on, each dictation is also saved as an audio file on this Mac. Turn it off in Settings and nothing is written."
+                    ? "Audio is captured only while you hold the key. Because “Offer the audio after each dictation” is on, each dictation is also saved as an audio file on this Mac. Turn it off in Settings and nothing is written."
                     : "Audio is captured only while you hold the key, and is discarded the moment it's transcribed. It is never written to disk.")
                 row("cpu", "Speech recognition runs on the Neural Engine using NVIDIA's Parakeet model. No audio is ever sent anywhere.")
                 row("sparkles", "Smart cleanup uses Apple Intelligence's on-device model. Text stays on this Mac.")

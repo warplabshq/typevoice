@@ -1,4 +1,7 @@
 /* ---------- tokens ---------- */
+/* Instrument Serif, self-hosted (SIL Open Font License, see assets/fonts/OFL.txt): no request leaves for a font CDN. */
+@font-face { font-family: "Instrument Serif"; font-style: normal; font-weight: 400; font-display: swap; src: url("assets/fonts/InstrumentSerif-Regular.woff2") format("woff2"); }
+@font-face { font-family: "Instrument Serif"; font-style: italic; font-weight: 400; font-display: swap; src: url("assets/fonts/InstrumentSerif-Italic.woff2") format("woff2"); }
 :root {
   --bg: #0b0b0d; --bg2: #121216; --card: #17171c; --card2: #1c1c22; --line: rgba(255,255,255,.08); --line2: rgba(255,255,255,.14);
   --text: #f2f2f4; --dim: rgba(255,255,255,.62); --faint: rgba(255,255,255,.42);

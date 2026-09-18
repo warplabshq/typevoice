@@ -24,7 +24,7 @@ final class AppState {
     /// Current band energies (low → high). Drives the waveform.
     var bands: [Float] = Array(repeating: 0, count: 10)
     var listeningSince: Date?
-    /// Audio of the last dictation, when "Keep recordings" is on. Shown as a draggable chip.
+    /// Audio of the last dictation, when "Offer the audio after each dictation" is on. Shown as a draggable chip.
     var lastAudio: URL?
     /// File name other apps see when the chip is dragged.
     var lastAudioName = "Voice note.m4a"

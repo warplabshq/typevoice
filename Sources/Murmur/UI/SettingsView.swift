@@ -88,11 +88,6 @@ struct SettingsView: View {
                 Text("Finish a sentence, pause a second, and the next one starts a new paragraph.")
                     .font(.callout).foregroundStyle(.secondary)
             }
-            Section("Voice notes") {
-                Toggle("Keep recordings", isOn: $keepRecordings)
-                Text("Saves each dictation as a small audio file too. Drag the chip that appears after you speak, or a row in Summary, into iMessage, Slack or WhatsApp to send your voice instead of the words. Stored only on this Mac.")
-                    .font(.callout).foregroundStyle(.secondary)
-            }
 
             Section("Microphone") {
                 Picker("Input", selection: $inputDeviceUID) {
@@ -129,6 +124,9 @@ struct SettingsView: View {
                                 shadow: Prefs.PillShadow(rawValue: pillShadow) ?? .soft)
                 }
                 Toggle("Show the text after each dictation", isOn: $showPreview)
+                Toggle("Offer the audio after each dictation", isOn: $keepRecordings)
+                Text("Keeps a small recording of each dictation and shows a Drag audio chip on the pill. Drag it, or a row in Summary, into iMessage, Slack or WhatsApp to send your voice instead of the words. Stored only on this Mac.")
+                    .font(.callout).foregroundStyle(.secondary)
             }
 
             Section {

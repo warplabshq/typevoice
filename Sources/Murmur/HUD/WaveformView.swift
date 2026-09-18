@@ -79,16 +79,33 @@ final class BarsView: NSView {
             for (i, l) in barLayers.enumerated() { l.backgroundColor = colorFor(i).cgColor }
         }
         if rebuild {
-            barLayers.forEach { $0.removeFromSuperlayer() }
+            // A different bar count (hover grows 18 → 32): cross-fade the two sets rather
+            // than swapping them, so the change reads as the wave spreading, not a cut.
+            let old = barLayers
             barLayers = (0..<bars).map { i in
                 let l = CALayer()
                 l.backgroundColor = colorFor(i).cgColor
                 l.cornerRadius = barWidth / 2
                 l.anchorPoint = CGPoint(x: 0.5, y: 0.5)
+                l.opacity = old.isEmpty ? 1 : 0
                 layer?.addSublayer(l)
                 return l
             }
-            layoutBars(heights: Array(repeating: 2, count: bars), animated: false)
+            let startHeights = (0..<bars).map { i -> CGFloat in
+                guard !old.isEmpty else { return 2 }
+                let j = Int((CGFloat(i) / CGFloat(max(bars - 1, 1))) * CGFloat(old.count - 1))
+                return old[j].bounds.height
+            }
+            layoutBars(heights: startHeights, animated: false)
+            if !old.isEmpty {
+                CATransaction.begin()
+                CATransaction.setAnimationDuration(0.26)
+                CATransaction.setAnimationTimingFunction(CAMediaTimingFunction(name: .easeInEaseOut))
+                CATransaction.setCompletionBlock { old.forEach { $0.removeFromSuperlayer() } }
+                barLayers.forEach { $0.opacity = 1 }
+                old.forEach { $0.opacity = 0 }
+                CATransaction.commit()
+            }
         }
     }
 
@@ -119,7 +136,12 @@ final class BarsView: NSView {
         guard barLayers.count == bars, heights.count == bars else { return }
         let bw = snap(barWidth), gp = snap(gap)
         let totalW = CGFloat(bars) * (bw + gp) - gp
-        var x = snap((bounds.width - totalW) / 2)
+        // While SwiftUI is still animating the frame (hover grows it), the bars would spill
+        // past the capsule. Squeeze the spacing to what fits right now; it relaxes as the
+        // frame catches up, so the wave and the capsule grow together.
+        let fit = totalW > 0 ? min(1, bounds.width / totalW) : 1
+        let step = (bw + gp) * fit
+        var x = snap((bounds.width - (totalW * fit)) / 2)
         let midY = snap(bounds.height / 2)
         CATransaction.begin()
         CATransaction.setDisableActions(!animated)
@@ -136,7 +158,7 @@ final class BarsView: NSView {
             l.bounds = CGRect(x: 0, y: 0, width: bw, height: h)
             l.position = CGPoint(x: x + bw / 2, y: midY)
             l.cornerRadius = bw / 2
-            x += bw + gp
+            x += step
         }
         CATransaction.commit()
     }

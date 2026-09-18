@@ -10,7 +10,7 @@ Hold 🌐, talk, release. Clean text lands at your cursor. Everything runs on th
   (your spellings, e.g. VidAI), Style, Settings, License and Privacy. No telemetry, no accounts.
 - **Triggers:** hold to talk (double-tap keeps listening) or tap to start / tap to stop.
   Settings › Microphone picks the input and has a level test.
-- **Voice notes (opt-in):** Settings › Voice notes › Keep recordings saves each dictation as a
+- **Voice notes (opt-in):** Settings › Indicator › Offer the audio after each dictation saves each dictation as a
   small AAC file too; drag the chip after speaking, or a Summary row, into any chat.
 - **Rebrand:** the display name comes from `CFBundleDisplayName` in `Packaging/Info.plist`
   (`Brand.name` in code); the bundle ID lives in `project.yml`, `Packaging/Info.plist` and

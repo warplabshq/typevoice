@@ -57,6 +57,19 @@ struct LicenseView: View {
                     }
                     .buttonStyle(.link)
                     .font(.callout)
+                    if let id = Licensing.supportID {
+                        LabeledContent("Support ID") {
+                            HStack(spacing: 6) {
+                                Text(id).font(.system(.callout, design: .monospaced)).textSelection(.enabled)
+                                Button {
+                                    NSPasteboard.general.clearContents(); NSPasteboard.general.setString(id, forType: .string)
+                                } label: { Image(systemName: "doc.on.doc") }
+                                .buttonStyle(.borderless).help("Copy")
+                            }
+                        }
+                        Text("A random identifier the purchase check is filed under. It is not linked to you; quote it if you ever want those records deleted.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
                 }
             }
         }
