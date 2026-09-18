@@ -68,7 +68,8 @@ final class HistoryStore {
             }
         }
     }
-    var range: Range = .all { didSet { if range != oldValue { reload() } } }
+    /// Opens on the last seven days every launch; the picker widens it for the session.
+    var range: Range = .week { didSet { if range != oldValue { reload() } } }
     /// Thirty rows keeps the list light; older ones arrive on request.
     static let pageSize = 30
 
