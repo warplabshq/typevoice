@@ -118,7 +118,7 @@ struct OnboardingView: View {
                     .overlay(RoundedRectangle(cornerRadius: 10, style: .continuous).strokeBorder(tryFocused ? AnyShapeStyle(Color.accentColor) : AnyShapeStyle(.separator), lineWidth: tryFocused ? 1.5 : 1))
                     .focused($tryFocused)
                     .onChange(of: tryText) { _, t in if !t.trimmingCharacters(in: .whitespaces).isEmpty { tried = true } }
-                    .onAppear { tryFocused = true; NotificationCenter.default.post(name: .murmurArmHotkey, object: nil) }
+                    .onAppear { tryFocused = true; NotificationCenter.default.post(name: .typevoiceArmHotkey, object: nil) }
             }
         }
     }
@@ -137,7 +137,7 @@ struct OnboardingView: View {
 
     private var retryAction: (String, () -> Void)? {
         guard state.warmError != nil else { return nil }
-        return ("Retry", { NotificationCenter.default.post(name: .murmurRetryWarm, object: nil) })
+        return ("Retry", { NotificationCenter.default.post(name: .typevoiceRetryWarm, object: nil) })
     }
 
     private var footer: some View {
@@ -148,7 +148,7 @@ struct OnboardingView: View {
             Spacer()
             if step == 4 {
                 Button(tried || revisiting ? "Done" : "Skip") {
-                    NotificationCenter.default.post(name: .murmurOnboardingDone, object: nil)
+                    NotificationCenter.default.post(name: .typevoiceOnboardingDone, object: nil)
                 }
                 .buttonStyle(tried ? AnyPrimitiveButtonStyle(.glassProminent) : AnyPrimitiveButtonStyle(.glass))
                 .keyboardShortcut(tried ? .defaultAction : .cancelAction)
@@ -159,7 +159,7 @@ struct OnboardingView: View {
                     .keyboardShortcut(.defaultAction)
             }
         }
-        .onChange(of: trigger) { _, _ in NotificationCenter.default.post(name: .murmurTriggerChanged, object: nil) }
+        .onChange(of: trigger) { _, _ in NotificationCenter.default.post(name: .typevoiceTriggerChanged, object: nil) }
     }
 
     private var canContinue: Bool {
@@ -283,6 +283,6 @@ struct AnyPrimitiveButtonStyle: PrimitiveButtonStyle {
 }
 
 extension Notification.Name {
-    static let murmurRetryWarm = Notification.Name("murmur.retryWarm")
-    static let murmurArmHotkey = Notification.Name("murmur.armHotkey")
+    static let typevoiceRetryWarm = Notification.Name("typevoice.retryWarm")
+    static let typevoiceArmHotkey = Notification.Name("typevoice.armHotkey")
 }

@@ -94,7 +94,7 @@ struct HistoryView: View {
                 }
             }
         }
-        .onReceive(NotificationCenter.default.publisher(for: .murmurPlaybackChanged)) { _ in playingID = RecordingPlayer.shared.playingID }
+        .onReceive(NotificationCenter.default.publisher(for: .typevoicePlaybackChanged)) { _ in playingID = RecordingPlayer.shared.playingID }
         .searchable(text: $query, placement: .toolbar, prompt: "Search")
         .onChange(of: query) { _, q in history.query = q }
         .toolbar {

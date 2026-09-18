@@ -2,7 +2,7 @@ import AVFoundation
 import FluidAudio
 import Foundation
 
-/// `Murmur --test file.wav [file2.wav …]`: runs the text pipeline on audio files
+/// `TypeVoice --test file.wav [file2.wav …]`: runs the text pipeline on audio files
 /// and prints each stage. Exits when done. Used by Tools/wer.py.
 enum PipelineTest {
     static func runIfRequested() -> Bool {
@@ -59,7 +59,7 @@ enum PipelineTest {
                 let t1 = ContinuousClock.now
                 let transcript = try await transcriber.transcribe(samples)
                 var raw = transcript.text
-                if ProcessInfo.processInfo.environment["MURMUR_TOKENS"] == "1" {
+                if ProcessInfo.processInfo.environment["TYPEVOICE_TOKENS"] == "1" {
                     for t in transcript.tokens { print(String(format: "  %6.2f-%6.2f  %@", t.start, t.end, t.token)) }
                 }
                 if Prefs.pauseParagraphs, !transcript.tokens.isEmpty {

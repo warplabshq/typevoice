@@ -5,7 +5,7 @@ import SQLite3
 /// breaking a sweat; search is indexed, stats are one aggregate query.
 final class HistoryDB: @unchecked Sendable {
     private var db: OpaquePointer?
-    private let q = DispatchQueue(label: "murmur.history", qos: .userInitiated)
+    private let q = DispatchQueue(label: "typevoice.history", qos: .userInitiated)
 
     struct Stats: Sendable, Equatable {
         var count = 0

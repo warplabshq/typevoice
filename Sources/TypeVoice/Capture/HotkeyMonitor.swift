@@ -90,7 +90,7 @@ final class HotkeyMonitor {
             ready.signal()
             CFRunLoopRun()
         }
-        thread.name = "murmur.hotkey"
+        thread.name = "typevoice.hotkey"
         thread.qualityOfService = .userInteractive
         thread.start()
         tapThread = thread

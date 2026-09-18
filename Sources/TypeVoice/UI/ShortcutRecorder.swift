@@ -44,7 +44,7 @@ struct ShortcutRecorder: View {
     private func start() {
         recording = true
         heldModifiers = []
-        NotificationCenter.default.post(name: .murmurPauseHotkey, object: true)
+        NotificationCenter.default.post(name: .typevoicePauseHotkey, object: true)
         monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { e in
             handle(e) ? nil : e
         }
@@ -54,7 +54,7 @@ struct ShortcutRecorder: View {
         recording = false
         if let m = monitor { NSEvent.removeMonitor(m) }
         monitor = nil
-        NotificationCenter.default.post(name: .murmurPauseHotkey, object: false)
+        NotificationCenter.default.post(name: .typevoicePauseHotkey, object: false)
     }
 
     /// Returns true when the event was consumed.
@@ -97,5 +97,5 @@ struct ShortcutRecorder: View {
 
 extension Notification.Name {
     /// Object: Bool. True pauses the global trigger while the recorder listens.
-    static let murmurPauseHotkey = Notification.Name("murmur.pauseHotkey")
+    static let typevoicePauseHotkey = Notification.Name("typevoice.pauseHotkey")
 }

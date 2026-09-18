@@ -2,7 +2,7 @@
 import PackageDescription
 
 let package = Package(
-    name: "Murmur",
+    name: "TypeVoice",
     platforms: [.macOS("26.0")],
     dependencies: [
         .package(url: "https://github.com/FluidInference/FluidAudio.git", from: "0.15.7"),
@@ -10,12 +10,12 @@ let package = Package(
     ],
     targets: [
         .executableTarget(
-            name: "Murmur",
+            name: "TypeVoice",
             dependencies: [
                 .product(name: "FluidAudio", package: "FluidAudio"),
                 .product(name: "RevenueCat", package: "purchases-ios-spm"),
             ],
-            path: "Sources/Murmur",
+            path: "Sources/TypeVoice",
             swiftSettings: [
                 .swiftLanguageMode(.v5),
             ],

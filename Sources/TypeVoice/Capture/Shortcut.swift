@@ -116,7 +116,7 @@ struct Shortcut: Codable, Equatable, Sendable {
             } else {
                 UserDefaults.standard.removeObject(forKey: Prefs.Key.customShortcut)
             }
-            NotificationCenter.default.post(name: .murmurTriggerChanged, object: nil)
+            NotificationCenter.default.post(name: .typevoiceTriggerChanged, object: nil)
         }
     }
 }

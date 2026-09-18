@@ -122,12 +122,12 @@ final class RecordingPlayer: NSObject, AVAudioPlayerDelegate {
         player?.play()
         playingID = id
         onChange?()
-        NotificationCenter.default.post(name: .murmurPlaybackChanged, object: nil)
+        NotificationCenter.default.post(name: .typevoicePlaybackChanged, object: nil)
     }
 
     func stop() {
         player?.stop(); player = nil; playingID = nil; onChange?()
-        NotificationCenter.default.post(name: .murmurPlaybackChanged, object: nil)
+        NotificationCenter.default.post(name: .typevoicePlaybackChanged, object: nil)
     }
 
     nonisolated func audioPlayerDidFinishPlaying(_ player: AVAudioPlayer, successfully flag: Bool) {
@@ -136,5 +136,5 @@ final class RecordingPlayer: NSObject, AVAudioPlayerDelegate {
 }
 
 extension Notification.Name {
-    static let murmurPlaybackChanged = Notification.Name("murmur.playbackChanged")
+    static let typevoicePlaybackChanged = Notification.Name("typevoice.playbackChanged")
 }

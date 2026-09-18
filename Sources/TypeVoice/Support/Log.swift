@@ -1,25 +1,25 @@
 import Foundation
 import OSLog
 
-/// One logger per subsystem area. `MURMUR_DEBUG=1` in the environment turns on
+/// One logger per subsystem area. `TYPEVOICE_DEBUG=1` in the environment turns on
 /// per-stage latency lines on stdout so `Tools/latency.sh` can parse them.
 enum Log {
-    static let app = Logger(subsystem: "com.priyam.murmur", category: "app")
-    static let audio = Logger(subsystem: "com.priyam.murmur", category: "audio")
-    static let asr = Logger(subsystem: "com.priyam.murmur", category: "asr")
-    static let insert = Logger(subsystem: "com.priyam.murmur", category: "insert")
-    static let hud = Logger(subsystem: "com.priyam.murmur", category: "hud")
+    static let app = Logger(subsystem: "com.priyamventures.typevoice", category: "app")
+    static let audio = Logger(subsystem: "com.priyamventures.typevoice", category: "audio")
+    static let asr = Logger(subsystem: "com.priyamventures.typevoice", category: "asr")
+    static let insert = Logger(subsystem: "com.priyamventures.typevoice", category: "insert")
+    static let hud = Logger(subsystem: "com.priyamventures.typevoice", category: "hud")
 
-    /// `MURMUR_DEBUG=1` in the environment, or `defaults write com.priyam.murmur debugLog -bool true`.
+    /// `TYPEVOICE_DEBUG=1` in the environment, or `defaults write com.priyamventures.typevoice debugLog -bool true`.
     static let debugTimings: Bool =
-        ProcessInfo.processInfo.environment["MURMUR_DEBUG"] == "1" || UserDefaults.standard.bool(forKey: "debugLog")
+        ProcessInfo.processInfo.environment["TYPEVOICE_DEBUG"] == "1" || UserDefaults.standard.bool(forKey: "debugLog")
 
-    /// ~/Library/Logs/Murmur/murmur.log, also mirrored to stderr.
+    /// ~/Library/Logs/TypeVoice/typevoice.log, also mirrored to stderr.
     static let logFile: FileHandle? = {
         guard debugTimings else { return nil }
-        let dir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0].appendingPathComponent("Logs/Murmur")
+        let dir = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0].appendingPathComponent("Logs/TypeVoice")
         try? FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-        let url = dir.appendingPathComponent("murmur.log")
+        let url = dir.appendingPathComponent("typevoice.log")
         if !FileManager.default.fileExists(atPath: url.path) { FileManager.default.createFile(atPath: url.path, contents: nil) }
         let h = try? FileHandle(forWritingTo: url)
         h?.seekToEndOfFile()

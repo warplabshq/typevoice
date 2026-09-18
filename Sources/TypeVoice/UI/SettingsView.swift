@@ -143,7 +143,7 @@ struct SettingsView: View {
         }
         .formStyle(.grouped)
         .onChange(of: trigger) { _, _ in
-            NotificationCenter.default.post(name: .murmurTriggerChanged, object: nil)
+            NotificationCenter.default.post(name: .typevoiceTriggerChanged, object: nil)
         }
     }
 }

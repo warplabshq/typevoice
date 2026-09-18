@@ -7,9 +7,9 @@ enum Brand {
     static let name: String =
         (Bundle.main.object(forInfoDictionaryKey: "CFBundleDisplayName") as? String)
         ?? (Bundle.main.object(forInfoDictionaryKey: "CFBundleName") as? String)
-        ?? "Murmur"
+        ?? "TypeVoice"
     static let tagline = "Local dictation"
-    static let bundleID = Bundle.main.bundleIdentifier ?? "com.priyam.murmur"
+    static let bundleID = Bundle.main.bundleIdentifier ?? "com.priyamventures.typevoice"
     static let company = "Priyam Ventures"
     static let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
 

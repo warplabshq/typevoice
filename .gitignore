@@ -4,3 +4,4 @@ build/
 .swiftpm/
 .DS_Store
 Tools/clips/
+Sources/TypeVoice/Support/Secrets.swift

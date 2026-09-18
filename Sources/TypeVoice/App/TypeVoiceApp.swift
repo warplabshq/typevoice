@@ -3,7 +3,7 @@ import Combine
 import SwiftUI
 
 @main
-struct MurmurApp: App {
+struct TypeVoiceApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
     @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
 
@@ -44,7 +44,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         RecordingStore.cleanDragLinks()
         if Log.debugTimings {
             DistributedNotificationCenter.default().addObserver(
-                forName: Notification.Name("murmur.debug.showTab"), object: nil, queue: .main
+                forName: Notification.Name("typevoice.debug.showTab"), object: nil, queue: .main
             ) { [weak self] n in
                 Task { @MainActor in
                     if let raw = n.object as? String, let t = MainTab(rawValue: raw) { openMainWindow(t) }
@@ -75,22 +75,22 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         controller.hud = hud
 
         observers.append(NotificationCenter.default.addObserver(
-            forName: .murmurTriggerChanged, object: nil, queue: .main
+            forName: .typevoiceTriggerChanged, object: nil, queue: .main
         ) { [weak self] _ in Task { @MainActor in self?.controller.restartHotkey() } })
         observers.append(NotificationCenter.default.addObserver(
-            forName: .murmurOnboardingDone, object: nil, queue: .main
+            forName: .typevoiceOnboardingDone, object: nil, queue: .main
         ) { [weak self] _ in Task { @MainActor in self?.finishOnboarding() } })
         observers.append(NotificationCenter.default.addObserver(
-            forName: .murmurShowOnboarding, object: nil, queue: .main
+            forName: .typevoiceShowOnboarding, object: nil, queue: .main
         ) { [weak self] _ in Task { @MainActor in self?.showOnboarding() } })
         observers.append(NotificationCenter.default.addObserver(
-            forName: .murmurPauseHotkey, object: nil, queue: .main
+            forName: .typevoicePauseHotkey, object: nil, queue: .main
         ) { [weak self] n in Task { @MainActor in self?.controller.hotkey.setPaused((n.object as? Bool) ?? false) } })
         observers.append(NotificationCenter.default.addObserver(
-            forName: .murmurArmHotkey, object: nil, queue: .main
+            forName: .typevoiceArmHotkey, object: nil, queue: .main
         ) { [weak self] _ in Task { @MainActor in self?.controller.start() } })
         observers.append(NotificationCenter.default.addObserver(
-            forName: .murmurRetryWarm, object: nil, queue: .main
+            forName: .typevoiceRetryWarm, object: nil, queue: .main
         ) { [weak self] _ in Task { @MainActor in self?.controller.warm() } })
 
         if Prefs.hasOnboarded, Permissions.accessibility, Permissions.mic == .granted {
@@ -123,7 +123,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             w.minSize = NSSize(width: 720, height: 460)
             w.center()
             w.isReleasedWhenClosed = false
-            w.setFrameAutosaveName("MurmurMain")
+            w.setFrameAutosaveName("TypeVoiceMain")
             w.delegate = self
             w.title = mainTab.label
             main = w
@@ -231,9 +231,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 }
 
 extension Notification.Name {
-    static let murmurTriggerChanged = Notification.Name("murmur.triggerChanged")
-    static let murmurOnboardingDone = Notification.Name("murmur.onboardingDone")
-    static let murmurShowOnboarding = Notification.Name("murmur.showOnboarding")
+    static let typevoiceTriggerChanged = Notification.Name("typevoice.triggerChanged")
+    static let typevoiceOnboardingDone = Notification.Name("typevoice.onboardingDone")
+    static let typevoiceShowOnboarding = Notification.Name("typevoice.showOnboarding")
 }
 
 /// Bridges the AppKit-owned tab selection into SwiftUI.
@@ -244,18 +244,18 @@ private struct MainRoot: View {
         MainView(state: delegate.state, history: delegate.history, dictionary: delegate.dictionary, licensing: delegate.licensing, tab: $tab)
             .onAppear { tab = delegate.tabBinding.wrappedValue; delegate.setMainTitle(tab) }
             .onChange(of: tab) { _, t in delegate.setMainTitle(t) }
-            .onReceive(NotificationCenter.default.publisher(for: .murmurShowTab)) { n in
+            .onReceive(NotificationCenter.default.publisher(for: .typevoiceShowTab)) { n in
                 if let t = n.object as? MainTab { tab = t }
             }
     }
 }
 
 extension Notification.Name {
-    static let murmurShowTab = Notification.Name("murmur.showTab")
+    static let typevoiceShowTab = Notification.Name("typevoice.showTab")
 }
 
 @MainActor
 func openMainWindow(_ tab: MainTab) {
     AppDelegate.shared?.showMain(tab: tab)
-    NotificationCenter.default.post(name: .murmurShowTab, object: tab)
+    NotificationCenter.default.post(name: .typevoiceShowTab, object: tab)
 }

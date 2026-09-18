@@ -1,5 +1,5 @@
 import AppKit
-// Murmur icon: deep graphite squircle with a glossy top light, a fine rim, and
+// TypeVoice icon: deep graphite squircle with a glossy top light, a fine rim, and
 // luminous bars with a soft glow. Rendered at exact pixel sizes.
 func render(_ size: Int, to url: URL) {
     let s = CGFloat(size)

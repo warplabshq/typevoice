@@ -69,7 +69,7 @@ struct MainView: View {
             // Every tab carries a toolbar so the title bar keeps one height.
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
-                    Button { NotificationCenter.default.post(name: .murmurShowOnboarding, object: nil) } label: {
+                    Button { NotificationCenter.default.post(name: .typevoiceShowOnboarding, object: nil) } label: {
                         Label("How to use", systemImage: "questionmark.circle")
                     }
                     .help("How to use \(Brand.name)")

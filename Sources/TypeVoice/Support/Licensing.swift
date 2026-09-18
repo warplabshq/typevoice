@@ -15,7 +15,8 @@ final class Licensing {
 
     static let trialDays = 3
     /// RevenueCat public SDK key for this app (starts with "appl_"). Replace before shipping.
-    static let apiKey = "appl_REPLACE-ME"
+    /// From Sources/TypeVoice/Support/Secrets.swift (git-ignored; `make` creates it from Secrets.example.swift).
+    static let apiKey = Secrets.revenueCatAPIKey
     static let entitlement = "pro"
     static var isConfigured: Bool { !apiKey.contains("REPLACE-ME") }
     /// The random identifier RevenueCat knows this Mac by. Shown in the License tab so a
