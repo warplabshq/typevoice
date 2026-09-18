@@ -236,7 +236,11 @@ kbd { font: 13px -apple-system, BlinkMacSystemFont, sans-serif; background: var(
   :root { --s7: 56px; --s8: 72px; }
   nav { gap: 14px; } nav a:not(.navcta) { display: none; }
   .tape .pill { height: 56px; padding: 0 16px; } .tape .pill canvas { width: 180px !important; height: 43px !important; } .tape { margin-top: var(--s5); }
-  .strip { display: grid; grid-template-columns: 1fr; gap: 10px 0; } .strip li { padding: 0; justify-content: center; border-left: 0; } .steps { grid-template-columns: 1fr; }
+  /* Phones: a tidy 2×2, value over label, no glyph. */
+  .strip { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 20px; max-width: 320px; margin-left: auto; margin-right: auto; }
+  .strip li { flex-direction: column; align-items: flex-start; gap: 1px; padding: 0; border-left: 0; white-space: normal; }
+  .strip b { font-size: 17px; } .strip span { font-size: 13px; } .netglyph { display: none; }
+  .steps { grid-template-columns: 1fr; }
   .stage { padding: 24px 14px 0; border-radius: 16px; } .stage .window { margin-bottom: -20px; } .window .body { grid-template-columns: 1fr; } .side { display: none; } .tiles { grid-template-columns: repeat(2, 1fr); } .titlebar .title { margin-left: 8px; }
   .bento { grid-template-columns: 1fr; } .tile-b, .tile-b.span2, .tile-b.small { grid-column: span 1; }
   .pair { grid-template-columns: 1fr; } .arrow { transform: rotate(90deg); justify-self: center; }
