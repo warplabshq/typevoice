@@ -68,7 +68,11 @@ h3 { font-size: 17px; font-weight: 600; }
 .tape-clean .track { color: var(--ribbon-fg); font-size: 15px; font-weight: 500; padding-left: 150px; }
 @keyframes tape { from { transform: translateX(-50%); } to { transform: translateX(0); } }
 .tape .pill { position: absolute; left: 50%; top: 28px; transform: translateX(-50%); z-index: 2; height: 68px; padding: 0 22px; border: 0; background: #000;
-  box-shadow: 0 14px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05); }
+  box-shadow: 0 14px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.14), inset 0 -1px 0 rgba(255,255,255,.05), inset 0 0 0 1px rgba(255,255,255,.05); }
+/* A soft light above and below the pill so it lifts off the dark background. */
+.tape .pill::before { content: ""; position: absolute; inset: -34px -10px; border-radius: 999px; z-index: -1; pointer-events: none;
+  background: radial-gradient(60% 55% at 50% 0%, rgba(255,255,255,.16), transparent 70%), radial-gradient(60% 55% at 50% 100%, rgba(255,255,255,.12), transparent 70%); }
+@media (prefers-color-scheme: light) { .tape .pill::before { background: radial-gradient(60% 55% at 50% 0%, rgba(0,0,0,.10), transparent 70%), radial-gradient(60% 55% at 50% 100%, rgba(0,0,0,.08), transparent 70%); } }
 .tape-badge { position: absolute; left: 50%; top: 2px; transform: translateX(-50%); font-size: 12px; color: var(--dim); white-space: nowrap; }
 .tape-badge span { display: inline-block; opacity: 0; transform: translateY(4px); transition: opacity .45s ease, transform .45s ease; }
 .tape-badge span.on { opacity: 1; transform: translateY(0); }
@@ -208,7 +212,10 @@ h3 { font-size: 17px; font-weight: 600; }
 .faq p { color: var(--dim); margin: 10px 0 0; max-width: 720px; }
 #faq .muted { margin-top: var(--s3); font-size: 14px; }
 .final { text-align: center; padding: var(--s8) 0 var(--s7); }
-.final .pill.mini { margin-bottom: var(--s4); height: 56px; padding: 0 18px; border: 0; background: #000; box-shadow: 0 14px 40px rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.05); } .final h2 { margin-bottom: var(--s4); }
+.final .pill.mini { position: relative; margin-bottom: var(--s4); height: 56px; padding: 0 18px; border: 0; background: #000; box-shadow: 0 14px 40px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.14), inset 0 0 0 1px rgba(255,255,255,.05); }
+.final .pill.mini::before { content: ""; position: absolute; inset: -30px -10px; border-radius: 999px; z-index: -1; pointer-events: none;
+  background: radial-gradient(60% 55% at 50% 0%, rgba(255,255,255,.14), transparent 70%), radial-gradient(60% 55% at 50% 100%, rgba(255,255,255,.10), transparent 70%); }
+@media (prefers-color-scheme: light) { .final .pill.mini::before { background: radial-gradient(60% 55% at 50% 0%, rgba(0,0,0,.10), transparent 70%), radial-gradient(60% 55% at 50% 100%, rgba(0,0,0,.08), transparent 70%); } } .final h2 { margin-bottom: var(--s4); }
 
 /* ---------- footer ---------- */
 footer { border-top: 1px solid var(--line); padding: var(--s6) 0 var(--s5); color: var(--faint); font-size: 13px; }
