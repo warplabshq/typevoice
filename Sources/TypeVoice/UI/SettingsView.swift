@@ -21,6 +21,7 @@ struct SettingsView: View {
     @State private var devices = InputDevices.all()
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var advanced = false
+    @State private var aiStatus = SmartCleaner.status
 
     var body: some View {
         Form {
@@ -78,6 +79,20 @@ struct SettingsView: View {
                 Toggle("Smart cleanup", isOn: $smart)
                 Text("Fixes false starts and self-corrections with Apple Intelligence, on this Mac. Never adds anything. Tone lives under Style.")
                     .font(.callout).foregroundStyle(.secondary)
+                // A definite answer, not a shrug: is Apple's model doing the cleanup right now?
+                HStack(alignment: .top, spacing: 8) {
+                    Circle().fill(aiStatus.isReady ? Color.green : Color.orange).frame(width: 8, height: 8).padding(.top, 5)
+                    VStack(alignment: .leading, spacing: 3) {
+                        Text(aiStatus.title).font(.callout.weight(.medium))
+                        Text(aiStatus.detail).font(.callout).foregroundStyle(.secondary)
+                        if aiStatus.canOpenSettings {
+                            Button("Open Apple Intelligence settings") { Permissions.openAppleIntelligencePane() }
+                                .buttonStyle(.link).font(.callout).padding(.top, 2)
+                        }
+                    }
+                }
+                .onAppear { aiStatus = SmartCleaner.status }
+                .onReceive(Timer.publish(every: 5, on: .main, in: .common).autoconnect()) { _ in aiStatus = SmartCleaner.status }
                 Toggle("Numbers as digits", isOn: $numbers)
                 Text("“twenty twenty four” becomes 2024, “five dollars fifty” becomes $5.50. Small numbers stay as words.")
                     .font(.callout).foregroundStyle(.secondary)

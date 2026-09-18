@@ -68,6 +68,7 @@ final class DictationController {
         watchAccessibility()
         warm()
         state.smartCleanupAvailable = smart.isAvailable
+        Log.d("apple intelligence: \(SmartCleaner.status.title)")
         if smart.isAvailable { smart.prewarm() }
     }
 

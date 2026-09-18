@@ -45,22 +45,53 @@ final class SmartCleaner {
         return false
     }
 
-    var unavailableReason: String? {
+    /// The definite answer, in the OS's own words, for the Settings indicator.
+    enum Status: Equatable {
+        case ready, off, downloading, notEligible, other(String)
+        var isReady: Bool { self == .ready }
+        var title: String {
+            switch self {
+            case .ready: "Apple Intelligence is ready"
+            case .off: "Apple Intelligence is off"
+            case .downloading: "Apple Intelligence hasn't finished downloading"
+            case .notEligible: "This Mac can't run Apple Intelligence"
+            case .other: "Apple Intelligence isn't available"
+            }
+        }
+        var detail: String {
+            switch self {
+            case .ready: "Sentences are tidied by Apple's on-device model. Nothing is sent anywhere."
+            case .off: "Turn it on in System Settings › Apple Intelligence & Siri. Until then, cleanup uses the built-in rules."
+            case .downloading: "macOS is on it, but downloads the model only while the Mac is on power and Wi-Fi. This turns green by itself when it's done; until then, cleanup uses the built-in rules."
+            case .notEligible: "Cleanup uses the built-in rules, which do most of the work."
+            case .other(let r): "\(r). Cleanup uses the built-in rules meanwhile."
+            }
+        }
+        var canOpenSettings: Bool { self == .off || self == .downloading }
+    }
+
+    static var status: Status {
         #if canImport(FoundationModels)
         switch SystemLanguageModel.default.availability {
-        case .available: return nil
+        case .available: return .ready
         case .unavailable(let r):
             switch r {
-            case .appleIntelligenceNotEnabled: return "Turn on Apple Intelligence in System Settings."
-            case .modelNotReady: return "Apple Intelligence is still downloading."
-            case .deviceNotEligible: return "This Mac can't run Apple Intelligence."
-            @unknown default: return "Apple Intelligence isn't available."
+            case .appleIntelligenceNotEnabled: return .off
+            case .modelNotReady: return .downloading
+            case .deviceNotEligible: return .notEligible
+            @unknown default: return .other(String(describing: r))
             }
         }
         #else
-        return "Requires macOS 26."
+        return .other("Requires macOS 26")
         #endif
     }
+
+    var unavailableReason: String? {
+        let s = Self.status
+        return s.isReady ? nil : s.title
+    }
+
 
     /// Creates and prewarms a fresh single-use session.
     func prewarm() {

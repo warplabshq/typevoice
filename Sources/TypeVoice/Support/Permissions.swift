@@ -34,6 +34,10 @@ enum Permissions {
         NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
     }
 
+    static func openAppleIntelligencePane() {
+        open("x-apple.systempreferences:com.apple.Siri-Settings.extension")
+    }
+
     static func openAccessibilityPane() {
         open("x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility")
     }
