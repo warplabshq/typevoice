@@ -97,6 +97,16 @@ final class TextInserter {
             try await Task.sleep(for: .milliseconds(80))
         }
 
+        // With a chord trigger (⌥⌘) the session ends on the first key you let go, so the
+        // other modifier is often still down when the text is ready. A ⌘V posted then
+        // arrives as ⌥⌘V, which most apps answer with the error beep. Wait for clean hands.
+        for _ in 0..<80 {
+            let held = CGEventSource.flagsState(.combinedSessionState)
+                .intersection([.maskCommand, .maskAlternate, .maskControl, .maskShift, .maskSecondaryFn])
+            if held.isEmpty { break }
+            try await Task.sleep(for: .milliseconds(10))
+        }
+
         pb.clearContents()
         pb.setString(text, forType: .string)
         let ours = pb.changeCount

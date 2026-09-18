@@ -83,9 +83,13 @@ struct HUDView: View {
             HStack(spacing: 12) {
                 if !text.isEmpty {
                     TypeOnText(text: text, maxWidth: 400)
+                    // If the paste didn't land (no text field under the cursor), the words are one click away.
+                    CopyGlyphButton(action: onCopy)
                 }
                 if let url = state.lastAudio {
                     AudioChip(url: url, name: state.lastAudioName)
+                }
+                if !text.isEmpty || state.lastAudio != nil {
                     DismissButton(action: onDismiss)
                 }
             }
@@ -149,6 +153,30 @@ struct ElapsedLabel: View {
 }
 
 /// Drag this into any chat to send the voice instead of the words.
+/// A small copy glyph beside the shown text; flips to a check for a moment when used.
+struct CopyGlyphButton: View {
+    let action: () -> Void
+    @State private var hover = false
+    @State private var copied = false
+    var body: some View {
+        Button {
+            action()
+            withAnimation(Theme.quick) { copied = true }
+            Task { try? await Task.sleep(for: .milliseconds(1200)); withAnimation(Theme.quick) { copied = false } }
+        } label: {
+            Image(systemName: copied ? "checkmark" : "doc.on.doc")
+                .font(.system(size: 10, weight: .bold))
+                .contentTransition(.symbolEffect(.replace))
+                .foregroundStyle(hover || copied ? Color.black : Theme.onGlassDim)
+                .frame(width: 22, height: 22)
+                .background(hover || copied ? Color.white : Color.white.opacity(0.12), in: Circle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .help("Copy the text")
+    }
+}
+
 /// The small × next to the audio chip: puts the pill away right now.
 struct DismissButton: View {
     let action: () -> Void

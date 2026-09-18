@@ -337,9 +337,18 @@ final class DictationController {
     }
 
     func copyOffered() {
-        guard case .copyOffer(let text, _) = state.phase else { return }
-        inserter.copyToClipboard(text)
-        show(.copyOffer(text, copied: true), for: .milliseconds(900))
+        switch state.phase {
+        case .copyOffer(let text, _):
+            inserter.copyToClipboard(text)
+            show(.copyOffer(text, copied: true), for: .milliseconds(900))
+        case .done(let text) where !text.isEmpty:
+            // The preview's copy glyph: grab the words without leaving the pill.
+            inserter.copyToClipboard(text)
+            dismiss?.cancel()
+            show(.done(text), for: .seconds(4))
+        default:
+            break
+        }
     }
 
     private func show(_ phase: AppState.Phase, for d: Duration) {

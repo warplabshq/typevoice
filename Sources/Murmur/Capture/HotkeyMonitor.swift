@@ -22,6 +22,9 @@ final class HotkeyMonitor {
         var paused = false            // the recorder is listening; ignore everything
         var shortcut: Shortcut = .fn
         var isDown = false
+        /// Whether the trigger's own key (say Left ⌘) is physically down, tracked from its
+        /// flagsChanged events; flags alone can't tell Left ⌘ from Right ⌘.
+        var primaryDown = false
     }
     private let shared = OSAllocatedUnfairLock(initialState: Shared())
     func setActive(_ on: Bool) { shared.withLock { $0.active = on } }
@@ -37,7 +40,7 @@ final class HotkeyMonitor {
     func start() {
         stop()
         let sc = currentShortcut
-        shared.withLock { $0.shortcut = sc; $0.isDown = false }
+        shared.withLock { $0.shortcut = sc; $0.isDown = false; $0.primaryDown = false }
         if !installTap() { installFallbackMonitor() }
         Log.d("hotkey: \(sc.description)")
     }
@@ -111,7 +114,8 @@ final class HotkeyMonitor {
                 // Only events for one of the chord's own keys count, so a plain ⌘ press
                 // never wakes an ⌥⌘ trigger and Left/Right stay distinct.
                 guard !s.paused, s.shortcut.involves(modifierKey: code) else { return nil }
-                let down = flags.contains(s.shortcut.chordFlags)
+                if code == s.shortcut.keyCode, let own = Shortcut.flag(forModifierKey: code) { s.primaryDown = flags.contains(own) }
+                let down = s.primaryDown && flags.contains(CGEventFlags(rawValue: s.shortcut.modifiers))
                 guard down != s.isDown else { return nil }
                 s.isDown = down
                 return down
@@ -168,11 +172,14 @@ final class HotkeyMonitor {
             guard let self else { return }
             let sc = self.shared.withLock { $0.shortcut }
             guard sc.involves(modifierKey: e.keyCode) else { return }
-            let down = CGEventFlags(rawValue: UInt64(e.modifierFlags.rawValue)).contains(sc.chordFlags)
-            let changed = self.shared.withLock { s -> Bool in
+            let flags = CGEventFlags(rawValue: UInt64(e.modifierFlags.rawValue))
+            let changed: Bool = self.shared.withLock { s in
+                if e.keyCode == sc.keyCode, let own = Shortcut.flag(forModifierKey: e.keyCode) { s.primaryDown = flags.contains(own) }
+                let down = s.primaryDown && flags.contains(CGEventFlags(rawValue: sc.modifiers))
                 if s.paused || s.isDown == down { return false }
                 s.isDown = down; return true
             }
+            let down = self.shared.withLock { $0.isDown }
             if changed { Task { @MainActor in down ? self.onPress() : self.onRelease() } }
         }
         if let f { fallbackMonitors.append(f) }
