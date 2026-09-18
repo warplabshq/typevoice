@@ -12,10 +12,11 @@ struct Dictation: Identifiable, Codable, Sendable, Equatable, Hashable {
     var latencyMs: Int? = nil
     /// Database row id, used as the paging cursor for searches. Not persisted in exports.
     var rowid: Int64? = nil
+    /// Recording on disk, resolved once when the page loads (a stat per row per frame
+    /// while scrolling is what made Summary stutter). Not persisted.
+    var audioURL: URL? = nil
 
     enum CodingKeys: String, CodingKey { case id, text, date, appName, bundleID, seconds, words, latencyMs }
-
-    var audioURL: URL? { RecordingStore.url(for: id) }
 
     static func wordCount(_ s: String) -> Int {
         s.split(whereSeparator: { $0.isWhitespace || $0.isNewline }).count
@@ -68,7 +69,8 @@ final class HistoryStore {
         }
     }
     var range: Range = .all { didSet { if range != oldValue { reload() } } }
-    static let pageSize = 150
+    /// Thirty rows keeps the list light; older ones arrive on request.
+    static let pageSize = 30
 
     init() {
         db = HistoryDB(url: Paths.support.appendingPathComponent("history.sqlite"))
@@ -80,8 +82,18 @@ final class HistoryStore {
         var d = d
         if d.words == 0 { d.words = Dictation.wordCount(d.text) }
         db.insert(d)
+        d.audioURL = RecordingStore.url(for: d.id)
         if query.isEmpty { entries.insert(d, at: 0) } else { reload() }
         stats = db.stats()
+    }
+
+    /// A recording saved after the row was added (it's encoded in the background).
+    func attachAudio(id: UUID, url: URL) {
+        if let i = entries.firstIndex(where: { $0.id == id }) { entries[i].audioURL = url }
+    }
+
+    private static func withAudio(_ page: [Dictation]) -> [Dictation] {
+        page.map { var d = $0; d.audioURL = RecordingStore.url(for: d.id); return d }
     }
 
     func delete(_ ids: Set<UUID>) {
@@ -99,7 +111,7 @@ final class HistoryStore {
     }
 
     func reload() {
-        let page = db.page(query: query, since: range.since, before: nil, beforeRow: nil, limit: Self.pageSize)
+        let page = Self.withAudio(db.page(query: query, since: range.since, before: nil, beforeRow: nil, limit: Self.pageSize))
         entries = page
         hasMore = page.count == Self.pageSize
         stats = db.stats()
@@ -107,7 +119,7 @@ final class HistoryStore {
 
     func loadMore() {
         guard hasMore, let last = entries.last else { return }
-        let page = db.page(query: query, since: range.since, before: last.date, beforeRow: last.rowid, limit: Self.pageSize)
+        let page = Self.withAudio(db.page(query: query, since: range.since, before: last.date, beforeRow: last.rowid, limit: Self.pageSize))
         entries += page
         hasMore = page.count == Self.pageSize
     }

@@ -7,6 +7,7 @@ struct HistoryView: View {
     @State private var selection = Set<UUID>()
     @State private var confirmClear = false
     @State private var copiedID: UUID?
+    @State private var playingID: UUID?
 
     private var grouped: [(String, [Dictation])] {
         let cal = Calendar.current
@@ -62,7 +63,7 @@ struct HistoryView: View {
                     ForEach(grouped, id: \.0) { day, items in
                         Section {
                             ForEach(items) { d in
-                                HistoryRow(d: d, copied: copiedID == d.id) { copy(d) } onDelete: { history.delete([d.id]) }
+                                HistoryRow(d: d, copied: copiedID == d.id, playing: playingID == d.id) { copy(d) } onDelete: { history.delete([d.id]) }
                                     .tag(d.id)
                             }
                         } header: {
@@ -93,6 +94,7 @@ struct HistoryView: View {
                 }
             }
         }
+        .onReceive(NotificationCenter.default.publisher(for: .murmurPlaybackChanged)) { _ in playingID = RecordingPlayer.shared.playingID }
         .searchable(text: $query, placement: .toolbar, prompt: "Search")
         .onChange(of: query) { _, q in history.query = q }
         .toolbar {
@@ -259,10 +261,10 @@ struct HistoryView: View {
 private struct HistoryRow: View {
     let d: Dictation
     let copied: Bool
+    let playing: Bool
     let onCopy: () -> Void
     let onDelete: () -> Void
     @State private var hover = false
-    @State private var playing = false
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
@@ -272,7 +274,6 @@ private struct HistoryRow: View {
                 Text(d.text)
                     .font(.body)
                     .lineLimit(3)
-                    .textSelection(.enabled)
                 HStack(spacing: 5) {
                     Text(d.appName)
                     Text("·")
@@ -288,21 +289,30 @@ private struct HistoryRow: View {
                     if let url = d.audioURL {
                         Text("·")
                         Button {
-                            RecordingPlayer.shared.toggle(id: d.id); playing = RecordingPlayer.shared.playingID == d.id
+                            RecordingPlayer.shared.toggle(id: d.id)
                         } label: {
                             Label(playing ? "Stop" : "Play", systemImage: playing ? "stop.fill" : "play.fill")
                                 .font(.caption.weight(.semibold))
                         }
                         .buttonStyle(.plain)
                         .foregroundStyle(Color.accentColor)
-                        RecordingDrag(url: url, fileName: RecordingStore.fileName(for: d.text)) {
+                        // The AppKit drag source only exists for the row under the mouse;
+                        // hosting one per row is what a heavy list is made of.
+                        if hover {
+                            RecordingDrag(url: url, fileName: RecordingStore.fileName(for: d.text)) {
+                                Image(systemName: "waveform")
+                                    .font(.caption)
+                                    .foregroundStyle(.secondary)
+                                    .padding(.horizontal, 2)
+                            }
+                            .fixedSize()
+                            .help("Drag into a message to send the recording")
+                        } else {
                             Image(systemName: "waveform")
                                 .font(.caption)
                                 .foregroundStyle(.secondary)
                                 .padding(.horizontal, 2)
                         }
-                        .fixedSize()
-                        .help("Drag into a message to send the recording")
                     }
                 }
                 .font(.caption)
@@ -328,7 +338,6 @@ private struct HistoryRow: View {
         .padding(.vertical, 6)
         .contentShape(Rectangle())
         .onHover { hover = $0 }
-        .onReceive(NotificationCenter.default.publisher(for: .murmurPlaybackChanged)) { _ in playing = RecordingPlayer.shared.playingID == d.id }
         .contextMenu {
             Button("Copy", action: onCopy)
             if let url = d.audioURL {

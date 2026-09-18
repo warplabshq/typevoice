@@ -282,7 +282,7 @@ final class DictationController {
                     let entry = Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
                                           bundleID: target.bundleID, seconds: rec.seconds, latencyMs: Int((ContinuousClock.now - t0).ms))
                     history.add(entry)
-                    if Prefs.keepRecordings { let samples = rec.samples; _ = try? RecordingStore.save(samples: samples, id: entry.id) }
+                    if Prefs.keepRecordings, let url = try? RecordingStore.save(samples: rec.samples, id: entry.id) { history.attachAudio(id: entry.id, url: url) }
                         show(.copyOffer(text.trimmingCharacters(in: .whitespaces), copied: false), for: .seconds(8))
                     return
                 }
@@ -301,6 +301,7 @@ final class DictationController {
                     let url = try? await Task.detached(priority: .utility) { try RecordingStore.save(samples: samples, id: entry.id) }.value
                     state.lastAudioName = RecordingStore.fileName(for: entry.text)
                     state.lastAudio = url
+                    if let url { history.attachAudio(id: entry.id, url: url) }
                 }
                 if Prefs.showPreview || state.lastAudio != nil {
                     // With an audio chip, linger long enough to grab it.
