@@ -58,12 +58,14 @@ h3 { font-size: 17px; font-weight: 600; }
 /* Ticker tape: what you said flows in from the left, what got typed rolls out on a ribbon. */
 :root { --ribbon-bg: #f4f4f6; --ribbon-fg: #111114; }
 @media (prefers-color-scheme: light) { :root { --ribbon-bg: #111114; --ribbon-fg: #f4f4f6; } }
-.tape { position: relative; width: 112vw; margin: var(--s6) 0 var(--s3) calc(50% - 56vw); height: 120px; transform: rotate(-2deg); pointer-events: none; }
+.tape { position: relative; contain: layout paint; width: 112vw; margin: var(--s6) 0 var(--s3) calc(50% - 56vw); height: 120px; transform: rotate(-2deg); pointer-events: none; }
 .tape-raw, .tape-clean { position: absolute; top: 40px; height: 44px; overflow: hidden; display: flex; align-items: center; }
 .tape-raw { left: 0; right: 50%; -webkit-mask-image: linear-gradient(90deg, transparent 8%, #000 42%, #000); mask-image: linear-gradient(90deg, transparent 8%, #000 42%, #000); }
 .tape-clean { left: 50%; right: 0; background: var(--ribbon-bg); box-shadow: 0 10px 30px rgba(0,0,0,.25);
   -webkit-mask-image: linear-gradient(90deg, #000, #000 58%, transparent 92%); mask-image: linear-gradient(90deg, #000, #000 58%, transparent 92%); }
-.track { display: flex; white-space: nowrap; will-change: transform; animation: tape 60s linear infinite; }
+.track { display: flex; white-space: nowrap; animation: tape 60s linear infinite; }
+/* Anything scrolled out of view stops animating: the page shouldn't tax the GPU for what nobody sees. */
+.offscreen, .offscreen * { animation-play-state: paused !important; }
 .track > span { padding-right: 1.4em; }
 .tape-raw .track { color: var(--dim); font-size: 15px; font-weight: 300; font-style: italic; padding-right: 140px; }
 .tape-raw .w, .say .w { display: inline-block; font-style: italic; opacity: var(--o); transform: rotate(var(--r)) translateY(var(--y)); animation: wobble var(--d) ease-in-out var(--dl) infinite alternate; }

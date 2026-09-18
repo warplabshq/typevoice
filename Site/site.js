@@ -39,7 +39,10 @@ document.addEventListener("DOMContentLoaded", () => {
     function targets(bs) { const half = (n - 1) / 2, raw = []; for (let i = 0; i < n; i++) { const d = Math.abs(i - half) / half, pos = d * 9, lo = Math.floor(pos), hi = Math.min(lo + 1, 9), f = pos - lo; let v = bs[lo] * (1 - f) + bs[hi] * f; if (i % 2) v = v * 0.85 + bs[Math.min(hi + 1, 9)] * 0.15; raw.push(v); }
       const out = raw.slice(); for (let i = 1; i < n - 1; i++) out[i] = raw[i-1] * 0.25 + raw[i] * 0.5 + raw[i+1] * 0.25; return out; }
     let last = performance.now();
-    function frame(now) { const dt = Math.min(0.05, (now - last) / 1000); last = now; const t = now / 1000;
+    function frame(now) {
+      // Off screen or hidden: keep the loop alive but draw nothing.
+      if (document.hidden || c.closest(".offscreen")) { last = now; requestAnimationFrame(frame); return; }
+      const dt = Math.min(0.05, (now - last) / 1000); last = now; const t = now / 1000;
       const boost = Math.max(0, (window.__boost || 0) - 0.02 * (dt * 60)); window.__boost = boost;
       const tg = targets(bands(t)).map(v => Math.min(1, v * (0.55 + boost * 1.2) + boost * 0.35));
       const up = 1 - Math.pow(0.001, dt * 3.2), down = 1 - Math.pow(0.001, dt * 1.6);
@@ -206,6 +209,9 @@ document.addEventListener("DOMContentLoaded", () => {
     };
     cycle(); flyClean.addEventListener("animationiteration", cycle);
   }
+  // Pause every animation in sections that are out of view (canvas loops check the same flag).
+  const vis = new IntersectionObserver(es => es.forEach(e => e.target.classList.toggle("offscreen", !e.isIntersecting)), { rootMargin: "120px 0px" });
+  document.querySelectorAll("section, footer").forEach(el => vis.observe(el));
   // Reveal on scroll, count-up numbers.
   const io = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) { e.target.classList.add("in"); io.unobserve(e.target); } }), { threshold: 0.02, rootMargin: "0px 0px -8% 0px" });
   document.querySelectorAll(".reveal").forEach(el => io.observe(el));
