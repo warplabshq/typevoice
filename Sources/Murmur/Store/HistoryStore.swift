@@ -50,6 +50,24 @@ final class HistoryStore {
     private(set) var stats = HistoryDB.Stats()
     private(set) var hasMore = false
     var query = "" { didSet { if query != oldValue { reload() } } }
+    /// How far back Summary looks. Narrower than "all" keeps the list a page or two long.
+    enum Range: String, CaseIterable, Identifiable {
+        case today, week, month, all
+        var id: String { rawValue }
+        var label: String {
+            switch self { case .today: "Today"; case .week: "7 days"; case .month: "30 days"; case .all: "All" }
+        }
+        var since: Date? {
+            let cal = Calendar.current
+            switch self {
+            case .today: return cal.startOfDay(for: .now)
+            case .week: return cal.date(byAdding: .day, value: -7, to: .now)
+            case .month: return cal.date(byAdding: .day, value: -30, to: .now)
+            case .all: return nil
+            }
+        }
+    }
+    var range: Range = .all { didSet { if range != oldValue { reload() } } }
     static let pageSize = 150
 
     init() {
@@ -81,7 +99,7 @@ final class HistoryStore {
     }
 
     func reload() {
-        let page = db.page(query: query, before: nil, beforeRow: nil, limit: Self.pageSize)
+        let page = db.page(query: query, since: range.since, before: nil, beforeRow: nil, limit: Self.pageSize)
         entries = page
         hasMore = page.count == Self.pageSize
         stats = db.stats()
@@ -89,7 +107,7 @@ final class HistoryStore {
 
     func loadMore() {
         guard hasMore, let last = entries.last else { return }
-        let page = db.page(query: query, before: last.date, beforeRow: last.rowid, limit: Self.pageSize)
+        let page = db.page(query: query, since: range.since, before: last.date, beforeRow: last.rowid, limit: Self.pageSize)
         entries += page
         hasMore = page.count == Self.pageSize
     }

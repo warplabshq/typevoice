@@ -48,19 +48,39 @@ struct HistoryView: View {
                         }
                     }
                     if history.entries.isEmpty {
-                        ContentUnavailableView.search(text: query)
-                            .listRowSeparator(.hidden)
-                            .listRowBackground(Color.clear)
+                        Group {
+                            if query.isEmpty {
+                                ContentUnavailableView("Nothing in the last \(history.range.label.lowercased())", systemImage: "calendar",
+                                                       description: Text("Pick a wider range above."))
+                            } else {
+                                ContentUnavailableView.search(text: query)
+                            }
+                        }
+                        .listRowSeparator(.hidden)
+                        .listRowBackground(Color.clear)
                     }
                     ForEach(grouped, id: \.0) { day, items in
                         Section {
                             ForEach(items) { d in
                                 HistoryRow(d: d, copied: copiedID == d.id) { copy(d) } onDelete: { history.delete([d.id]) }
                                     .tag(d.id)
-                                    .onAppear { if d.id == history.entries.last?.id { history.loadMore() } }
                             }
                         } header: {
                             Text(day).font(.subheadline.weight(.semibold)).foregroundStyle(.secondary)
+                        }
+                    }
+                    if history.hasMore {
+                        // Older pages come when asked for, like Mail, not by scrolling past the end.
+                        Section {
+                            Button { history.loadMore() } label: {
+                                Label("Show earlier dictations", systemImage: "arrow.down.circle")
+                                    .frame(maxWidth: .infinity)
+                            }
+                            .buttonStyle(.bordered)
+                            .controlSize(.large)
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                            .padding(.vertical, 6)
                         }
                     }
                 }
@@ -76,6 +96,13 @@ struct HistoryView: View {
         .searchable(text: $query, placement: .toolbar, prompt: "Search")
         .onChange(of: query) { _, q in history.query = q }
         .toolbar {
+            ToolbarItem(placement: .automatic) {
+                Picker("Range", selection: Binding(get: { history.range }, set: { history.range = $0 })) {
+                    ForEach(HistoryStore.Range.allCases) { r in Text(r.label).tag(r) }
+                }
+                .pickerStyle(.segmented)
+                .help("How far back to show")
+            }
             ToolbarItem(placement: .automatic) {
                 Menu {
                     Button("Plain text (.txt)") { export(.txt) }
@@ -103,9 +130,36 @@ struct HistoryView: View {
         }
     }
 
+    /// Typing the same words at 40 words a minute, plus the backspacing and re-reading
+    /// that comes with typing (about a fifth again), minus the time actually spent talking.
+    static func secondsSaved(words: Int, talking: Double) -> Double {
+        max(0, Double(words) / 40 * 60 * 1.2 - talking)
+    }
+
+    /// What the saved time is good for. Largest thing that fits, with a nod to the change.
+    static func funLine(minutes: Double) -> String {
+        let units: [(Double, String, String)] = [
+            (2400, "take a week off", "take %d weeks off"),
+            (480, "take a whole working day off", "take %d working days off"),
+            (300, "read a short novel", "read %d short novels"),
+            (120, "watch a feature film", "watch %d feature films"),
+            (45, "play an album start to finish", "play %d albums start to finish"),
+            (22, "watch a sitcom episode, ads skipped", "watch %d sitcom episodes, ads skipped"),
+            (15, "watch a TED talk", "watch %d TED talks"),
+            (6, "read a five-page chapter", "read %d five-page chapters"),
+            (3.5, "listen to a song", "listen to %d songs"),
+        ]
+        guard minutes >= 1 else { return "Keep talking; this grows fast." }
+        guard let (unit, one, many) = units.first(where: { minutes >= $0.0 }) else { return "Enough to stretch your legs." }
+        let n = Int(minutes / unit)
+        let rest = (minutes - Double(n) * unit) / unit
+        let what = n == 1 ? one : String(format: many, n)
+        return "That's enough to \(what)" + (rest >= 0.5 ? ", and then some." : ".")
+    }
+
     private var statsRow: some View {
         let s = history.stats
-        let saved = max(0, s.seconds * 3.2 - s.seconds)        // typing ≈ 40 wpm vs speaking ≈ 130 wpm
+        let saved = Self.secondsSaved(words: s.words, talking: s.seconds)
         return VStack(spacing: 12) {
             Card(padding: 20) {
                 HStack(alignment: .firstTextBaseline, spacing: 14) {
@@ -120,16 +174,24 @@ struct HistoryView: View {
                                 .foregroundStyle(Color(red: 0.20, green: 0.78, blue: 0.45))
                                 .contentTransition(.numericText())
                             if s.weekWords > 0 {
-                                Text("\(Fmt.durationLong(max(0, weekSeconds * 2.2))) this week")
+                                Text("\(Fmt.durationLong(Self.secondsSaved(words: s.weekWords, talking: weekSeconds))) this week")
                                     .font(.subheadline)
                                     .foregroundStyle(.secondary)
                             }
                         }
-                        Text(s.count == 0
-                             ? "Hold \(Prefs.triggerLabel) anywhere and start talking."
-                             : "Compared with typing at 40 words a minute. You speak at about \(Int(s.wordsPerMinute.rounded())).")
-                            .font(.callout)
-                            .foregroundStyle(.tertiary)
+                        if s.count == 0 {
+                            Text("Hold \(Prefs.triggerLabel) anywhere and start talking.")
+                                .font(.callout)
+                                .foregroundStyle(.tertiary)
+                        } else {
+                            Text(Self.funLine(minutes: saved / 60))
+                                .font(.callout)
+                                .foregroundStyle(.secondary)
+                                .contentTransition(.opacity)
+                            Text("Against typing at 40 words a minute, fixes included. You speak at about \(Int(s.wordsPerMinute.rounded())).")
+                                .font(.caption)
+                                .foregroundStyle(.tertiary)
+                        }
                     }
                     Spacer()
                     Image(systemName: "waveform")

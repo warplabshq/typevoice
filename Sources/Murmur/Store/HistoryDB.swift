@@ -84,14 +84,16 @@ final class HistoryDB: @unchecked Sendable {
 
     // MARK: Reads
 
-    func page(query: String?, before: Date?, beforeRow: Int64?, limit: Int) -> [Dictation] {
+    func page(query: String?, since: Date? = nil, before: Date?, beforeRow: Int64?, limit: Int) -> [Dictation] {
         q.sync {
             let trimmed = query?.trimmingCharacters(in: .whitespaces) ?? ""
+            let sinceT = since?.timeIntervalSince1970 ?? 0
             if trimmed.isEmpty {
-                return rows(sql: "SELECT rowid,id,text,date,app,bundle,seconds,words,latency_ms FROM dictations WHERE (? IS NULL OR date < ?) ORDER BY date DESC LIMIT ?") { st in
+                return rows(sql: "SELECT rowid,id,text,date,app,bundle,seconds,words,latency_ms FROM dictations WHERE (? IS NULL OR date < ?) AND date >= ? ORDER BY date DESC LIMIT ?") { st in
                     if let b = before { sqlite3_bind_double(st, 1, b.timeIntervalSince1970); sqlite3_bind_double(st, 2, b.timeIntervalSince1970) }
                     else { sqlite3_bind_null(st, 1); sqlite3_bind_null(st, 2) }
-                    sqlite3_bind_int(st, 3, Int32(limit))
+                    sqlite3_bind_double(st, 3, sinceT)
+                    sqlite3_bind_int(st, 4, Int32(limit))
                 }
             }
             // Two steps: let FTS5 walk matches newest-first by rowid (cheap even when a
@@ -109,7 +111,9 @@ final class HistoryDB: @unchecked Sendable {
             sqlite3_finalize(st)
             guard !ids.isEmpty else { return [] }
             let list = ids.map(String.init).joined(separator: ",")
-            return rows(sql: "SELECT rowid,id,text,date,app,bundle,seconds,words,latency_ms FROM dictations WHERE rowid IN (\(list)) ORDER BY rowid DESC") { _ in }
+            return rows(sql: "SELECT rowid,id,text,date,app,bundle,seconds,words,latency_ms FROM dictations WHERE rowid IN (\(list)) AND date >= ? ORDER BY rowid DESC") { st in
+                sqlite3_bind_double(st, 1, sinceT)
+            }
         }
     }
 
