@@ -195,7 +195,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Privacy diagram: the clean chip lands in the field and the sentence types out, every cycle.
   const flowTyped = document.getElementById("flow-typed"), flyClean = document.querySelector(".flow .fly.clean");
   if (flowTyped && flyClean) {
-    const sentence = "Can we move the launch…";
+    const sentence = "Can we move the…";
     let timers = [];
     const cycle = () => {
       timers.forEach(clearTimeout); timers = [];

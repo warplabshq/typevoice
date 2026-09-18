@@ -279,7 +279,8 @@ kbd { font: 13px -apple-system, BlinkMacSystemFont, sans-serif; background: var(
 .flow .tile-n b { font-size: 13px; font-weight: 600; color: var(--text); white-space: nowrap; }
 .flow .tile-n.ai { position: relative; border-color: transparent; background: var(--bg2); }
 .flow .tile-n.ai::before { content: ""; position: absolute; inset: -1px; border-radius: 13px; padding: 1px; background: linear-gradient(120deg, #ff8a5b, #ff5c8a, #8a6bff, #4fb8ff, #ff8a5b); -webkit-mask: linear-gradient(#000 0 0) content-box, linear-gradient(#000 0 0); -webkit-mask-composite: xor; mask-composite: exclude; opacity: .85; }
-.flow .mfield { height: 44px; min-width: 132px; padding: 0 12px; display: flex; align-items: center; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line2); font-size: 13px; color: var(--text); white-space: nowrap; }
+.flow .mfield { height: 44px; width: 156px; box-sizing: border-box; padding: 0 12px; display: flex; align-items: center; overflow: hidden; border-radius: 10px; background: var(--bg2); border: 1px solid var(--line2); font-size: 13px; color: var(--text); white-space: nowrap; }
+.flow .mfield span { flex: 0 1 auto; min-width: 0; overflow: hidden; }
 .flow .mfield .caret { width: 1.5px; height: 16px; background: var(--accent); margin-left: 1px; animation: blink 1s steps(2) infinite; }
 .flow .fly { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); opacity: 0; white-space: nowrap; }
 .flow .fly.wave { display: flex; align-items: center; gap: 2px; height: 16px; animation: fly1 6s linear infinite; }
