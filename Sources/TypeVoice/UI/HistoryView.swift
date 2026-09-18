@@ -196,9 +196,10 @@ struct HistoryView: View {
                         }
                     }
                     Spacer()
-                    Image(systemName: "waveform")
-                        .font(.system(size: 34, weight: .medium))
-                        .foregroundStyle(Color(red: 0.20, green: 0.78, blue: 0.45).opacity(0.35))
+                    // The brand's bars, alive: a calm synthetic voice in the same green.
+                    WaveformView(bars: 10, barWidth: 3, gap: 3, color: Color(red: 0.20, green: 0.78, blue: 0.45).opacity(0.8), demo: true)
+                        .frame(width: 66, height: 30)
+                        .accessibilityHidden(true)
                 }
             }
             HStack(spacing: 12) {

@@ -23,6 +23,12 @@ struct SettingsView: View {
     @State private var advanced = false
     @State private var aiStatus = SmartCleaner.status
 
+    /// "AppleUSBAudioEngine:RØDE:RØDE VideoMic GO II:82C5FB6E:1,2" → "RØDE VideoMic GO II".
+    static func deviceName(fromUID uid: String) -> String {
+        let parts = uid.split(separator: ":").map(String.init)
+        return parts.count >= 3 ? parts[2] : "Previous microphone"
+    }
+
     var body: some View {
         Form {
             Section("General") {
@@ -108,8 +114,14 @@ struct SettingsView: View {
                 Picker("Input", selection: $inputDeviceUID) {
                     Text("System default" + (InputDevices.defaultInput().map { " (\($0.name))" } ?? "")).tag("")
                     ForEach(devices) { Text($0.name).tag($0.uid) }
+                    // A remembered mic that isn't plugged in right now still needs a row, or the
+                    // picker shows nothing. The recorder already falls back to the system default.
+                    if !inputDeviceUID.isEmpty, !devices.contains(where: { $0.uid == inputDeviceUID }) {
+                        Text("\(Self.deviceName(fromUID: inputDeviceUID)) — not connected, using system default").tag(inputDeviceUID)
+                    }
                 }
                 .onAppear { devices = InputDevices.all() }
+                .onReceive(Timer.publish(every: 3, on: .main, in: .common).autoconnect()) { _ in devices = InputDevices.all() }
                 LabeledContent("Level") { MicMeter(deviceUID: inputDeviceUID) }
                 Text("Press Test and speak normally: the bar should reach the middle. AirPods and other Bluetooth mics take a moment to wake up.")
                     .font(.callout).foregroundStyle(.secondary)
