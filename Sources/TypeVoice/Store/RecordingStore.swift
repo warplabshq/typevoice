@@ -13,12 +13,16 @@ enum RecordingStore {
     /// Encodes 16 kHz mono samples to AAC (~32 kbps). Returns the file URL.
     static func save(samples: [Float], id: UUID) throws -> URL {
         let url = folder.appendingPathComponent("\(id.uuidString).m4a")
+        // AAC-LC in .m4a is the format everything plays — Messages, WhatsApp, Telegram, Slack,
+        // mail, Windows, Android — and 32 kbps mono is plenty for speech (~240 KB a minute).
+        // Constant bitrate, because a few strict players still misjudge VBR durations.
         let settings: [String: Any] = [
             AVFormatIDKey: kAudioFormatMPEG4AAC,
             AVSampleRateKey: 16_000,
             AVNumberOfChannelsKey: 1,
             AVEncoderBitRateKey: 32_000,
-            AVEncoderAudioQualityKey: AVAudioQuality.medium.rawValue,
+            AVEncoderBitRateStrategyKey: AVAudioBitRateStrategy_Constant,
+            AVEncoderAudioQualityKey: AVAudioQuality.high.rawValue,
         ]
         let file = try AVAudioFile(forWriting: url, settings: settings, commonFormat: .pcmFormatFloat32, interleaved: false)
         let format = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: 16_000, channels: 1, interleaved: false)!
