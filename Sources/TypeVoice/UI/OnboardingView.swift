@@ -43,8 +43,13 @@ struct OnboardingView: View {
     }
 
     private var hero: some View {
-        VStack(spacing: 14) {
-            PillPreview(accent: Prefs.accent)
+        VStack(spacing: 10) {
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable()
+                .interpolation(.high)
+                .frame(width: 84, height: 84)
+                .shadow(color: .black.opacity(0.35), radius: 14, y: 8)
+                .padding(.bottom, 4)
             Text("\(Brand.name)")
                 .font(.system(size: 26, weight: .bold))
             Text("Just talk. It's typed. All on this Mac.")
