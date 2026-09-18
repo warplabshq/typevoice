@@ -328,6 +328,14 @@ final class DictationController {
     }
 
     /// Called from the pill's Copy button.
+    /// The × on the pill: retreat now instead of waiting out the linger.
+    func putAway() {
+        dismiss?.cancel()
+        state.lastAudio = nil
+        state.phase = .idle
+        hud?.dismiss()
+    }
+
     func copyOffered() {
         guard case .copyOffer(let text, _) = state.phase else { return }
         inserter.copyToClipboard(text)

@@ -8,7 +8,7 @@ struct ShortcutRecorder: View {
     @State private var recording = false
     @State private var current = Shortcut.stored
     @State private var monitor: Any?
-    @State private var pendingModifier: UInt16?
+    @State private var heldModifiers: [UInt16] = []
 
     var body: some View {
         HStack(spacing: 8) {
@@ -43,7 +43,7 @@ struct ShortcutRecorder: View {
 
     private func start() {
         recording = true
-        pendingModifier = nil
+        heldModifiers = []
         NotificationCenter.default.post(name: .murmurPauseHotkey, object: true)
         monitor = NSEvent.addLocalMonitorForEvents(matching: [.keyDown, .flagsChanged]) { e in
             handle(e) ? nil : e
@@ -67,9 +67,13 @@ struct ShortcutRecorder: View {
             let flag = Shortcut.flag(forModifierKey: code)!
             let down = CGEventFlags(rawValue: UInt64(e.modifierFlags.rawValue)).contains(flag)
             if down {
-                pendingModifier = code           // wait: maybe a key follows
-            } else if pendingModifier == code {
-                save(Shortcut(keyCode: code, modifiers: 0, isModifierOnly: true))   // released alone
+                if !heldModifiers.contains(code) { heldModifiers.append(code) }   // wait: maybe a key follows
+            } else if let last = heldModifiers.last, heldModifiers.contains(code) {
+                // First release with no key pressed: the trigger is everything that was held.
+                // ⌘ alone stays ⌘; ⌥ then ⌘ becomes the ⌥⌘ chord, matched only when both are down.
+                var others = CGEventFlags()
+                for k in heldModifiers where k != last { if let f = Shortcut.flag(forModifierKey: k) { others.insert(f) } }
+                save(Shortcut(keyCode: last, modifiers: others.rawValue, isModifierOnly: true))
             }
             return true
         case .keyDown:

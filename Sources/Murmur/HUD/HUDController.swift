@@ -7,6 +7,7 @@ import Observation
 final class HUDController {
     let state: AppState
     var onCopy: () -> Void = {}
+    var onDismiss: () -> Void = {}
     private var window: HUDWindow?
     var debugWindow: NSWindow? { window }
     private var hideTask: Task<Void, Never>?
@@ -38,6 +39,7 @@ final class HUDController {
     private func makeWindow() -> HUDWindow {
         let w = HUDWindow(state: state)
         w.onCopy = { [weak self] in self?.onCopy() }
+        w.onDismiss = { [weak self] in self?.onDismiss() }
         return w
     }
 

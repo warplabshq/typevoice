@@ -71,6 +71,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         controller.licensing = licensing
         hud = HUDController(state: state)
         hud.onCopy = { [weak self] in self?.controller.copyOffered() }
+        hud.onDismiss = { [weak self] in self?.controller.putAway() }
         controller.hud = hud
 
         observers.append(NotificationCenter.default.addObserver(

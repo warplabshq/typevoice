@@ -4,6 +4,7 @@ import SwiftUI
 struct HUDView: View {
     let state: AppState
     var onCopy: () -> Void = {}
+    var onDismiss: () -> Void = {}
     @State private var hovering = false
 
     private var phase: AppState.Phase { state.phase }
@@ -85,6 +86,7 @@ struct HUDView: View {
                 }
                 if let url = state.lastAudio {
                     AudioChip(url: url, name: state.lastAudioName)
+                    DismissButton(action: onDismiss)
                 }
             }
             .transition(.blurFade)
@@ -147,6 +149,24 @@ struct ElapsedLabel: View {
 }
 
 /// Drag this into any chat to send the voice instead of the words.
+/// The small × next to the audio chip: puts the pill away right now.
+struct DismissButton: View {
+    let action: () -> Void
+    @State private var hover = false
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "xmark")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(hover ? Color.black : Theme.onGlassDim)
+                .frame(width: 22, height: 22)
+                .background(hover ? Color.white : Color.white.opacity(0.12), in: Circle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .help("Put the pill away")
+    }
+}
+
 struct AudioChip: View {
     let url: URL
     let name: String

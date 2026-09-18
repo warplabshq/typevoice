@@ -8,6 +8,7 @@ final class HUDWindow: NSPanel {
     static let canvas = CGSize(width: 720, height: 120)
 
     var onCopy: () -> Void = {}
+    var onDismiss: () -> Void = {}
 
     init(state: AppState) {
         super.init(
@@ -29,7 +30,7 @@ final class HUDWindow: NSPanel {
         isReleasedWhenClosed = false
         animationBehavior = .none
         isFloatingPanel = true
-        contentView = NSHostingView(rootView: HUDView(state: state, onCopy: { [weak self] in self?.onCopy() }))
+        contentView = NSHostingView(rootView: HUDView(state: state, onCopy: { [weak self] in self?.onCopy() }, onDismiss: { [weak self] in self?.onDismiss() }))
     }
 
     /// The pill is click-through except when it has a button to press.

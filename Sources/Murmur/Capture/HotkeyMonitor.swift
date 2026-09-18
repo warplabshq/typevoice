@@ -108,9 +108,10 @@ final class HotkeyMonitor {
             let code = UInt16(event.getIntegerValueField(.keyboardEventKeycode))
             let flags = event.flags
             let action: Bool? = shared.withLock { s -> Bool? in
-                guard !s.paused, s.shortcut.isModifierOnly, code == s.shortcut.keyCode,
-                      let flag = Shortcut.flag(forModifierKey: code) else { return nil }
-                let down = flags.contains(flag)
+                // Only events for one of the chord's own keys count, so a plain ⌘ press
+                // never wakes an ⌥⌘ trigger and Left/Right stay distinct.
+                guard !s.paused, s.shortcut.involves(modifierKey: code) else { return nil }
+                let down = flags.contains(s.shortcut.chordFlags)
                 guard down != s.isDown else { return nil }
                 s.isDown = down
                 return down
@@ -166,8 +167,8 @@ final class HotkeyMonitor {
         let f = NSEvent.addGlobalMonitorForEvents(matching: .flagsChanged) { [weak self] e in
             guard let self else { return }
             let sc = self.shared.withLock { $0.shortcut }
-            guard sc.isModifierOnly, e.keyCode == sc.keyCode, let flag = Shortcut.flag(forModifierKey: sc.keyCode) else { return }
-            let down = e.modifierFlags.rawValue & UInt(flag.rawValue) != 0
+            guard sc.involves(modifierKey: e.keyCode) else { return }
+            let down = CGEventFlags(rawValue: UInt64(e.modifierFlags.rawValue)).contains(sc.chordFlags)
             let changed = self.shared.withLock { s -> Bool in
                 if s.paused || s.isDown == down { return false }
                 s.isDown = down; return true
