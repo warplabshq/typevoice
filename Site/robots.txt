@@ -1,3 +1,0 @@
-User-agent: *
-Allow: /
-Sitemap: https://REPLACE-ME.example/sitemap.xml

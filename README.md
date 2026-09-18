@@ -66,9 +66,10 @@ synthetic ⌘V, plus the Microphone permission.
 
 ### Website and legal pages
 
-`Site/` is the landing page plus Support, Privacy Policy, Terms of Use and the EULA (with
-Apple's required minimum terms). Everything brand-specific is in `Site/site.js`. Deploy the
-folder anywhere static, then put the real host into `Brand.website` in
+The landing page plus Support, Privacy Policy, Terms of Use and the EULA (with Apple's
+required minimum terms) live in their own repository, `murmur-site` (locally
+`../MurmurSite`). Everything brand-specific is in its `site.js`. Deploy that
+repository anywhere static, then put the real host into `Brand.website` in
 `Sources/Murmur/Support/Brand.swift` so the in-app links (Privacy tab › Legal, License tab,
 Settings › Help, menu bar › Help) point at it. App Store Connect wants the Privacy Policy URL
 and Support URL; the EULA can be linked or pasted.
