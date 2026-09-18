@@ -47,7 +47,7 @@ struct OnboardingView: View {
             PillPreview(accent: Prefs.accent)
             Text("\(Brand.name)")
                 .font(.system(size: 26, weight: .bold))
-            Text("Hold a key. Talk. Release. It's typed. All on this Mac.")
+            Text("Just talk. It's typed. All on this Mac.")
                 .font(.system(size: 14))
                 .foregroundStyle(.secondary)
         }
@@ -59,7 +59,7 @@ struct OnboardingView: View {
         case 0:
             StepCard(
                 icon: "mic.fill", title: "Microphone",
-                text: "\(Brand.name) listens only while you hold the key. Audio never leaves this Mac and is never written to disk.",
+                text: "\(Brand.name) listens only while you hold your shortcut. Audio never leaves this Mac, and it is only kept if you later turn on the audio option.",
                 done: mic == .granted,
                 action: micAction
             )
@@ -76,7 +76,7 @@ struct OnboardingView: View {
                 icon: "keyboard", title: "Your shortcut",
                 text: trigger == Prefs.Trigger.fn.rawValue
                     ? "Hold 🌐 (the Globe/Fn key) to dictate. So macOS doesn't open the emoji picker every time, set “Press 🌐 key to” to Do Nothing in Keyboard settings."
-                    : "Hold your shortcut to dictate. Tap it twice to keep listening hands-free; Esc cancels.",
+                    : "Press what you want to hold: a key, a chord like ⌥⌘, or a combination like ⌥Space. Tap it twice to keep listening hands-free; Esc cancels.",
                 done: false,
                 action: trigger == Prefs.Trigger.fn.rawValue ? ("Open Keyboard settings", { Permissions.openKeyboardPane() }) : nil
             ) {
@@ -95,8 +95,8 @@ struct OnboardingView: View {
             StepCard(
                 icon: "cpu", title: "Speech model",
                 text: state.warmError ?? (state.isReady
-                    ? "Ready. Recognition runs on the Neural Engine; nothing is sent anywhere."
-                    : "One-time download and optimisation for this Mac. About a minute."),
+                    ? "Ready. Recognition runs on the Neural Engine; nothing is sent anywhere, ever."
+                    : "The speech model is downloaded once, about 450 MB, then tuned for this Mac's Neural Engine. After this, dictation never needs the internet."),
                 done: state.isReady,
                 progress: state.isReady ? nil : state.warm,
                 action: retryAction
@@ -258,10 +258,7 @@ private struct StepCard<Extra: View>: View {
                     .fixedSize(horizontal: false, vertical: true)
                 extra
                 if let progress {
-                    HStack(spacing: 10) {
-                        ProgressRing(fraction: progress.fraction, tint: .accentColor, track: .secondary.opacity(0.2))
-                        Text(progress.label).font(.system(size: 12, weight: .medium)).foregroundStyle(.secondary)
-                    }
+                    ModelProgressView(progress: progress)
                 }
                 if !done, action != nil || secondary != nil {
                     HStack(spacing: 10) {
@@ -272,6 +269,68 @@ private struct StepCard<Extra: View>: View {
                 }
             }
         }
+    }
+}
+
+/// The download step, shown properly: which stage, how far, and what it is.
+struct ModelProgressView: View {
+    let progress: WarmProgress
+    private static let sizeMB = 450.0
+    private var stages: [(WarmProgress.Phase, String)] { [(.downloading, "Download"), (.compiling, "Tune"), (.loading, "Load")] }
+    private var stageIndex: Int {
+        switch progress.phase { case .checking, .downloading: 0; case .compiling: 1; case .loading, .ready: 2 }
+    }
+    /// Whole-journey fraction: the download is the long part, tuning the rest.
+    private var overall: Double {
+        switch progress.phase {
+        case .checking: 0
+        case .downloading: progress.fraction * 0.7
+        case .compiling: 0.7 + progress.fraction * 0.25
+        case .loading: 0.95 + progress.fraction * 0.05
+        case .ready: 1
+        }
+    }
+    private var detail: String {
+        switch progress.phase {
+        case .checking: return "Checking what's already here…"
+        case .downloading: return "\(Int(progress.fraction * Self.sizeMB)) of about \(Int(Self.sizeMB)) MB"
+        case .compiling: return "Optimising for the Neural Engine, once…"
+        case .loading: return "Almost there…"
+        case .ready: return "Ready"
+        }
+    }
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 0) {
+                ForEach(Array(stages.enumerated()), id: \.offset) { i, stage in
+                    Text(stage.1)
+                        .font(.system(size: 12, weight: i == stageIndex ? .semibold : .medium))
+                        .foregroundStyle(i < stageIndex ? Color.green : i == stageIndex ? Color.primary : Color.secondary.opacity(0.7))
+                    if i < stages.count - 1 {
+                        Image(systemName: "chevron.right").font(.system(size: 9, weight: .semibold)).foregroundStyle(.quaternary).padding(.horizontal, 8)
+                    }
+                }
+                Spacer()
+                Text("\(Int(overall * 100))%")
+                    .font(.system(size: 12, weight: .semibold, design: .rounded)).monospacedDigit()
+                    .foregroundStyle(.secondary)
+                    .contentTransition(.numericText())
+            }
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Color.secondary.opacity(0.16))
+                    Capsule().fill(Color.accentColor).frame(width: max(6, g.size.width * overall))
+                        .animation(.easeOut(duration: 0.35), value: overall)
+                }
+            }
+            .frame(height: 6)
+            HStack {
+                Text(detail).font(.system(size: 12)).foregroundStyle(.secondary).monospacedDigit().contentTransition(.numericText())
+                Spacer()
+                Text("NVIDIA Parakeet · runs on the Neural Engine").font(.system(size: 11)).foregroundStyle(.tertiary)
+            }
+        }
+        .padding(.top, 2)
     }
 }
 
