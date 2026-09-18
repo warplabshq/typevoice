@@ -291,9 +291,9 @@ kbd { font: 13px -apple-system, BlinkMacSystemFont, sans-serif; background: var(
 @keyframes fly2 { 0%, 33% { left: 0; opacity: 0 } 37% { opacity: 1 } 61% { left: 100%; opacity: 1 } 65% { left: 100%; opacity: 0 } 100% { left: 100%; opacity: 0 } }
 @keyframes fly3 { 0%, 66% { left: 0; opacity: 0 } 70% { opacity: 1 } 94% { left: 100%; opacity: 1 } 98% { left: 100%; opacity: 0 } 100% { left: 100%; opacity: 0 } }
 .flow .out { display: flex; align-items: flex-start; padding-top: 40px; }
-.flow .out .wire { flex: 0 0 110px; margin-right: -47px; z-index: 0; }   /* runs on under the caption's width, right up to the cloud */
+.flow .out .wire { flex: 0 0 150px; margin-right: -47px; z-index: 0; }   /* runs on under the caption's width, right up to the cloud */
 .flow .out .node { min-width: 150px; position: relative; z-index: 1; }
-.flow .out .barrier { left: 40%; }
+.flow .out .barrier { left: 50%; }
 .flow .node em { white-space: nowrap; }
 .flow .barrier { position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); white-space: nowrap; font-size: 12px; font-weight: 600; color: var(--green); padding: 5px 12px; border-radius: 999px; background: var(--card2); border: 1px solid color-mix(in srgb, var(--green) 40%, var(--line2)); }
 .flow .cloud-n { width: 56px; height: 44px; border-radius: 999px; border: 1px dashed var(--line2); display: grid; place-items: center; }
