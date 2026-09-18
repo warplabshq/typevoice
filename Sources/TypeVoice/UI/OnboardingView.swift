@@ -73,8 +73,8 @@ struct OnboardingView: View {
                 icon: "hand.raised.fill", title: "Accessibility",
                 text: axHint,
                 done: ax,
-                action: ("Allow accessibility", { askedAX = .now; Permissions.requestAccessibility(); Permissions.openAccessibilityPane() }),
-                secondary: askedAX == nil ? nil : ("Relaunch \(Brand.name)", { Permissions.relaunch() })
+                action: ("Open Accessibility settings", { askedAX = .now; Permissions.requestAccessibility(); Permissions.openAccessibilityPane() }),
+                secondary: askedAX == nil ? ("Show \(Brand.name) in Finder", { Permissions.revealApp() }) : ("Relaunch \(Brand.name)", { Permissions.relaunch() })
             )
         case 2:
             StepCard(
@@ -130,9 +130,9 @@ struct OnboardingView: View {
 
     private var axHint: String {
         if let t = askedAX, Date.now.timeIntervalSince(t) > 8, !ax {
-            return "Still not on? If \(Brand.name) is already listed in the Accessibility pane, flip it off and on, or remove it with − and allow again. A relaunch fixes the rest."
+            return "In the Accessibility list, press + and choose \(Brand.name) (in Applications), or drag it in from Finder, then turn its switch on. If it's listed but the switch is on and nothing happens, relaunch."
         }
-        return "Needed to notice the key you hold and to paste the text into the app you're using. \(Brand.name) never reads what's on your screen."
+        return "Needed to notice the key you hold and to paste the text into the app you're using. \(Brand.name) never reads what's on your screen. macOS doesn't let a sandboxed app ask for this itself: press + in the list and pick \(Brand.name)."
     }
 
     private var micAction: (String, () -> Void) {
