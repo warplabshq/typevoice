@@ -42,7 +42,10 @@ struct CheatsheetView: View {
             ForEach(rows, id: \.0) { r in
                 HStack(alignment: .firstTextBaseline, spacing: 12) {
                     Text(r.0).font(.system(.body, design: .rounded).weight(.medium)).frame(width: 190, alignment: .leading)
+                        .fixedSize(horizontal: false, vertical: true)
                     Text(r.1).foregroundStyle(.secondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                        .frame(maxWidth: .infinity, alignment: .leading)
                 }
             }
         }
