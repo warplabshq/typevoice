@@ -44,6 +44,7 @@ func render(_ size: Int, to url: URL) {
     ctx.restoreGState()
 
     // Bars with a soft glow behind them.
+    // Keep in step with BrandWave.heights in Sources/TypeVoice/UI/BrandWave.swift.
     let heights: [CGFloat] = [0.16, 0.30, 0.52, 0.74, 0.46, 0.62, 0.34, 0.20]
     let n = heights.count
     let bw = s * 0.055, gap = s * 0.045

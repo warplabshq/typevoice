@@ -178,14 +178,16 @@ final class BarsView: NSView {
 
     // MARK: Idle breathing
 
+    /// Silence settles into the brand silhouette at a whisper, breathing a little.
     private func startBreathing() {
         guard !breathing else { return }
         breathing = true
-        let base = max(2, bounds.height * 0.07)
+        let scale = bounds.height * 0.34
+        let rest = BrandWave.silhouette(bars: bars).map { max(2, $0 * scale) }
         for (i, l) in barLayers.enumerated() {
             let a = CABasicAnimation(keyPath: "bounds.size.height")
-            a.fromValue = base * 0.6
-            a.toValue = base * 1.4
+            a.fromValue = rest[i] * 0.8
+            a.toValue = rest[i] * 1.2
             a.duration = 1.6
             a.autoreverses = true
             a.repeatCount = .infinity
@@ -193,7 +195,7 @@ final class BarsView: NSView {
             a.timingFunction = CAMediaTimingFunction(name: .easeInEaseOut)
             l.add(a, forKey: "breathe")
         }
-        layoutBars(heights: Array(repeating: base, count: bars), animated: true)
+        layoutBars(heights: rest, animated: true)
     }
 
     private func stopBreathing() {
@@ -209,10 +211,17 @@ final class BarsView: NSView {
         demoStart = Date()
         let t = Timer(timeInterval: 1 / 30, repeats: true) { [weak self] _ in
             guard let self, let w = self.window, w.isVisible, !w.isMiniaturized else { return }
+            // The brand silhouette, breathing: each bar sways a little at its own pace, and a
+            // slow swell runs across the whole shape, so it reads as alive but never as noise.
             let time = Date().timeIntervalSince(self.demoStart)
-            let targets = WaveformView.targets(bands: DemoBands.at(time), bars: self.bars)
-            let maxH = self.bounds.height * 0.82
-            self.layoutBars(heights: targets.map { $0 * maxH }, animated: true)
+            let shape = BrandWave.silhouette(bars: self.bars)
+            let maxH = self.bounds.height * 0.9
+            let swell = 0.9 + 0.1 * sin(time * 1.1)
+            let heights = shape.enumerated().map { i, f -> CGFloat in
+                let sway = 1 + 0.16 * sin(time * 2.3 + Double(i) * 0.9)
+                return max(2, f * maxH * swell * sway)
+            }
+            self.layoutBars(heights: heights, animated: true)
         }
         RunLoop.main.add(t, forMode: .common)
         demoTimer = t

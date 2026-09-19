@@ -197,7 +197,7 @@ struct HistoryView: View {
                     }
                     Spacer()
                     // The brand's bars, alive: a calm synthetic voice in the same green.
-                    WaveformView(bars: 10, barWidth: 3, gap: 3, color: Color(red: 0.20, green: 0.78, blue: 0.45).opacity(0.8), demo: true)
+                    WaveformView(bars: 8, barWidth: 3, gap: 3 * BrandWave.gapRatio, color: Color(red: 0.20, green: 0.78, blue: 0.45).opacity(0.8), demo: true)
                         .frame(width: 66, height: 30)
                         .accessibilityHidden(true)
                 }

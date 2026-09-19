@@ -89,8 +89,7 @@ private struct BrandRow: View {
                     .fill(LinearGradient(colors: [Color(white: 0.25), Color(white: 0.08)], startPoint: .top, endPoint: .bottom))
                     .frame(width: 30, height: 30)
                     .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(.white.opacity(0.12), lineWidth: 0.5))
-                Image(systemName: "waveform")
-                    .font(.system(size: 14, weight: .semibold))
+                BrandGlyph(height: 15, barWidth: 1.7)
                     .foregroundStyle(.white)
             }
             VStack(alignment: .leading, spacing: 1) {
