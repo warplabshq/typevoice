@@ -60,6 +60,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                 Task { @MainActor in
                     if let raw = n.object as? String, let t = MainTab(rawValue: raw) { openMainWindow(t) }
                     else if (n.object as? String) == "onboarding" { self?.showOnboarding() }
+                    else if (n.object as? String) == "cheatsheet" { CheatsheetWindow.show() }
+                    else if let raw = n.object as? String, raw.hasPrefix("appearance:") {
+                        // Force light/dark for design review; "system" follows the Mac again.
+                        let name: NSAppearance.Name? = raw.hasSuffix("light") ? .aqua : raw.hasSuffix("dark") ? .darkAqua : nil
+                        NSApp.appearance = name.map { NSAppearance(named: $0) } ?? nil
+                    }
                     else if (n.object as? String) == "dump" {
                         func dump(_ v: NSView?, _ depth: Int) {
                             guard let v else { return }
@@ -74,6 +80,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                     }
                     else if let raw = n.object as? String, raw.hasPrefix("dictate:") {
                         self?.controller.simulate(wav: URL(fileURLWithPath: String(raw.dropFirst(8))))
+                    }
+                    else if let raw = n.object as? String, raw.hasPrefix("hud:") {
+                        // Show the pill in a given state without a session (design review); nothing is typed.
+                        self?.controller.preview(String(raw.dropFirst(4)))
                     }
                 }
             }

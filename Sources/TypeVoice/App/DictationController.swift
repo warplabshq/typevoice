@@ -223,6 +223,41 @@ final class DictationController {
 
     // MARK: Pipeline
 
+    /// Debug: put the pill in a state by name — listening, locked, processing, done, copy,
+    /// error, notheard, audio, idle — for design review. No audio, no insertion.
+    func preview(_ name: String) {
+        dismiss?.cancel(); finishTask?.cancel(); finishTask = nil
+        target = inserter.captureTarget()
+        state.resetLevels()
+        let sample = "Can we move the launch review to Wednesday at three? I want the changelog in first."
+        switch name {
+        case "listening", "locked":
+            state.listeningSince = .now
+            state.phase = .listening(locked: name == "locked")
+            Task { @MainActor [weak self] in
+                var i = 0
+                while let self, self.state.phase.isListening, i < 6000 {
+                    self.state.bands = DemoBands.at(Double(i) * 0.05); i += 1
+                    try? await Task.sleep(for: .milliseconds(50))
+                }
+            }
+        case "processing": state.phase = .processing
+        case "done": state.phase = .done(sample)
+        case "audio":
+            state.lastAudioName = RecordingStore.fileName(for: sample)
+            state.lastAudio = try? RecordingStore.save(samples: [Float](repeating: 0, count: 16_000), id: UUID())
+            state.phase = .done(sample)
+        case "copy": state.phase = .copyOffer(sample, copied: false)
+        case "copied": state.phase = .copyOffer(sample, copied: true)
+        case "error": state.phase = .error("Can't type into a password field. Copied instead.")
+        case "notheard": state.phase = .notHeard
+        default:
+            state.lastAudio = nil
+            state.phase = .idle; hud?.dismiss(); return
+        }
+        hud?.present(for: target)
+    }
+
     /// Debug: run a full session with audio from a file instead of the microphone.
     func simulate(wav: URL) {
         guard state.phase == .idle, let samples = try? PipelineTest.load16k(wav) else { return }
