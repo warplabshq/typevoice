@@ -75,8 +75,7 @@ struct HUDView: View {
             .onHover { h in withAnimation(Theme.spring) { hovering = h } }
 
         case .processing:
-            ShimmerLine()
-                .frame(width: 80)
+            ProcessingRow(note: state.processingNote, onStop: onDismiss)
                 .transition(.blurFade)
                 .id("processing")
 
@@ -176,6 +175,37 @@ struct CopyGlyphButton: View {
         .onHover { hover = $0 }
         .help("Copy the text")
         .accessibilityLabel(copied ? "Copied" : "Copy the text")
+    }
+}
+
+/// The working state: a shimmer, and after a moment a stop button so nothing can feel stuck.
+/// Normally the words land in a fraction of a second and the × never appears.
+struct ProcessingRow: View {
+    let note: String?
+    let onStop: () -> Void
+    @State private var showStop = false
+    var body: some View {
+        HStack(spacing: 10) {
+            ShimmerLine().frame(width: 80)
+            if let note {
+                Text(note)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(Theme.onGlassDim)
+                    .transition(.blurFade)
+            }
+            if showStop {
+                DismissButton(action: onStop)
+                    .help("Stop")
+                    .accessibilityLabel("Stop")
+                    .transition(.blurFade)
+            }
+        }
+        .animation(Theme.quick, value: showStop)
+        .animation(Theme.quick, value: note)
+        .task {
+            try? await Task.sleep(for: .milliseconds(1500))
+            showStop = true
+        }
     }
 }
 

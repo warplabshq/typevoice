@@ -28,6 +28,8 @@ final class AppState {
     var lastAudio: URL?
     /// File name other apps see when the chip is dragged.
     var lastAudioName = "Voice note.m4a"
+    /// Why the pill is still working, when it is not the usual fraction of a second.
+    var processingNote: String?
     var paused = false
     var warm: WarmProgress = .init(phase: .checking, fraction: 0)
     var isReady: Bool { warm.phase == .ready }

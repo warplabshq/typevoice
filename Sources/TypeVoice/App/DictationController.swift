@@ -194,6 +194,7 @@ final class DictationController {
         finishTask?.cancel(); finishTask = nil
         recorder.cancel()
         locked = false
+        state.processingNote = nil
         state.phase = .idle
         hud?.dismiss()
         Log.app.info("cancelled")
@@ -297,12 +298,21 @@ final class DictationController {
             guard let self else { return }
             var produced: String?
             do {
-                let ready = await transcriber.isReady
-                if !ready {
-                    // Model still loading: wait for it rather than losing the audio.
-                    try await transcriber.warm { [weak self] p in Task { @MainActor in self?.state.warm = p } }
+                if !(await transcriber.isReady) {
+                    // Model still loading: keep the audio and wait, but stay cancellable (Esc or the
+                    // pill's ×) and give up after a while rather than sit on a frozen pill.
+                    state.processingNote = "Loading the speech model…"
+                    let deadline = ContinuousClock.now + .seconds(90)
+                    while !(await transcriber.isReady) {
+                        try Task.checkCancellation()
+                        if let e = state.warmError { throw StuckError.model(e) }
+                        if ContinuousClock.now > deadline { throw StuckError.tooLong }
+                        try await Task.sleep(for: .milliseconds(100))
+                    }
+                    state.processingNote = nil
                 }
-                let transcript = try await transcriber.transcribe(rec.samples)
+                let samples = rec.samples
+                let transcript = try await Self.within(.seconds(30)) { try await self.transcriber.transcribe(samples) }
                 try Task.checkCancellation()
                 var raw = transcript.text
                 Log.asr.info("raw: \(raw)")
@@ -388,13 +398,37 @@ final class DictationController {
         }
     }
 
-    /// Called from the pill's Copy button.
-    /// The × on the pill: retreat now instead of waiting out the linger.
+    /// The × on the pill: retreat now instead of waiting out the linger. While the words are
+    /// still being worked on it is a stop button: the transcription is abandoned.
     func putAway() {
+        if state.phase == .processing { cancel(); return }
         dismiss?.cancel()
         state.lastAudio = nil
         state.phase = .idle
         hud?.dismiss()
+    }
+
+    enum StuckError: LocalizedError {
+        case tooLong
+        case model(String)
+        var errorDescription: String? {
+            switch self {
+            case .tooLong: return "Took too long. Try again"
+            case .model(let e): return e
+            }
+        }
+    }
+
+    /// Runs `work` but gives up after `limit`. A CoreML call cannot be interrupted, so the
+    /// work may finish later on its own; the session just stops waiting for it.
+    static func within<T: Sendable>(_ limit: Duration, _ work: @escaping @Sendable () async throws -> T) async throws -> T {
+        try await withThrowingTaskGroup(of: T.self) { group in
+            group.addTask { try await work() }
+            group.addTask { try await Task.sleep(for: limit); throw StuckError.tooLong }
+            let first = try await group.next()!
+            group.cancelAll()
+            return first
+        }
     }
 
     func copyOffered() {
@@ -413,6 +447,7 @@ final class DictationController {
     }
 
     private func show(_ phase: AppState.Phase, for d: Duration) {
+        state.processingNote = nil
         state.phase = phase
         dismiss?.cancel()
         dismiss = Task { [weak self] in
