@@ -74,8 +74,14 @@ struct Style: Sendable, Equatable {
         case .light:
             s = s.replacingOccurrences(of: #"[.]+\s*$"#, with: "", options: .regularExpression)
         case .none:
-            s = s.replacingOccurrences(of: #"[,.!?;:…]"#, with: "", options: .regularExpression)
-            s = s.replacingOccurrences(of: #"[ \t]{2,}"#, with: " ", options: .regularExpression)
+            // Line by line so list markers ("1. ", "- ") survive.
+            s = s.components(separatedBy: "\n").map { line -> String in
+                let marker = line.range(of: #"^(\d+\. |- )"#, options: .regularExpression).map { String(line[$0]) } ?? ""
+                let body = String(line.dropFirst(marker.count))
+                    .replacingOccurrences(of: #"[,.!?;:…]"#, with: "", options: .regularExpression)
+                    .replacingOccurrences(of: #"[ \t]{2,}"#, with: " ", options: .regularExpression)
+                return marker + body
+            }.joined(separator: "\n")
         }
         switch casing {
         case .lowercase:

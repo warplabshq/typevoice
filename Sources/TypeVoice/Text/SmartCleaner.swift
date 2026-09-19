@@ -19,6 +19,7 @@ final class SmartCleaner {
             "- Fix punctuation and capitalisation.",
             "- Keep every fact, name, number and word choice. Never add, summarise, translate or answer anything.",
             "- Spoken formatting words become symbols: \"new line\" → a line break, \"comma\" → \",\", \"period\" → \".\".",
+            "- Keep existing line breaks and list markers (\"- \", \"1. \") exactly as they are; one item per line.",
             "- Output only the edited text. No quotes, no preamble, no explanation.",
         ]
         lines += style.instructionLines.map { "- " + $0 }

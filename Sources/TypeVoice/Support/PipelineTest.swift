@@ -17,7 +17,17 @@ enum PipelineTest {
                       "Things to buy, bullet milk, bullet eggs, bullet point bread.",
                       "Thanks for the update. New paragraph. I'll review it tomorrow, new line, Priyam.",
                       "The number one priority is speed.",
-                      "Step one open settings, step two, pick a shortcut."] {
+                      "Step one open settings, step two, pick a shortcut.",
+                      "Grocery list: milk, eggs, bread and butter.",
+                      "Grocery list, milk, two kilos of tomatoes, onions, coriander, and paneer.",
+                      "Bullet. Milk. Bullet, eggs. Bullet bread.",
+                      "Shopping list bullet milk, eggs, bread, and some butter.",
+                      "Call Sam, Rohan, and Priya about the launch.",
+                      "I like coffee, books and rain.",
+                      "First, we ship the build. Second, we write the changelog. Third, we post it and go home.",
+                      "First of all, thanks for coming. It means a lot.",
+                      "Things I need from you: the invoice, the signed contract, and the timeline.",
+                      "Packing list, passport, charger, headphones, a jacket."] {
                 print("\(c)\n  →\n\(Structure.commands(c).split(separator: "\n", omittingEmptySubsequences: false).map { "    |" + $0 }.joined(separator: "\n"))")
             }
             exit(0)
