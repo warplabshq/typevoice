@@ -51,6 +51,7 @@ struct HUDView: View {
                 if state.isReady {
                     WaveformView(bands: state.bands, bars: hovering ? 32 : 18, barWidth: 2.5, gap: 2, excited: hovering)
                         .frame(width: hovering ? 150 : 84, height: hovering ? 24 : 20)
+                        .accessibilityLabel(locked ? "Listening, hands-free" : "Listening")
                     if hovering, let since = state.listeningSince {
                         ElapsedLabel(since: since)
                     }
@@ -174,6 +175,7 @@ struct CopyGlyphButton: View {
         .buttonStyle(.plain)
         .onHover { hover = $0 }
         .help("Copy the text")
+        .accessibilityLabel(copied ? "Copied" : "Copy the text")
     }
 }
 
@@ -192,6 +194,7 @@ struct DismissButton: View {
         .buttonStyle(.plain)
         .onHover { hover = $0 }
         .help("Put the pill away")
+        .accessibilityLabel("Put away")
     }
 }
 
@@ -214,5 +217,6 @@ struct AudioChip: View {
         }
         .fixedSize()
         .help("Drag into a message to send the recording")
+        .accessibilityLabel("Recording, \(name). Drag into a message to send it")
     }
 }

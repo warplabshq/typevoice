@@ -9,7 +9,7 @@ import Carbon.HIToolbox
 /// pastes into the app that was frontmost.
 @MainActor
 final class TextInserter {
-    struct Target: Sendable {
+    struct Target: @unchecked Sendable {   // AXUIElement is thread-safe to hold; it is only used on the main actor
         let pid: pid_t
         let appName: String
         let bundleID: String?

@@ -4,6 +4,7 @@ import SwiftUI
 struct MenuContent: View {
     let state: AppState
     let history: HistoryStore
+    let licensing: Licensing
 
     var body: some View {
         Group {
@@ -16,6 +17,15 @@ struct MenuContent: View {
             } else {
                 Text("Hold \(Prefs.triggerLabel) to dictate")
             }
+        }
+        // A quiet nudge in the last stretch of the trial, and the way back in after it.
+        switch licensing.state {
+        case .trial(let days) where days <= 2:
+            Button(days == 1 ? "Last day of your trial · Buy \(Brand.name)…" : "\(days) days left in your trial · Buy…") { openMainWindow(.license) }
+        case .expired:
+            Button("Trial ended · Enter a license key…") { openMainWindow(.license) }
+        default:
+            EmptyView()
         }
         Divider()
         Button("Open \(Brand.name)") { openMainWindow(.history) }
@@ -42,7 +52,11 @@ struct MenuContent: View {
         if Updater.isConfigured {
             Button("Check for Updates…") { Updater.shared.check() }
         }
-        Button("Help…") { NSWorkspace.shared.open(Brand.supportURL) }
+        Menu("Help") {
+            Button("What You Can Say…") { CheatsheetWindow.show() }
+            Button("Help Online…") { NSWorkspace.shared.open(Brand.supportURL) }
+            Button("Report a Problem…") { Support.reportProblem(state: state) }
+        }
         Divider()
         Button("Quit \(Brand.name)") { NSApp.terminate(nil) }
             .keyboardShortcut("q")

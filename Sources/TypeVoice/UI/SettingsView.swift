@@ -2,6 +2,7 @@ import ServiceManagement
 import SwiftUI
 
 struct SettingsView: View {
+    let state: AppState
     @AppStorage(Prefs.Key.trigger) private var trigger = Prefs.Trigger.fn.rawValue
     @AppStorage(Prefs.Key.smartCleanup) private var smart = true
     @AppStorage(Prefs.Key.numbersAsDigits) private var numbers = true
@@ -16,6 +17,7 @@ struct SettingsView: View {
     @AppStorage(Prefs.Key.insertion) private var insertion = Prefs.Insertion.auto.rawValue
     @AppStorage(Prefs.Key.leadingSpace) private var leadingSpace = false
     @AppStorage(Prefs.Key.keepRecordings) private var keepRecordings = false
+    @AppStorage(Prefs.Key.recordingDays) private var recordingDays = 7
     @AppStorage(Prefs.Key.triggerMode) private var triggerMode = Prefs.TriggerMode.hold.rawValue
     @AppStorage(Prefs.Key.doubleTapLock) private var doubleTapLock = true
     @AppStorage(Prefs.Key.inputDeviceUID) private var inputDeviceUID = ""
@@ -45,10 +47,11 @@ struct SettingsView: View {
                 Text(showMenuBarIcon ? "\(Brand.name) lives in the menu bar; there is no Dock icon." : "With the icon hidden, open \(Brand.name) again from Finder or Spotlight to get here.")
                     .font(.callout).foregroundStyle(.secondary)
                 UpdatesRows()
-                LabeledContent("Links") {
+                LabeledContent("Help") {
                     HStack(spacing: 12) {
-                        Button("Help") { NSWorkspace.shared.open(Brand.supportURL) }.buttonStyle(.link)
-                        Button("Website") { NSWorkspace.shared.open(Brand.website) }.buttonStyle(.link)
+                        Button("What you can say") { CheatsheetWindow.show() }.buttonStyle(.link)
+                        Button("Online help") { NSWorkspace.shared.open(Brand.supportURL) }.buttonStyle(.link)
+                        Button("Report a problem") { Support.reportProblem(state: state) }.buttonStyle(.link)
                     }
                 }
             }
@@ -155,6 +158,16 @@ struct SettingsView: View {
                 Toggle("Offer the audio after each dictation", isOn: $keepRecordings)
                 Text("Keeps a small recording of each dictation and shows a Drag audio chip on the pill. Drag it, or a row in Summary, into iMessage, Slack or WhatsApp to send your voice instead of the words. Stored only on this Mac.")
                     .font(.callout).foregroundStyle(.secondary)
+                if keepRecordings {
+                    Picker("Keep recordings for", selection: $recordingDays) {
+                        Text("A day").tag(1)
+                        Text("A week").tag(7)
+                        Text("A month").tag(30)
+                        Text("Forever").tag(0)
+                    }
+                    Text("Older audio is deleted; the words stay in Summary. About 240 KB a minute of speech.")
+                        .font(.callout).foregroundStyle(.secondary)
+                }
             }
 
             Section {

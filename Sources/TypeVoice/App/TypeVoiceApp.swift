@@ -9,10 +9,19 @@ struct TypeVoiceApp: App {
 
     var body: some Scene {
         MenuBarExtra(isInserted: $showMenuBarIcon) {
-            MenuContent(state: delegate.state, history: delegate.history)
+            MenuContent(state: delegate.state, history: delegate.history, licensing: delegate.licensing)
         } label: {
-            Image(nsImage: MenuBarIcon.image)
-                .accessibilityLabel(Brand.name)
+            Image(nsImage: MenuBarIcon.image(for: delegate.state.phase, paused: delegate.state.paused))
+                .accessibilityLabel(menuBarLabel)
+        }
+    }
+
+    private var menuBarLabel: String {
+        if delegate.state.paused { return "\(Brand.name), paused" }
+        switch delegate.state.phase {
+        case .listening: return "\(Brand.name), listening"
+        case .processing: return "\(Brand.name), typing"
+        default: return Brand.name
         }
     }
 }
@@ -42,6 +51,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         Self.shared = self
         installMainMenu()
         RecordingStore.cleanDragLinks()
+        RecordingStore.prune()
+        Timer.scheduledTimer(withTimeInterval: 86400, repeats: true) { _ in Task { @MainActor in RecordingStore.prune() } }
         if Log.debugTimings {
             DistributedNotificationCenter.default().addObserver(
                 forName: Notification.Name("typevoice.debug.showTab"), object: nil, queue: .main

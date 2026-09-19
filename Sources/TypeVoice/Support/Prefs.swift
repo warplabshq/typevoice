@@ -26,6 +26,7 @@ enum Prefs {
         static let insertion = "insertion"             // "auto" | "paste"
         static let leadingSpace = "leadingSpace"       // Bool: prefix a space when pasting (for web apps)
         static let keepRecordings = "keepRecordings"   // Bool: save audio as .m4a
+        static let recordingDays = "recordingDays"     // Int: delete recordings older than this (0 = keep forever)
         static let triggerMode = "triggerMode"         // TriggerMode
         static let doubleTapLock = "doubleTapLock"     // Bool: double-tap keeps listening (hold mode)
         static let inputDeviceUID = "inputDeviceUID"   // String? (nil = system default)
@@ -116,6 +117,7 @@ enum Prefs {
             Key.voiceCommands: true,
             Key.pauseParagraphs: true,
             Key.insertion: Insertion.auto.rawValue,
+            Key.recordingDays: 7,
             Key.leadingSpace: false,
             Key.keepRecordings: false,
             Key.triggerMode: TriggerMode.hold.rawValue,
@@ -143,6 +145,7 @@ enum Prefs {
     static var pauseParagraphs: Bool { d.bool(forKey: Key.pauseParagraphs) }
     static var insertion: Insertion { Insertion(rawValue: d.string(forKey: Key.insertion) ?? "") ?? .auto }
     static var leadingSpace: Bool { d.bool(forKey: Key.leadingSpace) }
+    static var recordingDays: Int { d.integer(forKey: Key.recordingDays) }
     static var keepRecordings: Bool { d.bool(forKey: Key.keepRecordings) }
     static var triggerMode: TriggerMode { TriggerMode(rawValue: d.string(forKey: Key.triggerMode) ?? "") ?? .hold }
     static var doubleTapLock: Bool { d.bool(forKey: Key.doubleTapLock) }

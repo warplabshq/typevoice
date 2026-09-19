@@ -97,6 +97,20 @@ enum RecordingStore {
         if let u = url(for: id) { try? FileManager.default.removeItem(at: u) }
     }
 
+    /// Removes recordings older than the retention setting. The dictation stays in Summary;
+    /// only its audio goes. Runs at launch and once a day after.
+    static func prune(olderThanDays days: Int = Prefs.recordingDays) {
+        guard days > 0 else { return }
+        let cutoff = Date().addingTimeInterval(-Double(days) * 86400)
+        guard let items = try? FileManager.default.contentsOfDirectory(at: folder, includingPropertiesForKeys: [.creationDateKey]) else { return }
+        var n = 0
+        for u in items where u.pathExtension == "m4a" {
+            guard let c = try? u.resourceValues(forKeys: [.creationDateKey]).creationDate, c < cutoff else { continue }
+            try? FileManager.default.removeItem(at: u); n += 1
+        }
+        if n > 0 { Log.app.info("pruned \(n) recordings older than \(days) days") }
+    }
+
     static func deleteAll() {
         try? FileManager.default.removeItem(at: folder)
         try? FileManager.default.createDirectory(at: folder, withIntermediateDirectories: true)

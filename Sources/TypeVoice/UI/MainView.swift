@@ -60,7 +60,7 @@ struct MainView: View {
                 case .history: HistoryView(history: history)
                 case .dictionary: DictionaryView(dictionary: dictionary)
                 case .style: StyleView()
-                case .settings: SettingsView()
+                case .settings: SettingsView(state: state)
                 case .license: LicenseView(licensing: licensing)
                 case .privacy: PrivacyView(history: history, dictionary: dictionary)
                 }
