@@ -35,7 +35,10 @@ actor ParakeetTranscriber: Transcriber {
                 }
             )
             progress(.init(phase: .loading, fraction: 0))
-            let m = AsrManager(config: .default)
+            // v2's blank id up front, and no seam-gap repair: that pass re-decodes around any
+            // pause ≥ 1.5 s in recordings over 15 s (a thinking pause, for a dictation) and on
+            // this speaker's recordings it changed nothing while adding ~300 ms.
+            let m = AsrManager(config: ASRConfig(tdtConfig: TdtConfig(blankId: 1024), seamGapRepair: false))
             try await m.loadModels(models)
             self.manager = m
             Log.timing("asr.warm", since: t0)

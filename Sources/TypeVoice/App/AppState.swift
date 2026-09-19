@@ -9,7 +9,8 @@ final class AppState {
         case listening(locked: Bool)
         case processing
         case done(String)
-        case notHeard
+        /// Nothing usable came in; `silent` means the microphone delivered nothing at all.
+        case notHeard(silent: Bool)
         case error(String)
         /// Nothing to type into: offer the text for copying.
         case copyOffer(String, copied: Bool)

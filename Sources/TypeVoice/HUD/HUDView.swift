@@ -6,6 +6,8 @@ struct HUDView: View {
     var onCopy: () -> Void = {}
     var onDismiss: () -> Void = {}
     @State private var hovering = false
+    /// True after ten seconds of one session; resets with the next.
+    @State private var longHold = false
 
     private var phase: AppState.Phase { state.phase }
     private var shown: Bool { phase.isActive }
@@ -28,6 +30,12 @@ struct HUDView: View {
             .padding(HUDWindow.margin)
             .frame(width: HUDWindow.canvas.width, height: HUDWindow.canvas.height, alignment: alignment)
             .animation(phase == .idle ? Theme.springSoft : Theme.spring, value: phase)
+            .task(id: state.listeningSince) {
+                longHold = false
+                guard state.listeningSince != nil else { return }
+                try? await Task.sleep(for: .seconds(10))
+                if state.phase.isListening { withAnimation(Theme.quick) { longHold = true } }
+            }
     }
 
     private var pill: some View {
@@ -52,7 +60,8 @@ struct HUDView: View {
                     WaveformView(bands: state.bands, bars: hovering ? 32 : 18, barWidth: 2.5, gap: 2, excited: hovering)
                         .frame(width: hovering ? 150 : 84, height: hovering ? 24 : 20)
                         .accessibilityLabel(locked ? "Listening, hands-free" : "Listening")
-                    if hovering, let since = state.listeningSince {
+                    // The clock shows on hover, and on its own once a dictation runs long.
+                    if let since = state.listeningSince, hovering || longHold {
                         ElapsedLabel(since: since)
                     }
                 } else {
@@ -118,9 +127,17 @@ struct HUDView: View {
             .transition(.blurFade)
             .id("copy")
 
-        case .notHeard:
-            message("Didn't catch that", icon: "waveform.slash")
-                .id("notheard")
+        case .notHeard(let silent):
+            if silent {
+                HStack(spacing: 10) {
+                    message("Nothing from \(AudioRecorder.currentInputName() ?? "the microphone") · is the right mic chosen?", icon: "mic.slash")
+                    SettingsGlyphButton { openMainWindow(.settings) }
+                }
+                .id("silent")
+            } else {
+                message("Didn't catch that", icon: "waveform.slash")
+                    .id("notheard")
+            }
 
         case .error(let msg):
             message(msg, icon: "exclamationmark.circle")
@@ -206,6 +223,25 @@ struct ProcessingRow: View {
             try? await Task.sleep(for: .milliseconds(1500))
             showStop = true
         }
+    }
+}
+
+/// A gear on the pill: straight to Settings when the microphone is the problem.
+struct SettingsGlyphButton: View {
+    let action: () -> Void
+    @State private var hover = false
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "gearshape.fill")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundStyle(hover ? Color.black : Theme.onGlassDim)
+                .frame(width: 22, height: 22)
+                .background(hover ? Color.white : Color.white.opacity(0.12), in: Circle())
+        }
+        .buttonStyle(.plain)
+        .onHover { hover = $0 }
+        .help("Open Settings")
+        .accessibilityLabel("Open Settings")
     }
 }
 

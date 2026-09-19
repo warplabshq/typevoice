@@ -10,6 +10,60 @@ enum RecordingStore {
         return dir
     }()
 
+    /// The voice note nobody minds listening to: silence at either end is trimmed, and any
+    /// pause longer than 1.5 s inside is shortened to 0.7 s. Words are untouched; only the
+    /// dead air goes. The transcript is always made from the original samples.
+    static func tightened(_ samples: [Float], sampleRate: Int = 16_000) -> [Float] {
+        let frame = sampleRate / 50                       // 20 ms
+        guard samples.count > frame * 10 else { return samples }
+        // Per-frame RMS, then a floor from the quietest fifth of the frames plus a margin.
+        var rms: [Float] = []
+        rms.reserveCapacity(samples.count / frame + 1)
+        var i = 0
+        while i < samples.count {
+            let n = min(frame, samples.count - i)
+            var acc: Float = 0
+            for j in i..<(i + n) { acc += samples[j] * samples[j] }
+            rms.append((acc / Float(n)).squareRoot())
+            i += n
+        }
+        let sorted = rms.sorted()
+        let floor = sorted[sorted.count / 5]
+        let loud = sorted[sorted.count * 4 / 5]
+        // Well above the noise floor, but never so high that soft syllables count as silence.
+        let gate = min(max(floor * 4, 0.003), max(loud / 6, 0.003))
+        let speech = rms.map { $0 > gate }
+        guard speech.contains(true) else { return samples }
+        let keepPause = frame * 35                         // 0.7 s
+        let longPause = frame * 75                         // 1.5 s
+        let edge = frame * 12                              // 0.24 s of room around the first and last word
+        let first = speech.firstIndex(of: true)!, last = speech.lastIndex(of: true)!
+        var out: [Float] = []
+        out.reserveCapacity(samples.count)
+        var f = max(0, first - edge / frame)
+        let end = min(rms.count, last + 1 + edge / frame)
+        while f < end {
+            if speech[f] {
+                out.append(contentsOf: samples[(f * frame)..<min(samples.count, (f + 1) * frame)])
+                f += 1
+                continue
+            }
+            var g = f
+            while g < end, !speech[g] { g += 1 }
+            let run = (g - f) * frame
+            if run > longPause {
+                // Keep the head and tail of the pause so the cut is inaudible.
+                let half = keepPause / 2
+                out.append(contentsOf: samples[(f * frame)..<(f * frame + half)])
+                out.append(contentsOf: samples[(g * frame - half)..<min(samples.count, g * frame)])
+            } else {
+                out.append(contentsOf: samples[(f * frame)..<min(samples.count, g * frame)])
+            }
+            f = g
+        }
+        return out
+    }
+
     /// Encodes 16 kHz mono samples to AAC (~32 kbps). Returns the file URL.
     static func save(samples: [Float], id: UUID) throws -> URL {
         let url = folder.appendingPathComponent("\(id.uuidString).m4a")

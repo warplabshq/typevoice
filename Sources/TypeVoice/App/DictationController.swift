@@ -21,6 +21,7 @@ final class DictationController {
     private var pressStart: ContinuousClock.Instant?
     private var lockWindow: Task<Void, Never>?
     private var finishTask: Task<Void, Never>?
+    private var lengthCap: Task<Void, Never>?
     private var dismiss: Task<Void, Never>?
     private var levelSmoother: Float = 0
 
@@ -28,6 +29,9 @@ final class DictationController {
     static let shortHold: Duration = .milliseconds(300)
     static let minSpeech: Double = 0.35         // seconds
     static let minPeak: Float = 0.004            // raw amplitude, ≈ -48 dBFS; Parakeet is the real judge
+    static let silentPeak: Float = 0.0005        // below this the mic is delivering nothing (muted, wrong device, no permission)
+    /// Longest single dictation. Past this the words so far are typed; nobody wants an hour in one paste.
+    static let maxSeconds: Double = 10 * 60
 
     init(state: AppState, history: HistoryStore, dictionary: DictionaryStore) {
         self.state = state
@@ -167,6 +171,14 @@ final class DictationController {
         locked = Prefs.triggerMode == .toggle          // toggle mode is hands-free by nature
         state.listeningSince = .now
         state.phase = .listening(locked: locked)
+        lengthCap?.cancel()
+        lengthCap = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(Self.maxSeconds))
+            guard let self, !Task.isCancelled, self.state.phase.isListening else { return }
+            Log.app.info("length cap reached; finishing")
+            self.lockWindow?.cancel(); self.lockWindow = nil
+            self.finish()
+        }
         hud?.present(for: target)
         Log.app.info("listening → \(self.target?.appName ?? "?")")
         Log.d("listening → \(target?.appName ?? "?") ax=\(target?.element != nil) ctx=\(target?.context.textBeforeCaret?.suffix(20).description ?? "nil")")
@@ -191,6 +203,7 @@ final class DictationController {
 
     func cancel() {
         lockWindow?.cancel(); lockWindow = nil
+        lengthCap?.cancel(); lengthCap = nil
         finishTask?.cancel(); finishTask = nil
         recorder.cancel()
         locked = false
@@ -251,7 +264,8 @@ final class DictationController {
         case "copy": state.phase = .copyOffer(sample, copied: false)
         case "copied": state.phase = .copyOffer(sample, copied: true)
         case "error": state.phase = .error("Can't type into a password field. Copied instead.")
-        case "notheard": state.phase = .notHeard
+        case "notheard": state.phase = .notHeard(silent: false)
+        case "silent": state.phase = .notHeard(silent: true)
         default:
             state.lastAudio = nil
             state.phase = .idle; hud?.dismiss(); return
@@ -284,13 +298,16 @@ final class DictationController {
 
     private func finish(with rec: AudioRecorder.Recording) {
         guard state.phase.isListening else { return }
+        lengthCap?.cancel(); lengthCap = nil
         let t0 = ContinuousClock.now
         locked = false
         state.phase = .processing
 
         guard rec.seconds >= Self.minSpeech, rec.peak >= Self.minPeak else {
             Log.d("not heard: \(String(format: "%.2f", rec.seconds))s peak=\(rec.peak)")
-            show(.notHeard, for: .milliseconds(900))
+            // A held key with a flat line is a mic problem, not a mumble: say so, and offer Settings.
+            let silent = rec.seconds >= 1.0 && rec.peak < Self.silentPeak
+            show(.notHeard(silent: silent), for: .milliseconds(silent ? 4000 : 900))
             return
         }
         let target = self.target
@@ -343,7 +360,7 @@ final class DictationController {
                 try Task.checkCancellation()
 
                 guard !text.trimmingCharacters(in: .whitespaces).isEmpty else {
-                    show(.notHeard, for: .milliseconds(900)); return
+                    show(.notHeard(silent: false), for: .milliseconds(900)); return
                 }
 
                 guard let target else { throw TextInserter.InsertError.noFocusedApp }
@@ -352,7 +369,7 @@ final class DictationController {
                     let entry = Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
                                           bundleID: target.bundleID, seconds: rec.seconds, latencyMs: Int((ContinuousClock.now - t0).ms))
                     history.add(entry)
-                    if Prefs.keepRecordings, let url = try? RecordingStore.save(samples: rec.samples, id: entry.id) { history.attachAudio(id: entry.id, url: url) }
+                    if Prefs.keepRecordings, let url = try? RecordingStore.save(samples: RecordingStore.tightened(rec.samples), id: entry.id) { history.attachAudio(id: entry.id, url: url) }
                         show(.copyOffer(text.trimmingCharacters(in: .whitespaces), copied: false), for: .seconds(8))
                     return
                 }
@@ -368,7 +385,7 @@ final class DictationController {
                 state.lastAudio = nil
                 if Prefs.keepRecordings {
                     let samples = rec.samples
-                    let url = try? await Task.detached(priority: .utility) { try RecordingStore.save(samples: samples, id: entry.id) }.value
+                    let url = try? await Task.detached(priority: .utility) { try RecordingStore.save(samples: RecordingStore.tightened(samples), id: entry.id) }.value
                     state.lastAudioName = RecordingStore.fileName(for: entry.text)
                     state.lastAudio = url
                     if let url { history.attachAudio(id: entry.id, url: url) }

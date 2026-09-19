@@ -120,6 +120,12 @@ final class AudioRecorder: @unchecked Sendable {
         }
     }
 
+    /// The microphone a session records from: the chosen one if it's connected, else the default.
+    static func currentInputName() -> String? {
+        if let uid = Prefs.inputDeviceUID, let dev = InputDevices.device(uid: uid) { return dev.name }
+        return defaultInputName()
+    }
+
     /// Name of the system default input, for diagnostics.
     static func defaultInputName() -> String? {
         var id = AudioDeviceID(0)
