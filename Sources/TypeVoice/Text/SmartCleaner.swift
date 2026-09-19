@@ -48,27 +48,40 @@ final class SmartCleaner {
 
     /// The definite answer, in the OS's own words, for the Settings indicator.
     enum Status: Equatable {
-        case ready, off, downloading, notEligible, other(String)
+        case ready, off, downloading, notEligible
+        /// Siri and the Mac speak different flavours of English; Apple requires a match.
+        case languageMismatch(siri: String, mac: String)
+        /// Apple Intelligence isn't offered where this Mac is (region, language, boot drive…).
+        case blocked(String)
+        case other(String)
+
         var isReady: Bool { self == .ready }
         var title: String {
             switch self {
             case .ready: "Apple Intelligence is ready"
             case .off: "Apple Intelligence is off"
-            case .downloading: "Apple Intelligence hasn't finished downloading"
+            case .downloading: "Apple Intelligence is still downloading"
             case .notEligible: "This Mac can't run Apple Intelligence"
+            case .languageMismatch: "Siri and the Mac need the same language"
+            case .blocked: "Apple Intelligence isn't available on this Mac"
             case .other: "Apple Intelligence isn't available"
             }
         }
         var detail: String {
             switch self {
             case .ready: "Sentences are tidied by Apple's on-device model. Nothing is sent anywhere."
-            case .off: "Turn it on in System Settings › Siri (the pane is called Apple Intelligence & Siri on some Macs). Until then, cleanup uses the built-in rules."
-            case .downloading: "macOS downloads the model only once Apple Intelligence is switched on, while the Mac is on power and Wi-Fi. If the Siri pane shows no Apple Intelligence switch at all, set Siri › Language to the same language as the Mac (both English (United States), say): Apple requires them to match. This turns green by itself when it's done; until then, cleanup uses the built-in rules."
+            case .off: "Turn it on in System Settings › Apple Intelligence & Siri. Until then, cleanup uses the built-in rules, which do most of the work."
+            case .downloading: "This Mac qualifies; macOS fetches the model in the background while it's on power and Wi-Fi, usually within an hour of switching Apple Intelligence on. This turns green by itself when it's done. Until then, cleanup uses the built-in rules."
             case .notEligible: "Cleanup uses the built-in rules, which do most of the work."
+            case .languageMismatch(let siri, let mac):
+                "Siri is set to \(siri) and the Mac to \(mac). Apple only offers Apple Intelligence when they match: in System Settings › Apple Intelligence & Siri, set Language to \(mac) (or change the Mac's language to \(siri) under General › Language & Region). The switch appears once they agree. Until then, cleanup uses the built-in rules."
+            case .blocked(let why): "\(why) Cleanup uses the built-in rules, which do most of the work."
             case .other(let r): "\(r). Cleanup uses the built-in rules meanwhile."
             }
         }
-        var canOpenSettings: Bool { self == .off || self == .downloading }
+        var canOpenSettings: Bool {
+            switch self { case .off, .downloading, .languageMismatch: true; default: false }
+        }
     }
 
     static var status: Status {
@@ -78,7 +91,7 @@ final class SmartCleaner {
         case .unavailable(let r):
             switch r {
             case .appleIntelligenceNotEnabled: return .off
-            case .modelNotReady: return .downloading
+            case .modelNotReady: return Eligibility.explainNotReady()
             case .deviceNotEligible: return .notEligible
             @unknown default: return .other(String(describing: r))
             }
@@ -86,6 +99,54 @@ final class SmartCleaner {
         #else
         return .other("Requires macOS 26")
         #endif
+    }
+
+    /// Why "not ready" really is not ready. Apple's API says `.modelNotReady` both while the
+    /// model downloads and when the Mac will never get it, so read the system's own
+    /// eligibility record (world-readable) and name the input that fails.
+    enum Eligibility {
+        private static let record = "/private/var/db/eligibilityd/eligibility.plist"
+
+        static func explainNotReady() -> Status {
+            guard let data = FileManager.default.contents(atPath: record),
+                  let plist = try? PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any],
+                  let gm = plist["OS_ELIGIBILITY_DOMAIN_GREYMATTER"] as? [String: Any],
+                  let answer = gm["os_eligibility_answer_t"] as? Int else { return .downloading }
+            // 4 = eligible: the model really is on its way.
+            if answer >= 3 { return .downloading }
+            let status = gm["status"] as? [String: Int] ?? [:]
+            let failing = status.filter { $0.value == 2 }.map(\.key)   // 2 = this input rules the Mac out
+            if failing.contains("OS_ELIGIBILITY_INPUT_DEVICE_AND_SIRI_LANGUAGE_MATCH") {
+                return .languageMismatch(siri: siriLanguageName, mac: macLanguageName)
+            }
+            if failing.contains(where: { $0.hasSuffix("SIRI_LANGUAGE") }) {
+                return .blocked("Siri's language (\(siriLanguageName)) isn't one Apple Intelligence supports yet; English (United States) is the safe choice in System Settings › Apple Intelligence & Siri › Language.")
+            }
+            if failing.contains(where: { $0.hasSuffix("DEVICE_LANGUAGE") }) {
+                return .blocked("The Mac's language (\(macLanguageName)) isn't one Apple Intelligence supports yet.")
+            }
+            if failing.contains(where: { $0.contains("COUNTRY") || $0.contains("REGION") }) {
+                return .blocked("Apple hasn't opened Apple Intelligence in this Mac's region yet.")
+            }
+            if failing.contains("OS_ELIGIBILITY_INPUT_EXTERNAL_BOOT_DRIVE") {
+                return .blocked("Apple Intelligence doesn't run from an external boot drive.")
+            }
+            if failing.contains(where: { $0.contains("DEVICE_CLASS") || $0.contains("GENERATIVE_MODEL") }) {
+                return .notEligible
+            }
+            return failing.isEmpty ? .downloading : .blocked("macOS reports this Mac isn't eligible right now.")
+        }
+
+        /// "English (India)": what Siri is set to, from Siri's own preference domain.
+        static var siriLanguageName: String {
+            let id = (CFPreferencesCopyAppValue("Session Language" as CFString, "com.apple.assistant.backedup" as CFString) as? String) ?? "its language"
+            return Locale.current.localizedString(forIdentifier: id) ?? id
+        }
+        /// "English (US)": the Mac's first preferred language.
+        static var macLanguageName: String {
+            let id = Locale.preferredLanguages.first ?? "en"
+            return Locale.current.localizedString(forIdentifier: id) ?? id
+        }
     }
 
     var unavailableReason: String? {
