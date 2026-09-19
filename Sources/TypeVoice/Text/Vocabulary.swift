@@ -63,6 +63,9 @@ enum Vocabulary {
         guard ratio > 0.6, ratio < 1.5 else { return false }
         let raw = similarity(cPhon, keyPhon)
         let threshold: Double = keyPhon.count <= 4 ? 0.9 : (keyPhon.count <= 7 ? 0.78 : 0.7)
+        // A short name that only differs by its ending is usually a different name (Priya /
+        // Priyam, Ram / Rama), not a mishearing; leave those alone.
+        if cPhon != keyPhon, (keyPhon.hasPrefix(cPhon) || cPhon.hasPrefix(keyPhon)), min(cPhon.count, keyPhon.count) <= 5 { return false }
         if raw >= threshold { return true }
         // Vowels are what speech models get wrong most; allow a consonant-frame match
         // when the raw similarity is still reasonable and the frame is long enough to mean something.
