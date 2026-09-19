@@ -215,11 +215,11 @@ final class BarsView: NSView {
             // slow swell runs across the whole shape, so it reads as alive but never as noise.
             let time = Date().timeIntervalSince(self.demoStart)
             let shape = BrandWave.silhouette(bars: self.bars)
-            let maxH = self.bounds.height * 0.9
+            let maxH = self.bounds.height * 0.9 / 0.74          // the tallest bar reaches 90 % of the view
             let swell = 0.9 + 0.1 * sin(time * 1.1)
             let heights = shape.enumerated().map { i, f -> CGFloat in
-                let sway = 1 + 0.16 * sin(time * 2.3 + Double(i) * 0.9)
-                return max(2, f * maxH * swell * sway)
+                let sway = 1 + 0.12 * sin(time * 2.3 + Double(i) * 0.9)
+                return max(self.barWidth, f * maxH * swell * sway)
             }
             self.layoutBars(heights: heights, animated: true)
         }

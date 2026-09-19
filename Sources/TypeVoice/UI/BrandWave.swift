@@ -1,14 +1,26 @@
 import AppKit
 import SwiftUI
 
-/// The one waveform. Eight bars, these heights, rounded ends, bars a little wider than the
-/// gaps between them: the app icon, the menu bar glyph, the sidebar tile, the site's
-/// favicon and the resting shape of every live waveform all draw this. Change it here
-/// and re-run `make icon`; nothing else hard-codes a bar.
+/// The one waveform. Eight bars, these heights, rounded ends, and fixed proportions taken
+/// from the app icon: the gap is 0.82 of a bar's width and the tallest bar is 8.35 bar
+/// widths high. Give any drawing a bar width and the rest follows, so the menu bar glyph,
+/// the sidebar tile, the Summary card, the site's favicon and the resting shape of every
+/// live waveform are the same object at different sizes. Change it here and re-run
+/// `make icon`; nothing else hard-codes a bar.
 enum BrandWave {
     static let heights: [CGFloat] = [0.16, 0.30, 0.52, 0.74, 0.46, 0.62, 0.34, 0.20]
-    /// Gap as a fraction of the bar width, from the icon (0.045 / 0.055).
+    /// Gap as a fraction of the bar width (icon: 0.045 / 0.055).
     static let gapRatio: CGFloat = 0.82
+    /// Tallest bar as a multiple of the bar width (icon: 0.74 × 0.62 / 0.055).
+    static let tallest: CGFloat = 8.35
+
+    /// Bar heights in points for a given bar width.
+    static func barHeights(barWidth bw: CGFloat, heights: [CGFloat] = heights) -> [CGFloat] {
+        heights.map { max(bw, $0 / 0.74 * tallest * bw) }
+    }
+    static func width(barWidth bw: CGFloat, bars: Int = heights.count) -> CGFloat {
+        CGFloat(bars) * bw + CGFloat(bars - 1) * bw * gapRatio
+    }
 
     /// The same silhouette spread over any number of bars, for the live waveforms at rest.
     static func silhouette(bars: Int) -> [CGFloat] {
@@ -23,16 +35,18 @@ enum BrandWave {
     }
 
     /// A template NSImage of the glyph, for the menu bar and anywhere AppKit wants a picture.
+    /// `height` is the canvas; the bars are sized by `barWidth` alone and centred in it.
     static func image(height h: CGFloat, barWidth bw: CGFloat, alpha: CGFloat = 1, heights: [CGFloat] = heights) -> NSImage {
-        let gap = (bw * gapRatio * 4).rounded() / 4
-        let w = CGFloat(heights.count) * bw + CGFloat(heights.count - 1) * gap
+        let gap = bw * gapRatio
+        let w = width(barWidth: bw)
+        let bars = barHeights(barWidth: bw, heights: heights)
         let img = NSImage(size: NSSize(width: ceil(w), height: h), flipped: false) { rect in
             NSColor.black.withAlphaComponent(alpha).setFill()
             var x = (rect.width - w) / 2
-            for f in heights {
+            for bh in bars {
                 // Snap to half points so bars stay crisp at 2x.
-                let bh = (f * h * 0.86 * 2).rounded() / 2
-                let r = NSRect(x: x, y: ((h - bh) / 2 * 2).rounded() / 2, width: bw, height: bh)
+                let hh = min(h, (bh * 2).rounded() / 2)
+                let r = NSRect(x: x, y: ((h - hh) / 2 * 2).rounded() / 2, width: bw, height: hh)
                 NSBezierPath(roundedRect: r, xRadius: bw / 2, yRadius: bw / 2).fill()
                 x += bw + gap
             }
@@ -43,19 +57,17 @@ enum BrandWave {
     }
 }
 
-/// The glyph as a SwiftUI view, in the current foreground colour.
+/// The glyph as a SwiftUI view, in the current foreground colour. Size it by bar width.
 struct BrandGlyph: View {
-    var height: CGFloat = 14
     var barWidth: CGFloat = 1.6
     var body: some View {
-        let gap = barWidth * BrandWave.gapRatio
-        HStack(alignment: .center, spacing: gap) {
-            ForEach(Array(BrandWave.heights.enumerated()), id: \.offset) { _, f in
-                Capsule(style: .continuous)
-                    .frame(width: barWidth, height: max(barWidth, f * height * 0.86))
+        let bars = BrandWave.barHeights(barWidth: barWidth)
+        HStack(alignment: .center, spacing: barWidth * BrandWave.gapRatio) {
+            ForEach(Array(bars.enumerated()), id: \.offset) { _, h in
+                Capsule(style: .continuous).frame(width: barWidth, height: h)
             }
         }
-        .frame(height: height)
+        .frame(height: bars.max() ?? barWidth)
         .accessibilityHidden(true)
     }
 }
