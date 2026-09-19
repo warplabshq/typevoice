@@ -101,11 +101,11 @@ struct LicenseView: View {
     /// "You've saved 1h 40m of typing so far — about 45 minutes a week." Nothing until
     /// there is at least a few minutes to point at; a made-up number would read as a pitch.
     private var benefitLine: String? {
-        guard let s = history?.stats, s.count >= 3 else { return nil }
-        let saved = HistoryView.secondsSaved(words: s.words, talking: s.seconds)
+        guard let s = history?.stats, s.allCount >= 3 else { return nil }
+        let saved = HistoryView.secondsSaved(words: s.allWords, talking: s.allSeconds)
         guard saved >= 180 else { return nil }
-        // This week's words at the overall speaking pace, the same estimate Summary shows.
-        let weekTalking = s.wordsPerMinute > 0 ? Double(s.weekWords) / s.wordsPerMinute * 60 : 0
+        // This week's words at the overall speaking pace.
+        let weekTalking = s.allWordsPerMinute > 0 ? Double(s.weekWords) / s.allWordsPerMinute * 60 : 0
         let weekly = HistoryView.secondsSaved(words: s.weekWords, talking: weekTalking)
         var line = "You've saved \(Fmt.durationLong(saved)) of typing so far"
         // Mention the week only once it is a fraction of a longer history, not a repeat of the total.

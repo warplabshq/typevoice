@@ -125,7 +125,7 @@ struct HistoryView: View {
                 .help("Delete every dictation")
             }
         }
-        .confirmationDialog("Clear all \(history.stats.count.formatted()) dictations?", isPresented: $confirmClear, titleVisibility: .visible) {
+        .confirmationDialog("Clear all \(history.stats.allCount.formatted()) dictations?", isPresented: $confirmClear, titleVisibility: .visible) {
             Button("Clear History", role: .destructive) { history.clear(); selection.removeAll() }
         } message: {
             Text("This only affects \(Brand.name)'s history on this Mac. Text you already inserted into other apps stays where it is.")
@@ -175,14 +175,20 @@ struct HistoryView: View {
                                 .monospacedDigit()
                                 .foregroundStyle(Color(red: 0.20, green: 0.78, blue: 0.45))
                                 .contentTransition(.numericText())
-                            if s.weekWords > 0 {
-                                Text("\(Fmt.durationLong(Self.secondsSaved(words: s.weekWords, talking: weekSeconds))) this week")
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
+                            // The range's name, and the all-time figure when the range is narrower.
+                            Text(history.range == .all || s.allCount == s.count
+                                 ? rangeName
+                                 : "\(rangeName) · \(Fmt.durationLong(Self.secondsSaved(words: s.allWords, talking: s.allSeconds))) all time")
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
+                                .contentTransition(.opacity)
                         }
-                        if s.count == 0 {
+                        if s.allCount == 0 {
                             Text("Hold \(Prefs.triggerLabel) anywhere and start talking.")
+                                .font(.callout)
+                                .foregroundStyle(.tertiary)
+                        } else if s.count == 0 {
+                            Text("Nothing dictated \(rangeName) yet.")
                                 .font(.callout)
                                 .foregroundStyle(.tertiary)
                         } else {
@@ -203,8 +209,8 @@ struct HistoryView: View {
                 }
             }
             HStack(spacing: 12) {
-                StatTile(value: Fmt.count(s.words), label: "Words", detail: "\(Fmt.count(s.weekWords)) this week")
-                StatTile(value: Fmt.count(s.count), label: "Dictations", detail: "\(Fmt.count(s.weekCount)) this week")
+                StatTile(value: Fmt.count(s.words), label: "Words", detail: compare(s.words, s.allWords))
+                StatTile(value: Fmt.count(s.count), label: "Dictations", detail: compare(s.count, s.allCount))
                 StatTile(value: Fmt.duration(s.seconds), label: "Time talking", detail: s.count > 0 ? "\(Int(s.seconds / Double(s.count)))s on average" : nil)
                 StatTile(value: s.wordsPerMinute > 0 ? "\(Int(s.wordsPerMinute))" : "–", label: "Words / min", detail: "typing is about 40")
             }
@@ -212,11 +218,16 @@ struct HistoryView: View {
         }
     }
 
-    /// Seconds spoken this week, estimated from this week's words at the overall pace.
-    private var weekSeconds: Double {
-        let s = history.stats
-        guard s.wordsPerMinute > 0 else { return 0 }
-        return Double(s.weekWords) / s.wordsPerMinute * 60
+    /// Tile footnote: the all-time figure when the range is narrower, or a plain word when
+    /// the range already holds everything.
+    private func compare(_ inRange: Int, _ all: Int) -> String {
+        if history.range == .all { return "all time" }
+        return inRange == all ? "everything so far" : "\(Fmt.count(all)) all time"
+    }
+
+    /// "today", "this week", "this month", "all time" — the range in prose.
+    private var rangeName: String {
+        switch history.range { case .today: "today"; case .week: "this week"; case .month: "this month"; case .all: "all time" }
     }
 
     private enum ExportFormat: String { case txt, md, csv, json }

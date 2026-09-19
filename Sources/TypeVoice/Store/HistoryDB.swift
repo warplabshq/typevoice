@@ -8,12 +8,18 @@ final class HistoryDB: @unchecked Sendable {
     private let q = DispatchQueue(label: "typevoice.history", qos: .userInitiated)
 
     struct Stats: Sendable, Equatable {
+        /// Within the Summary's range (or all time when the range is All).
         var count = 0
         var words = 0
         var seconds: Double = 0
+        /// All time, for the "of N" comparisons and the License tab.
+        var allCount = 0
+        var allWords = 0
+        var allSeconds: Double = 0
         var weekCount = 0
         var weekWords = 0
         var wordsPerMinute: Double { seconds > 0 ? Double(words) / (seconds / 60) : 0 }
+        var allWordsPerMinute: Double { allSeconds > 0 ? Double(allWords) / (allSeconds / 60) : 0 }
     }
 
     init(url: URL) {
@@ -144,26 +150,37 @@ final class HistoryDB: @unchecked Sendable {
     }
 
     /// O(1) totals from the maintained `totals` row plus an index-range scan for the week.
-    func stats() -> Stats {
+    /// Totals for the range starting at `since` (nil = all time), plus the all-time and
+    /// seven-day figures the cards compare against. The all-time numbers come from the
+    /// `totals` row kept by triggers; the ranged ones are one indexed sum.
+    func stats(since: Date?) -> Stats {
         q.sync {
             var s = Stats()
             var st: OpaquePointer?
             if sqlite3_prepare_v2(db, "SELECT count, words, seconds FROM totals WHERE id = 1", -1, &st, nil) == SQLITE_OK {
                 if sqlite3_step(st) == SQLITE_ROW {
-                    s.count = Int(sqlite3_column_int64(st, 0))
-                    s.words = Int(sqlite3_column_int64(st, 1))
-                    s.seconds = sqlite3_column_double(st, 2)
+                    s.allCount = Int(sqlite3_column_int64(st, 0))
+                    s.allWords = Int(sqlite3_column_int64(st, 1))
+                    s.allSeconds = sqlite3_column_double(st, 2)
                 }
                 sqlite3_finalize(st)
             }
-            let weekAgo = Date().addingTimeInterval(-7 * 86400).timeIntervalSince1970
-            if sqlite3_prepare_v2(db, "SELECT COUNT(*), COALESCE(SUM(words),0) FROM dictations WHERE date > ?", -1, &st, nil) == SQLITE_OK {
-                sqlite3_bind_double(st, 1, weekAgo)
-                if sqlite3_step(st) == SQLITE_ROW {
-                    s.weekCount = Int(sqlite3_column_int64(st, 0))
-                    s.weekWords = Int(sqlite3_column_int64(st, 1))
+            func sum(after t: Date) -> (Int, Int, Double) {
+                var r = (0, 0, 0.0)
+                if sqlite3_prepare_v2(db, "SELECT COUNT(*), COALESCE(SUM(words),0), COALESCE(SUM(seconds),0) FROM dictations WHERE date >= ?", -1, &st, nil) == SQLITE_OK {
+                    sqlite3_bind_double(st, 1, t.timeIntervalSince1970)
+                    if sqlite3_step(st) == SQLITE_ROW {
+                        r = (Int(sqlite3_column_int64(st, 0)), Int(sqlite3_column_int64(st, 1)), sqlite3_column_double(st, 2))
+                    }
+                    sqlite3_finalize(st)
                 }
-                sqlite3_finalize(st)
+                return r
+            }
+            (s.weekCount, s.weekWords, _) = sum(after: Date().addingTimeInterval(-7 * 86400))
+            if let since {
+                (s.count, s.words, s.seconds) = sum(after: since)
+            } else {
+                (s.count, s.words, s.seconds) = (s.allCount, s.allWords, s.allSeconds)
             }
             return s
         }

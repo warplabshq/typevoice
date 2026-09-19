@@ -85,7 +85,7 @@ final class HistoryStore {
         db.insert(d)
         d.audioURL = RecordingStore.url(for: d.id)
         if query.isEmpty { entries.insert(d, at: 0) } else { reload() }
-        stats = db.stats()
+        stats = db.stats(since: range.since)
     }
 
     /// A recording saved after the row was added (it's encoded in the background).
@@ -101,21 +101,21 @@ final class HistoryStore {
         ids.forEach(RecordingStore.delete)
         db.delete(Array(ids))
         entries.removeAll { ids.contains($0.id) }
-        stats = db.stats()
+        stats = db.stats(since: range.since)
     }
 
     func clear() {
         RecordingStore.deleteAll()
         db.clear()
         entries.removeAll()
-        stats = db.stats()
+        stats = db.stats(since: range.since)
     }
 
     func reload() {
         let page = Self.withAudio(db.page(query: query, since: range.since, before: nil, beforeRow: nil, limit: Self.pageSize))
         entries = page
         hasMore = page.count == Self.pageSize
-        stats = db.stats()
+        stats = db.stats(since: range.since)
     }
 
     func loadMore() {
@@ -139,7 +139,7 @@ final class HistoryStore {
         }
         return out
     }
-    var isEmpty: Bool { stats.count == 0 }
+    var isEmpty: Bool { stats.allCount == 0 }
 
     /// One-time import of the v0 JSON file.
     private func migrateJSONIfNeeded() {
