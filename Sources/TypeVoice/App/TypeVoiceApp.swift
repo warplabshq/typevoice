@@ -116,17 +116,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         Log.d("launch complete; screens=\(NSScreen.screens.count)")
     }
 
-    /// `typevoice://activate?key=…` from the site's thank-you page: land on the License tab
-    /// with the key filled in and activate it.
+    /// typevoice:// URLs. `activate?key=…` comes from the site's thank-you page and lands
+    /// on the License tab with the key activated. `start`, `stop`, `toggle` and `cancel`
+    /// drive dictation from Shortcuts, Raycast, a Stream Deck or a shell (`open typevoice://toggle`).
     func application(_ application: NSApplication, open urls: [URL]) {
-        for url in urls where url.scheme == Brand.urlScheme && url.host == "activate" {
-            let key = URLComponents(url: url, resolvingAgainstBaseURL: false)?
-                .queryItems?.first { $0.name == "key" }?.value?.trimmingCharacters(in: .whitespacesAndNewlines)
-            guard let key, !key.isEmpty else { continue }
-            Log.app.info("license key arrived by URL")
-            showMain(tab: .license)
-            NotificationCenter.default.post(name: .typevoiceShowTab, object: MainTab.license)
-            Task { await licensing.activate(key) }
+        for url in urls where url.scheme == Brand.urlScheme {
+            switch url.host {
+            case "activate":
+                let key = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                    .queryItems?.first { $0.name == "key" }?.value?.trimmingCharacters(in: .whitespacesAndNewlines)
+                guard let key, !key.isEmpty else { continue }
+                Log.app.info("license key arrived by URL")
+                showMain(tab: .license)
+                NotificationCenter.default.post(name: .typevoiceShowTab, object: MainTab.license)
+                Task { await licensing.activate(key) }
+            case "start": controller?.startHandsFree()
+            case "stop": controller?.stopAndType()
+            case "toggle": controller?.toggle()
+            case "cancel": controller?.cancel()
+            case "settings": showMain(tab: .settings)
+            default: Log.app.warning("unknown URL \(url.absoluteString)")
+            }
         }
     }
 

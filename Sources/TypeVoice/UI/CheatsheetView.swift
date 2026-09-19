@@ -25,6 +25,10 @@ struct CheatsheetView: View {
                 ("Drag audio", "With the audio option on, drag your voice into any chat."),
                 ("Summary", "Every dictation, searchable, with time saved."),
             ])
+            group("From other apps", [
+                ("typevoice://toggle", "Start or stop hands-free dictation from Shortcuts, Raycast, a Stream Deck or a script."),
+                ("typevoice://start · stop · cancel", "The same, one action each."),
+            ])
             Text("Voice commands and pause paragraphs can be turned off in Settings › Dictating.")
                 .font(.callout).foregroundStyle(.secondary)
         }

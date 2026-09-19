@@ -199,6 +199,28 @@ final class DictationController {
         Log.app.info("cancelled")
     }
 
+    // MARK: Remote control (typevoice:// URLs, for Shortcuts, Raycast, Stream Deck…)
+
+    /// Starts a hands-free session as if the trigger had been double-tapped.
+    func startHandsFree() {
+        guard state.phase == .idle || !state.phase.isListening else { return }
+        press()
+        guard state.phase.isListening else { return }
+        lockWindow?.cancel(); lockWindow = nil
+        locked = true
+        state.phase = .listening(locked: true)
+    }
+
+    /// Ends the session and types the words; nothing happens if none is running.
+    func stopAndType() {
+        lockWindow?.cancel(); lockWindow = nil
+        finish()
+    }
+
+    func toggle() {
+        if state.phase.isListening { stopAndType() } else { startHandsFree() }
+    }
+
     // MARK: Pipeline
 
     /// Debug: run a full session with audio from a file instead of the microphone.
