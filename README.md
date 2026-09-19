@@ -3,7 +3,7 @@
 Local dictation for Mac. Hold a key, talk, release: clean, punctuated text lands at your
 cursor in any app. Everything runs on the Mac — no account, no server, no telemetry.
 
-Sold directly (free for three days, then one purchase, no subscription) and updated in place
+Sold directly (free for seven days, then one purchase, no subscription) and updated in place
 with Sparkle. The source is here under the Apache 2.0 licence so you can see exactly what it
 does with your voice, build it yourself, or improve it. See `TRADEMARKS.md` about the name
 and icon.
@@ -26,7 +26,7 @@ and icon.
 - **Voice notes (opt-in):** Settings › Indicator › Offer the audio after each dictation
   keeps a small AAC file per dictation; drag the chip on the pill, or a Summary row, into
   any chat.
-- **Licensing:** a three-day trial, then a license key from [Dodo Payments](https://dodopayments.com)
+- **Licensing:** a seven-day trial, then a license key from [Dodo Payments](https://dodopayments.com)
   (the merchant of record). The app talks to Dodo's public license endpoints only to
   activate, deactivate, or re-check a key (weekly, with a 30-day offline grace period).
 - **Updates:** [Sparkle](https://sparkle-project.org), checking an appcast on the website once

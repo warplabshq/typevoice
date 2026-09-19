@@ -3,6 +3,7 @@ import SwiftUI
 
 struct LicenseView: View {
     let licensing: Licensing
+    var history: HistoryStore? = nil
     @State private var key = ""
     @FocusState private var keyFocused: Bool
 
@@ -19,6 +20,14 @@ struct LicenseView: View {
                 case .licensed:
                     hero(icon: "checkmark.seal.fill", title: "\(Brand.name) is yours",
                          text: "Thank you. This Mac is activated; use the same key on the other Macs you work on.")
+                }
+            }
+            if !licensing.isLicensed, let line = benefitLine {
+                // One quiet line: what the trial has already given back, in the user's own numbers.
+                Section {
+                    Label(line, systemImage: "clock.arrow.circlepath")
+                        .foregroundStyle(.secondary)
+                        .font(.callout)
                 }
             }
             if licensing.isLicensed {
@@ -87,6 +96,21 @@ struct LicenseView: View {
 
     private func activate() {
         Task { await licensing.activate(key) }
+    }
+
+    /// "You've saved 1h 40m of typing so far — about 45 minutes a week." Nothing until
+    /// there is at least a few minutes to point at; a made-up number would read as a pitch.
+    private var benefitLine: String? {
+        guard let s = history?.stats, s.count >= 3 else { return nil }
+        let saved = HistoryView.secondsSaved(words: s.words, talking: s.seconds)
+        guard saved >= 180 else { return nil }
+        // This week's words at the overall speaking pace, the same estimate Summary shows.
+        let weekTalking = s.wordsPerMinute > 0 ? Double(s.weekWords) / s.wordsPerMinute * 60 : 0
+        let weekly = HistoryView.secondsSaved(words: s.weekWords, talking: weekTalking)
+        var line = "You've saved \(Fmt.durationLong(saved)) of typing so far"
+        // Mention the week only once it is a fraction of a longer history, not a repeat of the total.
+        if weekly >= 300, weekly < saved * 0.8 { line += ", \(Fmt.durationLong(weekly)) of it this week" }
+        return line + ". Buying once keeps that going."
     }
 
     private func hero(icon: String, title: String, text: String) -> some View {

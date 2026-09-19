@@ -18,7 +18,7 @@ struct MenuContent: View {
                 Text("Hold \(Prefs.triggerLabel) to dictate")
             }
         }
-        // A quiet nudge in the last stretch of the trial, and the way back in after it.
+        // A quiet nudge in the last two days of the trial, and the way back in after it.
         switch licensing.state {
         case .trial(let days) where days <= 2:
             Button(days == 1 ? "Last day of your trial · Buy \(Brand.name)…" : "\(days) days left in your trial · Buy…") { openMainWindow(.license) }

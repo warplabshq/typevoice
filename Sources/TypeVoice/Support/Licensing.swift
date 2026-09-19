@@ -1,7 +1,7 @@
 import Foundation
 import Observation
 
-/// Three-day free trial, then a license key from Dodo Payments (the merchant of record).
+/// Seven-day free trial, then a license key from Dodo Payments (the merchant of record).
 /// Network: only Dodo's three public license endpoints, and only when you activate,
 /// deactivate, or on the weekly re-check. Nothing else ever leaves the Mac.
 @MainActor
@@ -13,7 +13,7 @@ final class Licensing {
         case licensed
     }
 
-    static let trialDays = 3
+    static let trialDays = 7
     /// Re-check an activated key this often; a Mac that has been offline longer than the
     /// grace period falls back to the trial rules until it can reach Dodo again.
     static let revalidateEvery: TimeInterval = 7 * 86400
