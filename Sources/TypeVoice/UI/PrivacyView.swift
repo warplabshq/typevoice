@@ -23,7 +23,7 @@ struct PrivacyView: View {
                     : "Audio is captured only while you hold the key, and is discarded the moment it's transcribed. It is never written to disk.")
                 row("cpu", "Speech recognition runs on the Neural Engine using NVIDIA's Parakeet model. No audio is ever sent anywhere.")
                 row("sparkles", "Smart cleanup uses Apple Intelligence's on-device model. Text stays on this Mac.")
-                row("network", "Network use is limited to the one-time model download from huggingface.co and App Store purchase validation through RevenueCat. No analytics, no accounts.")
+                row("network", "Network use is limited to: the one-time model download from huggingface.co, the update check against \(Brand.name)'s own appcast, and, once you buy a license, activating and re-checking that key with Dodo Payments. No analytics, no accounts.")
                 row("internaldrive", "History is a small database and your dictionary a text file, both on this Mac, both yours to open, back up or delete.")
             }
             Section("Legal") {

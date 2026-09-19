@@ -69,6 +69,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         controller = DictationController(state: state, history: history, dictionary: dictionary)
         controller.licensing = licensing
+        _ = Updater.shared
         hud = HUDController(state: state)
         hud.onCopy = { [weak self] in self?.controller.copyOffered() }
         hud.onDismiss = { [weak self] in self?.controller.putAway() }
@@ -102,6 +103,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         }
         Log.app.info("\(Brand.name) launched")
         Log.d("launch complete; screens=\(NSScreen.screens.count)")
+    }
+
+    /// `typevoice://activate?key=…` from the site's thank-you page: land on the License tab
+    /// with the key filled in and activate it.
+    func application(_ application: NSApplication, open urls: [URL]) {
+        for url in urls where url.scheme == Brand.urlScheme && url.host == "activate" {
+            let key = URLComponents(url: url, resolvingAgainstBaseURL: false)?
+                .queryItems?.first { $0.name == "key" }?.value?.trimmingCharacters(in: .whitespacesAndNewlines)
+            guard let key, !key.isEmpty else { continue }
+            Log.app.info("license key arrived by URL")
+            showMain(tab: .license)
+            NotificationCenter.default.post(name: .typevoiceShowTab, object: MainTab.license)
+            Task { await licensing.activate(key) }
+        }
     }
 
     func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {

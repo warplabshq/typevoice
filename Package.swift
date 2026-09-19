@@ -6,20 +6,22 @@ let package = Package(
     platforms: [.macOS("26.0")],
     dependencies: [
         .package(url: "https://github.com/FluidInference/FluidAudio.git", from: "0.15.7"),
-        .package(url: "https://github.com/RevenueCat/purchases-ios-spm.git", from: "5.90.0"),
+        .package(url: "https://github.com/sparkle-project/Sparkle", from: "2.10.0"),
     ],
     targets: [
         .executableTarget(
             name: "TypeVoice",
             dependencies: [
                 .product(name: "FluidAudio", package: "FluidAudio"),
-                .product(name: "RevenueCat", package: "purchases-ios-spm"),
+                .product(name: "Sparkle", package: "Sparkle"),
             ],
             path: "Sources/TypeVoice",
             swiftSettings: [
                 .swiftLanguageMode(.v5),
             ],
             linkerSettings: [
+                // Sparkle is a dynamic framework, embedded in the bundle by the Makefile.
+                .unsafeFlags(["-Xlinker", "-rpath", "-Xlinker", "@executable_path/../Frameworks"]),
                 .linkedFramework("AppKit"),
                 .linkedFramework("Carbon"),
                 .linkedFramework("ServiceManagement"),

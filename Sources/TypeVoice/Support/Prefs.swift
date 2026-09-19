@@ -23,7 +23,8 @@ enum Prefs {
         static let customShortcut = "customShortcut"   // Shortcut (JSON)
         static let voiceCommands = "voiceCommands"     // Bool: new line / bullet / number one
         static let pauseParagraphs = "pauseParagraphs" // Bool: paragraph after a pause
-        static let leadingSpace = "leadingSpace"       // Bool: prefix a space (for web apps)
+        static let insertion = "insertion"             // "auto" | "paste"
+        static let leadingSpace = "leadingSpace"       // Bool: prefix a space when pasting (for web apps)
         static let keepRecordings = "keepRecordings"   // Bool: save audio as .m4a
         static let triggerMode = "triggerMode"         // TriggerMode
         static let doubleTapLock = "doubleTapLock"     // Bool: double-tap keeps listening (hold mode)
@@ -61,6 +62,11 @@ enum Prefs {
         var tint: Double { switch self { case .glass: return 0.30; case .dark: return 0.62; case .black: return 0.96 } }
     }
 
+    enum Insertion: String, CaseIterable, Identifiable {
+        case auto, paste
+        var id: String { rawValue }
+    }
+
     enum PillShadow: String, CaseIterable, Identifiable {
         case none, soft, strong
         var id: String { rawValue }
@@ -90,6 +96,7 @@ enum Prefs {
 
 
     static func registerDefaults() {
+        _ = Paths.support   // runs the sandbox-container migration before any default is read
         UserDefaults.standard.register(defaults: [
             Key.trigger: Trigger.fn.rawValue,
             Key.smartCleanup: true,
@@ -108,6 +115,7 @@ enum Prefs {
             Key.pillShadow: PillShadow.soft.rawValue,
             Key.voiceCommands: true,
             Key.pauseParagraphs: true,
+            Key.insertion: Insertion.auto.rawValue,
             Key.leadingSpace: false,
             Key.keepRecordings: false,
             Key.triggerMode: TriggerMode.hold.rawValue,
@@ -133,6 +141,7 @@ enum Prefs {
     static var pillLook: PillLook { PillLook(rawValue: d.string(forKey: Key.pillLook) ?? "") ?? .black }
     static var voiceCommands: Bool { d.bool(forKey: Key.voiceCommands) }
     static var pauseParagraphs: Bool { d.bool(forKey: Key.pauseParagraphs) }
+    static var insertion: Insertion { Insertion(rawValue: d.string(forKey: Key.insertion) ?? "") ?? .auto }
     static var leadingSpace: Bool { d.bool(forKey: Key.leadingSpace) }
     static var keepRecordings: Bool { d.bool(forKey: Key.keepRecordings) }
     static var triggerMode: TriggerMode { TriggerMode(rawValue: d.string(forKey: Key.triggerMode) ?? "") ?? .hold }

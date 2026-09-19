@@ -1,45 +1,66 @@
-# TypeVoice build. `make` builds a release .app into build/, `make run` launches it.
+# TypeVoice build. `make` builds a release .app into build/, `make run` launches it,
+# `make release` signs it with Developer ID, notarizes it and writes the Sparkle appcast.
 APP      := TypeVoice
 BUNDLE   := build/$(APP).app
-BIN      := .build/release/$(APP)
-# Signing: a stable identity keeps Accessibility/Microphone grants across rebuilds.
-# Ad-hoc ("-") changes identity on every build, so macOS forgets the grant each time.
+CONFIG   ?= release
+SPARKLE  := .build/artifacts/sparkle/Sparkle
+ENTITLEMENTS := Packaging/$(APP).entitlements
+
+# Day-to-day signing: a stable identity keeps Accessibility/Microphone grants across rebuilds.
+# Ad-hoc ("-") changes identity on every build, so macOS would forget the grant each time;
+# the Makefile pins an identifier-based designated requirement instead.
 # Auto-picks "TypeVoice Dev" (self-signed, see README) or an Apple Development cert.
 SIGN_ID  ?= $(shell security find-identity -v -p codesigning 2>/dev/null | grep -oE '"(TypeVoice Dev|Apple Development[^"]*)"' | head -1 | tr -d '"')
 ifeq ($(SIGN_ID),)
 SIGN_ID  := -
 endif
-CONFIG   ?= release
 
-.PHONY: all build app run clean debug
+# Release signing: the Developer ID Application certificate from your Apple Developer account,
+# and a notarytool keychain profile (`xcrun notarytool store-credentials TypeVoice`).
+RELEASE_ID ?= $(shell security find-identity -v -p codesigning 2>/dev/null | grep -oE '"Developer ID Application[^"]*"' | head -1 | tr -d '"')
+NOTARY_PROFILE ?= TypeVoice
+# Where the zip is published; the appcast points here. GitHub Releases works with no server.
+DOWNLOAD_URL ?= https://github.com/priyam-raj/typevoice/releases/download/v$(VERSION)/
+VERSION  := $(shell /usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Packaging/Info.plist)
+
+.PHONY: all build app run debug clean release notarize appcast keys icon
 
 all: app
 
-SECRETS = Sources/TypeVoice/Support/Secrets.swift
-$(SECRETS):
-	@cp Secrets.example.swift $(SECRETS) && echo "created $(SECRETS) from the template (fill in the RevenueCat key when you have it)"
-
-build: $(SECRETS)
+build:
 	swift build -c $(CONFIG) 2>&1 | tail -20
 
 app: build
 	@rm -rf $(BUNDLE)
-	@mkdir -p $(BUNDLE)/Contents/MacOS $(BUNDLE)/Contents/Resources
+	@mkdir -p $(BUNDLE)/Contents/MacOS $(BUNDLE)/Contents/Resources $(BUNDLE)/Contents/Frameworks
 	@cp .build/$(CONFIG)/$(APP) $(BUNDLE)/Contents/MacOS/$(APP)
 	@cp Packaging/Info.plist $(BUNDLE)/Contents/Info.plist
 	@# SPM resource bundles (if any) live next to the binary; ship them in Resources.
 	@for b in .build/$(CONFIG)/*.bundle; do [ -d "$$b" ] && cp -R "$$b" $(BUNDLE)/Contents/Resources/ || true; done
 	@[ -f Packaging/AppIcon.icns ] && cp Packaging/AppIcon.icns $(BUNDLE)/Contents/Resources/ || true
-	@# Ad-hoc signatures get a stable designated requirement (identifier-based) so TCC grants
-	@# survive rebuilds; a real certificate gets the default (identifier + anchor).
-	@if [ "$(SIGN_ID)" = "-" ]; then \
-	  codesign --force --sign - --options runtime --entitlements Packaging/TypeVoice.entitlements \
-	    --requirements '=designated => identifier "com.priyamventures.typevoice"' $(BUNDLE) 2>&1 | grep -v "replacing existing signature" || true; \
+	@# Sparkle ships as a dynamic framework; embed it where the rpath expects it. Its XPC
+	@# services only matter for sandboxed apps, so they stay out of the bundle.
+	@cp -R $(SPARKLE)/Sparkle.xcframework/macos-arm64_x86_64/Sparkle.framework $(BUNDLE)/Contents/Frameworks/
+	@rm -rf $(BUNDLE)/Contents/Frameworks/Sparkle.framework/Versions/B/XPCServices
+	@$(MAKE) --no-print-directory sign IDENTITY="$(SIGN_ID)"
+	@echo "→ $(BUNDLE)  (signed: $(SIGN_ID))"
+
+# Inside-out signing: Sparkle's nested helpers first, then the framework, then the app.
+# Ad-hoc signatures get an identifier-based designated requirement so TCC grants survive
+# rebuilds, and skip the hardened runtime (its library validation refuses an ad-hoc framework
+# in an ad-hoc process); a real certificate gets the default requirement and the runtime.
+sign:
+	@F=$(BUNDLE)/Contents/Frameworks/Sparkle.framework; \
+	 codesign -f -s "$(IDENTITY)" -o runtime $$F/Versions/B/Autoupdate 2>&1 | grep -v "replacing existing" || true; \
+	 codesign -f -s "$(IDENTITY)" -o runtime $$F/Versions/B/Updater.app 2>&1 | grep -v "replacing existing" || true; \
+	 codesign -f -s "$(IDENTITY)" -o runtime $$F 2>&1 | grep -v "replacing existing" || true
+	@if [ "$(IDENTITY)" = "-" ]; then \
+	  codesign -f -s - --entitlements $(ENTITLEMENTS) \
+	    --requirements '=designated => identifier "com.priyamventures.typevoice"' $(BUNDLE) 2>&1 | grep -v "replacing existing" || true; \
 	else \
-	  codesign --force --sign "$(SIGN_ID)" --options runtime --entitlements Packaging/TypeVoice.entitlements $(BUNDLE) 2>&1 | grep -v "replacing existing signature" || true; \
+	  codesign -f -s "$(IDENTITY)" -o runtime --timestamp --entitlements $(ENTITLEMENTS) $(BUNDLE) 2>&1 | grep -v "replacing existing" || true; \
 	fi
 	@codesign --verify --deep --strict $(BUNDLE) && echo "signature verified" || echo "WARNING: signature invalid"
-	@echo "→ $(BUNDLE)  (signed: $(SIGN_ID))"
 
 run: app
 	@pkill -x $(APP) 2>/dev/null || true
@@ -48,17 +69,50 @@ run: app
 debug:
 	@$(MAKE) CONFIG=debug run
 
+clean:
+	rm -rf .build build dist
 
-# App Store: regenerate the Xcode project, archive, and upload to App Store Connect.
-# Needs DEVELOPMENT_TEAM in project.yml and teamID in Packaging/ExportOptions.plist,
-# and an App Store Connect API key or an Apple ID signed in to Xcode.
-.PHONY: project archive
-project: $(SECRETS)
-	xcodegen generate
+# ---- Release ------------------------------------------------------------------------
+# make release → dist/TypeVoice-<version>.zip (Sparkle update), dist/TypeVoice.dmg (the site's
+# Download button) and dist/appcast.xml. Copy appcast.xml into the site repo and upload the
+# zip + dmg to the GitHub release tagged v<version>.
+release: app
+	@[ -n "$(RELEASE_ID)" ] || { echo "No Developer ID Application certificate in the keychain (see README › Releasing)"; exit 1; }
+	@$(MAKE) --no-print-directory sign IDENTITY="$(RELEASE_ID)"
+	@mkdir -p dist && rm -f dist/$(APP)-$(VERSION).zip dist/$(APP).dmg
+	@ditto -c -k --keepParent $(BUNDLE) dist/$(APP)-$(VERSION).zip
+	@$(MAKE) --no-print-directory notarize FILE=dist/$(APP)-$(VERSION).zip
+	@xcrun stapler staple $(BUNDLE) && rm -f dist/$(APP)-$(VERSION).zip && ditto -c -k --keepParent $(BUNDLE) dist/$(APP)-$(VERSION).zip
+	@$(MAKE) --no-print-directory dmg
+	@$(MAKE) --no-print-directory appcast
+	@echo "→ dist/$(APP)-$(VERSION).zip  dist/$(APP).dmg  dist/appcast.xml"
 
-archive: project
-	@rm -rf build/TypeVoice.xcarchive
-	xcodebuild -project TypeVoice.xcodeproj -scheme TypeVoice -configuration Release \
-	  -archivePath build/TypeVoice.xcarchive archive 2>&1 | grep -E "error:|ARCHIVE" 
-	xcodebuild -exportArchive -archivePath build/TypeVoice.xcarchive \
-	  -exportOptionsPlist Packaging/ExportOptions.plist -exportPath build/export 2>&1 | grep -E "error:|EXPORT|Upload"
+notarize:
+	xcrun notarytool submit $(FILE) --keychain-profile $(NOTARY_PROFILE) --wait
+
+# A plain DMG: the app plus an Applications shortcut. Notarized and stapled on its own.
+dmg:
+	@rm -rf build/dmg && mkdir -p build/dmg
+	@cp -R $(BUNDLE) build/dmg/ && ln -s /Applications build/dmg/Applications
+	@hdiutil create -quiet -volname $(APP) -srcfolder build/dmg -ov -format UDZO dist/$(APP).dmg
+	@codesign -f -s "$(RELEASE_ID)" --timestamp dist/$(APP).dmg
+	@$(MAKE) --no-print-directory notarize FILE=dist/$(APP).dmg
+	@xcrun stapler staple dist/$(APP).dmg
+
+# Sparkle appcast for everything in dist/. Needs the EdDSA private key in the login
+# keychain (`make keys`, once). Release notes: put dist/TypeVoice-<version>.html next to the zip.
+appcast:
+	$(SPARKLE)/bin/generate_appcast --download-url-prefix "$(DOWNLOAD_URL)" -o dist/appcast.xml dist/
+
+# One-time: EdDSA key pair for update signing. Prints the public key for SUPublicEDKey in
+# Packaging/Info.plist; the private key lives in your login keychain. Back it up (-x).
+keys:
+	$(SPARKLE)/bin/generate_keys
+
+# Regenerate Packaging/AppIcon.icns from Tools/icon.swift.
+icon:
+	@rm -rf build/AppIcon.iconset && mkdir -p build/AppIcon.iconset
+	@swift Tools/icon.swift build/AppIcon.iconset
+	@cd build/AppIcon.iconset && for s in 16 32 128 256 512; do \
+	   cp icon_$$s.png icon_$${s}x$${s}.png; d=$$((s*2)); cp icon_$$d.png icon_$${s}x$${s}@2x.png; done && rm icon_[0-9]*.png
+	@iconutil -c icns build/AppIcon.iconset -o Packaging/AppIcon.icns && echo "→ Packaging/AppIcon.icns"

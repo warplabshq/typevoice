@@ -169,7 +169,7 @@ final class DictationController {
         state.phase = .listening(locked: locked)
         hud?.present(for: target)
         Log.app.info("listening → \(self.target?.appName ?? "?")")
-        Log.d("listening → \(target?.appName ?? "?")")
+        Log.d("listening → \(target?.appName ?? "?") ax=\(target?.element != nil) ctx=\(target?.context.textBeforeCaret?.suffix(20).description ?? "nil")")
     }
 
     private func release() {
@@ -268,8 +268,10 @@ final class DictationController {
                     }
                 }
                 text = style.finish(text)
-                text = Cleaner.fit(text, to: .unknown, style: style)
-                if Prefs.leadingSpace, let f = text.first, !f.isWhitespace, !f.isPunctuation { text = " " + text }
+                let context = Prefs.insertion == .auto ? (target?.context ?? .unknown) : .unknown
+                text = Cleaner.fit(text, to: context, style: style)
+                // Blind paste (no readable field): Mac text views add the space themselves; web apps may not.
+                if context.textBeforeCaret == nil, Prefs.leadingSpace, let f = text.first, !f.isWhitespace, !f.isPunctuation { text = " " + text }
                 produced = text.trimmingCharacters(in: .whitespaces)
                 try Task.checkCancellation()
 

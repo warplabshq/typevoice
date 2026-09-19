@@ -13,6 +13,7 @@ struct SettingsView: View {
     @AppStorage(Prefs.Key.pillLook) private var pillLook = Prefs.PillLook.black.rawValue
     @AppStorage(Prefs.Key.pillShadow) private var pillShadow = Prefs.PillShadow.soft.rawValue
     @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
+    @AppStorage(Prefs.Key.insertion) private var insertion = Prefs.Insertion.auto.rawValue
     @AppStorage(Prefs.Key.leadingSpace) private var leadingSpace = false
     @AppStorage(Prefs.Key.keepRecordings) private var keepRecordings = false
     @AppStorage(Prefs.Key.triggerMode) private var triggerMode = Prefs.TriggerMode.hold.rawValue
@@ -43,9 +44,9 @@ struct SettingsView: View {
                 Toggle("Show in menu bar", isOn: $showMenuBarIcon)
                 Text(showMenuBarIcon ? "\(Brand.name) lives in the menu bar; there is no Dock icon." : "With the icon hidden, open \(Brand.name) again from Finder or Spotlight to get here.")
                     .font(.callout).foregroundStyle(.secondary)
-                LabeledContent("Version") {
+                UpdatesRows()
+                LabeledContent("Links") {
                     HStack(spacing: 12) {
-                        Text(Brand.version).foregroundStyle(.secondary)
                         Button("Help") { NSWorkspace.shared.open(Brand.supportURL) }.buttonStyle(.link)
                         Button("Website") { NSWorkspace.shared.open(Brand.website) }.buttonStyle(.link)
                     }
@@ -158,7 +159,13 @@ struct SettingsView: View {
 
             Section {
                 DisclosureGroup("Advanced", isExpanded: $advanced) {
-                    Toggle("Start with a space", isOn: $leadingSpace)
+                    Picker("Insert text via", selection: $insertion) {
+                        Text("Accessibility, then paste").tag(Prefs.Insertion.auto.rawValue)
+                        Text("Always paste").tag(Prefs.Insertion.paste.rawValue)
+                    }
+                    Text("Accessibility types straight into the field and reads the words before the cursor to get spacing and capitals right. Pasting is the fallback for apps that don't expose their fields.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Toggle("Start with a space when pasting", isOn: $leadingSpace)
                     Text("Mac apps add the space before pasted text themselves. Turn this on if a web app you use doesn't.")
                         .font(.callout).foregroundStyle(.secondary)
                     LabeledContent("Speech model") {

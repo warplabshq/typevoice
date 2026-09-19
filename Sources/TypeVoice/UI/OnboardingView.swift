@@ -73,8 +73,8 @@ struct OnboardingView: View {
                 icon: "hand.raised.fill", title: "Accessibility",
                 text: axHint,
                 done: ax,
-                action: ("Open Accessibility settings", { askedAX = .now; Permissions.requestAccessibility(); Permissions.openAccessibilityPane() }),
-                secondary: askedAX == nil ? ("Show \(Brand.name) in Finder", { Permissions.revealApp() }) : ("Relaunch \(Brand.name)", { Permissions.relaunch() })
+                action: ("Allow Accessibility", { askedAX = .now; Permissions.requestAccessibility(); Permissions.openAccessibilityPane() }),
+                secondary: askedAX == nil ? nil : ("Relaunch \(Brand.name)", { Permissions.relaunch() })
             )
         case 2:
             StepCard(
@@ -130,9 +130,9 @@ struct OnboardingView: View {
 
     private var axHint: String {
         if let t = askedAX, Date.now.timeIntervalSince(t) > 8, !ax {
-            return "In the Accessibility list, press + and choose \(Brand.name) (in Applications), or drag it in from Finder, then turn its switch on. If it's listed but the switch is on and nothing happens, relaunch."
+            return "Turn on \(Brand.name) in the Accessibility list that just opened. If the switch is already on and nothing happens, relaunch; if \(Brand.name) isn't listed, press + and pick it from Applications."
         }
-        return "Needed to notice the key you hold and to paste the text into the app you're using. \(Brand.name) never reads what's on your screen. macOS doesn't let a sandboxed app ask for this itself: press + in the list and pick \(Brand.name)."
+        return "Needed to notice the key you hold and to type the words into the app you're using. \(Brand.name) never reads what's on your screen."
     }
 
     private var micAction: (String, () -> Void) {

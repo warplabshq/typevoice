@@ -20,18 +20,11 @@ enum Permissions {
 
     static var accessibility: Bool { AXIsProcessTrusted() }
 
-    /// Asks for the system prompt. A sandboxed app never gets one and is not added to the
-    /// Accessibility list by this call (tccd answers the check only), so the onboarding
-    /// walks people through adding the app with the list's + button instead.
+    /// Shows the system prompt (once per app signature), which also lists the app in the
+    /// Accessibility pane so the user only has to flip its switch.
     static func requestAccessibility() {
         let opts = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
         _ = AXIsProcessTrustedWithOptions(opts)
-    }
-
-    /// Selects the app in Finder so it can be dragged into the Accessibility list, or found
-    /// through the list's + button.
-    static func revealApp() {
-        NSWorkspace.shared.activateFileViewerSelecting([Bundle.main.bundleURL])
     }
 
     static func openAppleIntelligencePane() {

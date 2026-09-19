@@ -8,24 +8,24 @@ someone say *this is too good*", not "more".
 macOS 26 or later on Apple silicon, Xcode 27.
 
 ```bash
-make app      # release build into build/TypeVoice.app, ad-hoc signed and sandboxed
+make app      # release build into build/TypeVoice.app, ad-hoc signed
 make run      # build and launch
-make project  # generate the Xcode project (XcodeGen) if you prefer Xcode
+open Package.swift   # if you prefer Xcode
 ```
 
-The first `make` creates `Sources/TypeVoice/Support/Secrets.swift` from
-`Secrets.example.swift`. It holds the RevenueCat key and is git-ignored; the placeholder
-value builds fine, the License tab just says purchases aren't configured.
+Nothing in the tree is secret. The checkout link (`Brand.swift`) and the update feed
+(`Packaging/Info.plist`) hold placeholders; with them, the License tab says the checkout
+isn't configured and the updater stays off, which is right for a fork.
 
-The first launch downloads the speech model (about 450 MB) into the app's sandbox
-container. Permissions (Microphone, Accessibility) are per bundle identifier, so a build
-with a different identifier asks again.
+The first launch downloads the speech model (about 450 MB) into
+`~/Library/Application Support/FluidAudio`. Permissions (Microphone, Accessibility) are per
+bundle identifier and signature, so a build with a different identifier asks again.
 
 ## Ground rules
 
 - Nothing leaves the Mac. No analytics, no crash reporters, no network calls beyond the
-  model download and the purchase check. A change that adds a network call needs a very
-  good reason and an update to the privacy policy.
+  model download, the update check and the license check. A change that adds a network
+  call needs a very good reason and an update to the privacy policy.
 - No sounds, no haptics. It's macOS.
 - Keep the pill quiet. Motion is calm, monochrome by default.
 - Match the surrounding code: comment density, naming, and the way it reads.

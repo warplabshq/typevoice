@@ -1,9 +1,10 @@
 import AppKit
-import RevenueCat
 import SwiftUI
 
 struct LicenseView: View {
     let licensing: Licensing
+    @State private var key = ""
+    @FocusState private var keyFocused: Bool
 
     var body: some View {
         Form {
@@ -11,76 +12,88 @@ struct LicenseView: View {
                 switch licensing.state {
                 case .trial(let days):
                     hero(icon: "clock", title: days == 1 ? "1 day left in your trial" : "\(days) days left in your trial",
-                         text: "Everything works during the trial. Unlock \(Brand.name) Pro to keep dictating after it ends.")
+                         text: "Everything works during the trial. Buy \(Brand.name) once to keep dictating after it ends; there is no subscription.")
                 case .expired:
                     hero(icon: "lock", title: "Your trial has ended",
-                         text: "Dictation is paused until you unlock Pro. Everything you dictated is still in your Summary.")
-                case .pro:
-                    hero(icon: "checkmark.seal.fill", title: "\(Brand.name) Pro",
-                         text: "Thank you. Purchases are tied to your Apple ID and work on all your Macs.")
+                         text: "Dictation is paused until you enter a license key. Everything you dictated is still in your Summary.")
+                case .licensed:
+                    hero(icon: "checkmark.seal.fill", title: "\(Brand.name) is yours",
+                         text: "Thank you. This Mac is activated; use the same key on the other Macs you work on.")
                 }
             }
-            if licensing.state != .pro {
-                Section("Unlock Pro") {
-                    if !Licensing.isConfigured {
-                        Text("Purchases will be available once \(Brand.name) is on the App Store.")
-                            .foregroundStyle(.secondary)
-                    } else if licensing.packages.isEmpty {
-                        HStack(spacing: 8) { ProgressView().controlSize(.small); Text("Loading prices…").foregroundStyle(.secondary) }
-                            .task { await licensing.sync() }
-                    } else {
-                        ForEach(licensing.packages, id: \.identifier) { p in
-                            LabeledContent {
-                                Button(licensing.busy ? "…" : p.storeProduct.localizedPriceString) {
-                                    Task { await licensing.purchase(p) }
-                                }
-                                .buttonStyle(.borderedProminent)
-                                .disabled(licensing.busy)
-                            } label: {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(p.storeProduct.localizedTitle)
-                                    Text(p.storeProduct.localizedDescription).font(.callout).foregroundStyle(.secondary)
-                                }
-                            }
-                        }
+            if licensing.isLicensed {
+                Section("License") {
+                    LabeledContent("Key") {
+                        Text(licensing.licenseKeyMasked ?? "").font(.system(.body, design: .monospaced))
+                    }
+                    Text("Your key was emailed to you by Dodo Payments when you bought \(Brand.name). Deactivate this Mac before selling it or handing it on, so the seat is free for your next one.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    HStack(spacing: 12) {
+                        Button(licensing.busy ? "…" : "Deactivate this Mac") { Task { await licensing.deactivate() } }
+                            .disabled(licensing.busy)
+                        Button("Re-check") { Task { await licensing.revalidateIfDue(force: true) } }
+                            .disabled(licensing.busy)
                     }
                     if let e = licensing.lastError {
                         Label(e, systemImage: "exclamationmark.triangle").foregroundStyle(.red).font(.callout)
                     }
-                    Button("Restore Purchases") { Task { await licensing.restore() } }
-                        .disabled(!Licensing.isConfigured || licensing.busy)
-                    Text("Billed by Apple through the App Store. No account with \(Brand.name), ever.")
+                }
+            } else {
+                Section("Buy \(Brand.name)") {
+                    LabeledContent {
+                        Button("Buy — \(Brand.price)") { NSWorkspace.shared.open(Brand.checkoutURL) }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(!Licensing.isConfigured)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("One purchase, no subscription")
+                            Text(Licensing.isConfigured
+                                 ? "Checkout opens in your browser. The key arrives by email and lands here by itself."
+                                 : "The checkout link isn't configured in this build.")
+                                .font(.callout).foregroundStyle(.secondary)
+                        }
+                    }
+                }
+                Section("Already have a key?") {
+                    HStack(spacing: 10) {
+                        TextField("XXXX-XXXX-XXXX-XXXX", text: $key)
+                            .textFieldStyle(.roundedBorder)
+                            .font(.system(.body, design: .monospaced))
+                            .focused($keyFocused)
+                            .onSubmit { activate() }
+                        Button(licensing.busy ? "…" : "Activate") { activate() }
+                            .buttonStyle(.borderedProminent)
+                            .disabled(licensing.busy || key.trimmingCharacters(in: .whitespaces).isEmpty)
+                    }
+                    if let e = licensing.lastError {
+                        Label(e, systemImage: "exclamationmark.triangle").foregroundStyle(.red).font(.callout)
+                    }
+                    Text("Activation sends the key and this Mac's name to Dodo Payments, nothing else. No account with \(Brand.name), ever.")
                         .font(.callout).foregroundStyle(.secondary)
                     HStack(spacing: 14) {
-                        Button("Terms of Use") { NSWorkspace.shared.open(Brand.eulaURL) }
+                        Button("License Agreement") { NSWorkspace.shared.open(Brand.eulaURL) }
                         Button("Privacy Policy") { NSWorkspace.shared.open(Brand.privacyURL) }
+                        Button("Lost your key?") { NSWorkspace.shared.open(Brand.supportURL) }
                     }
                     .buttonStyle(.link)
                     .font(.callout)
-                    if let id = Licensing.supportID {
-                        LabeledContent("Support ID") {
-                            HStack(spacing: 6) {
-                                Text(id).font(.system(.callout, design: .monospaced)).textSelection(.enabled)
-                                Button {
-                                    NSPasteboard.general.clearContents(); NSPasteboard.general.setString(id, forType: .string)
-                                } label: { Image(systemName: "doc.on.doc") }
-                                .buttonStyle(.borderless).help("Copy")
-                            }
-                        }
-                        Text("A random identifier the purchase check is filed under. It is not linked to you; quote it if you ever want those records deleted.")
-                            .font(.callout).foregroundStyle(.secondary)
-                    }
                 }
             }
         }
         .formStyle(.grouped)
+        .onAppear { keyFocused = licensing.isExpired }
+        .onChange(of: licensing.state) { _, s in if s == .licensed { key = "" } }
+    }
+
+    private func activate() {
+        Task { await licensing.activate(key) }
     }
 
     private func hero(icon: String, title: String, text: String) -> some View {
         HStack(spacing: 14) {
             Image(systemName: icon)
                 .font(.system(size: 26, weight: .semibold))
-                .foregroundStyle(licensing.state == .pro ? Color.green : Color.accentColor)
+                .foregroundStyle(licensing.isLicensed ? Color.green : Color.accentColor)
                 .frame(width: 44)
             VStack(alignment: .leading, spacing: 4) {
                 Text(title).font(.title3.weight(.semibold))

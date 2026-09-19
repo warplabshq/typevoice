@@ -18,6 +18,21 @@
     <key>NSHumanReadableCopyright</key>           <string>© 2026 Priyam Raj</string>
     <key>CFBundleIconFile</key>                   <string>AppIcon</string>
     <key>LSApplicationCategoryType</key>          <string>public.app-category.productivity</string>
-    <key>ITSAppUsesNonExemptEncryption</key>      <false/>
+
+    <!-- Sparkle. SUFeedURL is the appcast the site hosts; SUPublicEDKey is the public half of
+         the EdDSA key from `make keys` (the private half stays in your login keychain). -->
+    <key>SUFeedURL</key>                          <string>https://REPLACE-ME.example/appcast.xml</string>
+    <key>SUPublicEDKey</key>                      <string>REPLACE-ME</string>
+    <key>SUEnableAutomaticChecks</key>            <true/>
+    <key>SUScheduledCheckInterval</key>           <integer>86400</integer>
+
+    <!-- typevoice://activate?key=… from the site's thank-you page fills the License tab. -->
+    <key>CFBundleURLTypes</key>
+    <array>
+        <dict>
+            <key>CFBundleURLName</key>    <string>com.priyamventures.typevoice</string>
+            <key>CFBundleURLSchemes</key> <array><string>typevoice</string></array>
+        </dict>
+    </array>
 </dict>
 </plist>
