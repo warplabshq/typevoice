@@ -23,7 +23,7 @@ NOTARY_PROFILE ?= TypeVoice
 DOWNLOAD_URL ?= https://github.com/priyam-raj/typevoice/releases/download/v$(VERSION)/
 VERSION  := $(shell /usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Packaging/Info.plist)
 
-.PHONY: all build app run debug clean release notarize appcast keys icon
+.PHONY: all build app run debug clean release notarize appcast keys icon notes
 
 all: app
 
@@ -76,7 +76,7 @@ clean:
 # make release → dist/TypeVoice-<version>.zip (Sparkle update), dist/TypeVoice.dmg (the site's
 # Download button) and dist/appcast.xml. Copy appcast.xml into the site repo and upload the
 # zip + dmg to the GitHub release tagged v<version>.
-release: app
+release: app notes
 	@[ -n "$(RELEASE_ID)" ] || { echo "No Developer ID Application certificate in the keychain (see README › Releasing)"; exit 1; }
 	@$(MAKE) --no-print-directory sign IDENTITY="$(RELEASE_ID)"
 	@mkdir -p dist && rm -f dist/$(APP)-$(VERSION).zip dist/$(APP).dmg
@@ -103,6 +103,12 @@ dmg:
 # keychain (`make keys`, once). Release notes: put dist/TypeVoice-<version>.html next to the zip.
 appcast:
 	$(SPARKLE)/bin/generate_appcast --download-url-prefix "$(DOWNLOAD_URL)" -o dist/appcast.xml dist/
+
+# Release notes for Sparkle: the top CHANGELOG.md entry as a small HTML page next to the zip.
+notes:
+	@mkdir -p dist
+	@python3 -c 'import re,sys,html; t=open("CHANGELOG.md").read(); m=re.search(r"^## (.+?)\n(.*?)(?=^## |\Z)", t, re.S|re.M); title,body=m.group(1),m.group(2).strip(); 	items=[html.escape(re.sub(r"\s+"," ",i.strip())) for i in re.split(r"^- ", body, flags=re.M)[1:]]; intro=html.escape(body.split("\n- ")[0].strip()) if not body.startswith("- ") else ""; 	print("<!doctype html><meta charset=utf-8><style>body{font:14px/1.5 -apple-system,system-ui;color:#222;margin:16px 20px}h1{font-size:17px;margin:0 0 8px}li{margin:4px 0}@media(prefers-color-scheme:dark){body{color:#ddd;background:#1e1e1e}}</style>" 	+"<h1>TypeVoice "+html.escape(title)+"</h1>"+("<p>"+intro+"</p>" if intro else "")+"<ul>"+"".join("<li>"+i+"</li>" for i in items)+"</ul>")' > dist/$(APP)-$(VERSION).html
+	@echo "→ dist/$(APP)-$(VERSION).html"
 
 # One-time: EdDSA key pair for update signing. Prints the public key for SUPublicEDKey in
 # Packaging/Info.plist; the private key lives in your login keychain. Back it up (-x).

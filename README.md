@@ -85,7 +85,8 @@ Each is set up once.
    site's `thanks.html`, which hands the key to the app through `typevoice://activate?key=…`.
 
 Then, per version: bump `CFBundleShortVersionString` and `CFBundleVersion` in
-`Packaging/Info.plist`, write release notes to `dist/TypeVoice-<version>.html` (optional), and
+`Packaging/Info.plist`, write the entry at the top of `CHANGELOG.md` (it becomes the release
+notes Sparkle shows, and the site's changelog page repeats it), and
 
 ```bash
 make release
