@@ -74,7 +74,7 @@ struct HistoryView: View {
                         // Older pages come when asked for, like Mail, not by scrolling past the end.
                         Section {
                             Button { history.loadMore() } label: {
-                                Label("Show earlier dictations", systemImage: "arrow.down.circle")
+                                Label(remainingLabel, systemImage: "arrow.down.circle")
                                     .frame(maxWidth: .infinity)
                             }
                             .buttonStyle(.bordered)
@@ -216,6 +216,13 @@ struct HistoryView: View {
             }
             .fixedSize(horizontal: false, vertical: true)
         }
+    }
+
+    /// "Show 10 more · 63 earlier" — how much is left in the range, so the button sets expectations.
+    private var remainingLabel: String {
+        let left = max(0, history.stats.count - history.entries.count)
+        let next = min(HistoryStore.pageSize, left)
+        return left > next ? "Show \(next) more · \(left) earlier" : "Show the \(left) earlier"
     }
 
     /// Tile footnote: the all-time figure when the range is narrower, or a plain word when

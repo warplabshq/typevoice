@@ -71,7 +71,7 @@ final class HistoryStore {
     /// Opens on the last seven days every launch; the picker widens it for the session.
     var range: Range = .week { didSet { if range != oldValue { reload() } } }
     /// Thirty rows keeps the list light; older ones arrive on request.
-    static let pageSize = 30
+    static let pageSize = 10
 
     init() {
         db = HistoryDB(url: Paths.support.appendingPathComponent("history.sqlite"))
