@@ -1,10 +1,21 @@
-# TypeVoice
+<p align="center">
+  <a href="https://typevoice.ai"><img src="docs/readme/banner.png" alt="TypeVoice — Just talk. It's typed." width="100%"></a>
+</p>
 
-Local dictation for Mac. Hold a key, talk, release: clean, punctuated text lands at your
-cursor in any app. Everything runs on the Mac — no account, no server, no telemetry — and
-the code is here so you don't have to take our word for it.
+<p align="center">
+  Local dictation for Mac. Hold a key, talk, release: clean, punctuated text lands at your cursor in any app.<br>
+  Everything runs on the Mac — no account, no server, no telemetry — and the code is here so you don't have to take our word for it.
+</p>
 
-**[typevoice.ai](https://typevoice.ai)** · free for seven days, then one purchase, no subscription.
+<p align="center">
+  <a href="https://typevoice.ai">Website</a> ·
+  <a href="https://github.com/warplabshq/typevoice-releases/releases/latest/download/TypeVoice.dmg">Download</a> ·
+  <a href="https://typevoice.ai/changelog">What's new</a> ·
+  <a href="https://typevoice.ai/support">Support</a> ·
+  <a href="LICENSE">GPL v3</a>
+</p>
+
+<br>
 
 ## Open source, and paid
 
@@ -19,6 +30,9 @@ the GPL. A fork needs its own name and icon, so that nobody mistakes it for the 
 stand behind.
 
 ## How it works
+
+<p align="center"><img src="docs/readme/style.png" alt="The Style tab: what you say, what you get, and the cleanup rules" width="840"></p>
+
 
 - **Speech:** NVIDIA Parakeet TDT 0.6B v2 on the Neural Engine, via [FluidAudio](https://github.com/FluidInference/FluidAudio).
   Downloaded once (about 450 MB) on first launch. English, every accent.
