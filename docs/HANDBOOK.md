@@ -169,11 +169,12 @@ Static HTML/CSS/JS; everything brand-specific in `site.js` (`SITE`): price, refu
 team price/seats, checkout links, download link, domain, email. Pages: index, support, privacy,
 terms, eula, changelog, thanks (Dodo return page, `noindex`), plus `appcast.xml`, `robots.txt`,
 `sitemap.xml`, a `404.html`, `_headers` (HSTS, caching, `no-cache` on the appcast) and one Pages
-Function, `functions/geo.js`: it answers `/geo` with the visitor's country (from Cloudflare), the
-Dodo PPP percentage and an ECB exchange rate, and `site.js` rewrites the price lines to "about
-₹2,400 in India" (rounded up past Dodo's ~4% conversion margin). `PCT` in that file mirrors Dodo's
-default PPP table (World Bank PA.NUS.GDP.PLI 2024, rounded to 5, floor 30, cap 100); if the
-percentages are edited in the Dodo dashboard, edit `PCT` too. `?c=BR` previews another country.
+Function, `functions/geo.js`: it answers `/geo` with the fixed price for the visitor's country
+(from Cloudflare's country header) and `site.js` rewrites the price lines to "₹2,499 in 🇮🇳 India".
+Its `PRICES` table mirrors the Dodo Localized Pricing rules (`pricing_mode: by_country`, PPP off,
+rules on all four products via `/products/{id}/localized-prices`): IN ₹2,499 / ₹9,499 (+GST),
+PK/BD/EG/NG $24 / $89. Everyone else pays $79 / $299 converted at checkout. Change a rule → change
+the table. `?c=NG` previews another country.
 Umami (self-hosted) is scoped to typevoice.ai, drops query strings, and counts `download`, `buy`,
 `buy-team`, `activate` and `regional-price` events. `make deploy` publishes via wrangler direct upload. Legal copy states: 7-day trial,
 $79 / 2 Macs, team 5 × 2 Macs, 14-day refund, PPP, jurisdiction India, Dodo as merchant of record,
@@ -205,7 +206,8 @@ Nothing secret is in either repository.
 - 2026-09-18 renamed Murmur → TypeVoice; bundle id `com.priyamventures.typevoice`.
 - 2026-09-20 direct sales instead of the App Store (sandbox removed; Accessibility insertion
   back; RevenueCat out — it has no Dodo integration; Dodo license keys; Sparkle).
-- 2026-09-20 trial 3 → 7 days; personal key 2 Macs; team key 5 × 2 Macs at $299; PPP on;
+- 2026-09-20 trial 3 → 7 days; personal key 2 Macs; team key 5 × 2 Macs at $299; PPP first, then
+  replaced by fixed Localized Pricing for IN/PK/BD/EG/NG only (PPP defaults also discounted the UK, DE, JP…);
   14-day refund; closed source; downloads on a public releases repo; site on Cloudflare Pages.
 - Name collision noted: a third-party iPhone "TypeVoice: AI Voice Keyboard" exists at
   typevoice.app (App Store id 6769261600). Owner chose to keep the name; domain is typevoice.ai.
