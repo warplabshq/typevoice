@@ -8,6 +8,8 @@ user's words: what changed for the person dictating, not which file moved.
 
 - Style › Sign-off: a fixed note on the end of every dictation, for places where spelling
   gets judged — a coding assistant, a ticket queue. Off by default; the text is yours to change.
+- License: with a personal key, the team key is one click away and this Mac can switch to it;
+  the tab knows which kind of key it holds; the key is re-checked while the app stays running.
 
 ## 1.0.3 — 20 September 2026
 
