@@ -35,7 +35,7 @@ struct LicenseView: View {
                     LabeledContent("Key") {
                         Text(licensing.licenseKeyMasked ?? "").font(.system(.body, design: .monospaced))
                     }
-                    Text("Your key was emailed to you by Dodo Payments when you bought \(Brand.name). Deactivate this Mac before selling it or handing it on, so the seat is free for your next one.")
+                    Text("Your key was emailed to you by Dodo Payments when you bought \(Brand.name); it covers two Macs. Deactivate this Mac before selling it or handing it on, so the seat is free for your next one.")
                         .font(.callout).foregroundStyle(.secondary)
                     HStack(spacing: 12) {
                         Button(licensing.busy ? "…" : "Deactivate this Mac") { Task { await licensing.deactivate() } }
@@ -55,7 +55,7 @@ struct LicenseView: View {
                             .disabled(!Licensing.isConfigured)
                     } label: {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("One purchase, no subscription")
+                            Text("One purchase, no subscription · two Macs")
                             Text(Licensing.isConfigured
                                  ? "Checkout opens in your browser. The key arrives by email and lands here by itself."
                                  : "The checkout link isn't configured in this build.")
@@ -83,6 +83,7 @@ struct LicenseView: View {
                         Button("License Agreement") { NSWorkspace.shared.open(Brand.eulaURL) }
                         Button("Privacy Policy") { NSWorkspace.shared.open(Brand.privacyURL) }
                         Button("Lost your key?") { NSWorkspace.shared.open(Brand.supportURL) }
+                        Button("Buying for a team?") { NSWorkspace.shared.open(Brand.website.appendingPathComponent("index.html#pricing")) }
                     }
                     .buttonStyle(.link)
                     .font(.callout)

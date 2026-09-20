@@ -79,10 +79,13 @@ Each is set up once.
    `Packaging/Info.plist`. The private key stays in your login keychain; export a backup with
    `.build/artifacts/sparkle/Sparkle/bin/generate_keys -x sparkle-private.key` and keep it
    somewhere safe. Losing it means existing installs can't verify future updates.
-4. **Dodo Payments** — a product with a *License Key* entitlement (Advanced settings ›
-   Entitlements; set the activations limit, no expiry). Put its checkout link into
-   `Brand.checkoutURL` and the price into `Brand.price`. Set the product's return URL to the
-   site's `thanks.html`, which hands the key to the app through `typevoice://activate?key=…`.
+4. **Dodo Payments** — two one-time products, each with a *License Key* entitlement (Advanced
+   settings › Entitlements, no expiry): **Personal, $79, activations limit 2** (a desk Mac and a
+   laptop) and **Team, $299, activations limit 10** (five people, two Macs each, one shared
+   key). Put the personal checkout link into `Brand.checkoutURL` and the price into
+   `Brand.price`; the team link goes into the site's `SITE.teamCheckoutURL`. Set both products'
+   return URL to the site's `thanks.html`, which hands the key to the app through
+   `typevoice://activate?key=…`.
 
 Then, per version: bump `CFBundleShortVersionString` and `CFBundleVersion` in
 `Packaging/Info.plist`, write the entry at the top of `CHANGELOG.md` (it becomes the release
