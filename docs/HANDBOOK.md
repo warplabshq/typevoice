@@ -1,0 +1,209 @@
+# TypeVoice developer handbook
+
+Everything a developer (or a future Claude session) needs to run, ship and support TypeVoice.
+Written 2026-09-20 at the end of the launch setup; keep it current when any of it changes.
+
+## 1. What it is
+
+Local push-to-talk dictation for macOS 26 on Apple silicon. Hold a key, talk, release; the words
+are typed into the frontmost app. Speech recognition is NVIDIA Parakeet TDT 0.6B v2 on the
+Neural Engine via the FluidAudio package (English only, ~450 MB model downloaded on first launch
+into `~/Library/Application Support/FluidAudio`). Cleanup is rule-based (`Sources/TypeVoice/Text/`),
+with Apple Intelligence's on-device model on top when the Mac has it. No accounts, no telemetry,
+no server of ours. Sold directly for $79 (personal, two Macs) or $299 (team key, five people),
+seven-day trial, Dodo Payments as merchant of record, Sparkle for updates. Closed source.
+
+Owner: Priyam Raj, Priyam Ventures / Warplabs. Support: mail@warplabs.co. Site: https://typevoice.ai.
+
+## 2. Repositories and hosting
+
+| What | Where | Notes |
+|---|---|---|
+| App source (private) | github.com/warplabshq/typevoice | local `~/Desktop/Projects/TypeVoice`, branch `main` |
+| Website | github.com/warplabshq/typevoice-site | local `~/Desktop/Projects/TypeVoiceSite`; deployed by `make deploy` to Cloudflare Pages project `typevoice` (account Priyam Ventures) → https://typevoice.pages.dev and https://typevoice.ai |
+| Downloads + release notes (public) | github.com/warplabshq/typevoice-releases | only release assets; the site's Download button and the Sparkle appcast point here |
+| Old forms product (unrelated) | github.com/warplabshq/typevoice-forms | the previous "TypeVoice" (Next.js on Railway) — retired; its Railway service should be deleted |
+
+Cloudflare: the `typevoice.ai` zone is in the same account. `wrangler` is logged in via OAuth
+(`npx wrangler whoami`); it can deploy Pages but cannot edit DNS — DNS needs an API token with
+*Zone › DNS › Edit* on that zone (keychain item `typevoice-cf-dns`, account `cloudflare`).
+
+## 3. Build and run (development)
+
+```bash
+make run          # release build → build/TypeVoice.app, ad-hoc signed, then launches it
+make debug        # same, debug configuration
+make app          # build only
+open Package.swift   # Xcode, if wanted
+```
+
+Ad-hoc dev builds carry an identifier-based designated requirement so Accessibility/Microphone
+grants survive rebuilds, and skip the hardened runtime (its library validation refuses the ad-hoc
+Sparkle framework). Never `pkill` and relaunch the app while the user may be dictating: check
+the last line of `~/Library/Logs/TypeVoice/typevoice.log` — a `listening →` without a following
+`inserted`/`cancelled` means a dictation is in flight.
+
+Self-tests (headless, no GUI):
+
+```bash
+build/TypeVoice.app/Contents/MacOS/TypeVoice --test itn        # numbers
+build/TypeVoice.app/Contents/MacOS/TypeVoice --test structure  # lists, commands
+build/TypeVoice.app/Contents/MacOS/TypeVoice --test vocab      # dictionary matcher
+build/TypeVoice.app/Contents/MacOS/TypeVoice --test clip.wav   # full pipeline on audio (16 kHz wav; afconvert -f WAVE -d LEI16@16000 -c 1 in.m4a out.wav)
+TYPEVOICE_DEBUG=1 build/TypeVoice.app/Contents/MacOS/TypeVoice | Tools/latency.sh
+```
+
+Debug hooks in the running app (all via a distributed notification; the app must have
+`debugLog` on: `defaults write com.priyamventures.typevoice debugLog -bool YES`):
+
+```bash
+# helper: swift Tools/… or the one-liner below posts "typevoice.debug.showTab"
+post() { swift -e 'import Foundation; DistributedNotificationCenter.default().postNotificationName(Notification.Name("typevoice.debug.showTab"), object: CommandLine.arguments[1], userInfo: nil, deliverImmediately: true)' -- "$1"; }
+post history | dictionary | style | settings | license | privacy   # open a main-window tab
+post onboarding | cheatsheet
+post hud:listening | hud:locked | hud:processing | hud:done | hud:audio | hud:copy | hud:copied | hud:error | hud:notheard | hud:silent | hud:idle
+post appearance:light | appearance:dark | appearance:system
+post dictate:/path/to/clip.wav     # run a full session from a file (types into the frontmost app!)
+```
+
+Other defaults: `dodoTest` (Bool) points licensing and the Buy buttons at Dodo's test mode and
+returns to `http://localhost:8787/thanks.html`; `NSRequiresAquaSystemAppearance` is not used.
+The site's local preview: `make preview` in the site repo (port 8787).
+
+## 4. Where things live on a user's Mac
+
+- Data: `~/Library/Application Support/TypeVoice/` — `history.sqlite` (FTS5), `dictionary.json`,
+  `Recordings/*.m4a` (only with "Offer the audio after each dictation" on; pruned by the retention
+  setting), `.first` (trial start marker; its creation date is the trial clock).
+- Model: `~/Library/Application Support/FluidAudio/Models/parakeet-tdt-0.6b-v2` (443 MB).
+- Preferences: `com.priyamventures.typevoice` (`defaults read` it). Licence key, activation id and
+  last validation date are in there (`licenseKey`, `licenseInstance`, `licenseValidated`).
+- Log: `~/Library/Logs/TypeVoice/typevoice.log` (only with `debugLog`).
+- Drag cache: `~/Library/Caches/TypeVoice/Drag/` (hard links with friendly names).
+- Migration: builds ≤ 0.1.0 were sandboxed; `Support/Migration.swift` moves data out of
+  `~/Library/Containers/com.priyamventures.typevoice` on first launch of a direct build.
+
+## 5. Licensing (Dodo Payments)
+
+How it works, end to end:
+
+1. Buyer pays on Dodo's hosted checkout (price adapts to their billing country: PPP is on for both
+   products; Dodo's default country table applies unless changed under Settings › Business).
+2. Dodo generates a license key from the product's *License Key entitlement* and emails it with the
+   receipt and our activation message. It also redirects to `https://typevoice.ai/thanks.html?license_key=…`;
+   that page offers `typevoice://activate?key=…`, which lands the key in the app.
+3. The app calls `POST https://live.dodopayments.com/licenses/activate {license_key, name}`
+   (name = the Mac's name) and stores the returned activation id. Errors: 404 wrong key,
+   403 inactive/expired, 422 activation limit reached.
+4. Weekly `POST /licenses/validate {license_key, license_key_instance_id}`; 30-day offline grace;
+   `POST /licenses/deactivate` frees the seat ("Deactivate this Mac" in the License tab).
+   Code: `Sources/TypeVoice/Support/Licensing.swift`, UI: `UI/LicenseView.swift`.
+
+Dodo objects (business `bus_0Nm8jK4nXxx8K3JOHmy3K`):
+
+| | Live | Test |
+|---|---|---|
+| Brand "TypeVoice" (icon logo, statement descriptor `DODOPAY_TYPEVOICE`, url typevoice.ai, support mail@warplabs.co) | `brnd_0NnyfC6Euxw3tgW6MqhsY` | `brnd_0Nnyf6cJYrq7XwAH5rKVr` |
+| Product TypeVoice, $79, entitlement activations 2 | `pdt_0NnyeIUl5lH6A5vMnNQl0` | `pdt_0Nnye4FRV4gyNve43FkdY` |
+| Product TypeVoice Team, $299, entitlement activations 10 | `pdt_0NnyeIYh7eg5s2udMzUGZ` | `pdt_0Nnye4HFHXLRKq4WkVJXG` |
+
+Checkout links: `https://checkout.dodopayments.com/buy/<product id>?redirect_url=<thanks page>`
+(test: `test.checkout.dodopayments.com`). They are built in `Brand.swift` (app) and `site.js`
+(site). Test card: 4242 4242 4242 4242, any future date, any CVC.
+
+API access without ever seeing the key: `~/bin/dodoapi test|live METHOD /path ['json']` reads
+the key from the keychain (`typevoice-dodo-test` / `typevoice-dodo-live`, account `dodo`).
+Gotchas learned: entitlements attach as `{"entitlements":[{"entitlement_id":…}]}`; product images
+are `PUT /products/{id}/images` → presigned S3 PUT (same key each time, CDN may cache the old one
+for a while); brand logos need `PUT /brands/{id}/images` **and then** `PATCH /brands/{id}
+{"image_id":…}`; PPP percentages and Adaptive Currency are dashboard-only.
+
+Dashboard-only, done by the owner: business verification and payouts, PPP percentages, refunds.
+
+Support playbook:
+- *Lost key* → Dodo dashboard › Customers/Licenses, resend, or `dodoapi live GET /licenses`.
+- *Moving to a new Mac* → Deactivate this Mac on the old one; if the old Mac is gone, deactivate
+  the instance from the dashboard (or `POST /licenses/deactivate`).
+- *Refund* → issue in Dodo (14-day policy on the site); the key is revoked and the app notices at
+  its next weekly check (or Re-check).
+- *"Price is different from the site"* → PPP by billing country; see the support FAQ.
+
+## 6. Releasing
+
+One-time setup (owner):
+1. Developer ID Application certificate: Xcode › Settings › Accounts › Manage Certificates › +.
+2. Notarization credentials: an app-specific password from account.apple.com › Sign-In and
+   Security › App-Specific Passwords, then
+   `xcrun notarytool store-credentials TypeVoice --apple-id <email> --team-id <TEAMID>`.
+3. Sparkle keys: `make keys` → paste the public key into `SUPublicEDKey` in `Packaging/Info.plist`;
+   back up the private key (`.build/artifacts/sparkle/Sparkle/bin/generate_keys -x file`). Losing it
+   means shipped copies can't take updates.
+4. `gh auth login` (done on the owner's Mac; org warplabshq).
+
+Per release:
+1. Top entry in `CHANGELOG.md` (user's words); bump `CFBundleShortVersionString` and
+   `CFBundleVersion` in `Packaging/Info.plist`; commit.
+2. `make release` → signs with Developer ID, notarizes (2–10 min), staples, writes
+   `dist/TypeVoice-<v>.zip` (Sparkle), `dist/TypeVoice.dmg` (downloads), `dist/TypeVoice-<v>.html`
+   (notes) and `dist/appcast.xml`.
+3. `make publish` → GitHub release `v<v>` in warplabshq/typevoice-releases with both files, copies
+   the appcast into the site repo and deploys the site. Commit the site repo afterwards.
+4. Update `changelog.html` on the site (mirror the CHANGELOG entry; replace "coming soon").
+
+Installed copies check `https://typevoice.ai/appcast.xml` daily (`SUFeedURL`), show the notes and
+install in place. Updates are verified by Apple notarization + the Sparkle EdDSA signature.
+
+## 7. Site
+
+Static HTML/CSS/JS; everything brand-specific in `site.js` (`SITE`): price, refund days, Mac limit,
+team price/seats, checkout links, download link, domain, email. Pages: index, support, privacy,
+terms, eula, changelog, thanks (Dodo return page, `noindex`), plus `appcast.xml`, `robots.txt`,
+`sitemap.xml`. `make deploy` publishes via wrangler direct upload. Legal copy states: 7-day trial,
+$79 / 2 Macs, team 5 × 2 Macs, 14-day refund, PPP, jurisdiction India, Dodo as merchant of record,
+closed source with third-party notices.
+
+## 8. Brand
+
+One waveform (`Sources/TypeVoice/UI/BrandWave.swift`): eight bars, gap 0.82× bar width, tallest
+bar 8.35× bar width. Icon (`make icon` from `Tools/icon.swift`), menu bar glyph, sidebar tile,
+Summary card, live waveform at rest, site diagram all use it. Asset set: `swift Tools/brand.swift
+build/AppIcon.iconset Brand Brand/out` (icons, lockups, wordmarks, product tile, banner; see
+`Brand/README.md`). Serif is Instrument Serif (OFL). Never use the Apple logo on buttons.
+
+## 9. Credentials and where they are
+
+| Secret | Where |
+|---|---|
+| Dodo API keys | macOS keychain: `typevoice-dodo-test`, `typevoice-dodo-live` (account `dodo`) |
+| Cloudflare wrangler OAuth | `~/Library/Preferences/.wrangler/config/default.toml` |
+| Cloudflare DNS token | keychain `typevoice-cf-dns` (account `cloudflare`) |
+| GitHub | `gh auth` keyring, user priyam-raj (admin on warplabshq) |
+| Notarization | keychain profile `TypeVoice` (notarytool) |
+| Sparkle private key | login keychain (created by `make keys`); back it up |
+
+Nothing secret is in either repository.
+
+## 10. Decisions log
+
+- 2026-09-18 renamed Murmur → TypeVoice; bundle id `com.priyamventures.typevoice`.
+- 2026-09-20 direct sales instead of the App Store (sandbox removed; Accessibility insertion
+  back; RevenueCat out — it has no Dodo integration; Dodo license keys; Sparkle).
+- 2026-09-20 trial 3 → 7 days; personal key 2 Macs; team key 5 × 2 Macs at $299; PPP on;
+  14-day refund; closed source; downloads on a public releases repo; site on Cloudflare Pages.
+- Name collision noted: a third-party iPhone "TypeVoice: AI Voice Keyboard" exists at
+  typevoice.app (App Store id 6769261600). Owner chose to keep the name; domain is typevoice.ai.
+- Parakeet stays the engine: Apple's SpeechTranscriber measured equal on the owner's voice and
+  2–3× slower in batch; a seam-gap repair pass in FluidAudio was turned off (−300 ms, no text change).
+
+## 11. Open work
+
+- DNS: point typevoice.ai at the Pages project (needs the DNS token); add `www`.
+- Apple: Developer ID cert, notarytool credentials; Sparkle keys; first `make release` / `make publish`
+  as 1.0.0; clean-Mac test (download → open → onboard → trial → test purchase → activate → update check).
+- Delete the Railway service of the old product.
+- Parked (usage limit): the dictation-quality implementation on the `quality` branch/worktree
+  (`../TypeVoice-quality`: TextPipeline scaffold + `--test text` runner; modules cleaner, numbers,
+  structure, spoken formats, vocabulary v2, audio capture, smart-cleanup gate — proposals in the
+  session scratchpad) and the UX-audit synthesis (raw findings from 8 auditors).
+- Later: newsletter only if wanted (privacy policy promises no list today); larger team sizes;
+  App Intents (needs an Xcode build; URLs `typevoice://start|stop|toggle|cancel` exist).
