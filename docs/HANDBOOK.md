@@ -106,11 +106,11 @@ How it works, end to end:
    `POST /licenses/deactivate` frees the seat ("Deactivate this Mac" in the License tab).
    Code: `Sources/TypeVoice/Support/Licensing.swift`, UI: `UI/LicenseView.swift`.
 
-Dodo objects (business `bus_0Nm8jK4nXxx8K3JOHmy3K`):
+Dodo objects (business `<business id>`):
 
 | | Live | Test |
 |---|---|---|
-| Brand "TypeVoice" (icon logo, statement descriptor `DODOPAY_TYPEVOICE`, url typevoice.ai, support mail@warplabs.co) | `brnd_0NnyfC6Euxw3tgW6MqhsY` | `brnd_0Nnyf6cJYrq7XwAH5rKVr` |
+| Brand "TypeVoice" (icon logo, statement descriptor `DODOPAY_TYPEVOICE`, url typevoice.ai, support mail@warplabs.co) | `<brand id>` | `<brand id>` |
 | Product TypeVoice, $79, entitlement activations 2 | `pdt_0NnyeIUl5lH6A5vMnNQl0` | `pdt_0Nnye4FRV4gyNve43FkdY` |
 | Product TypeVoice Team, $299, entitlement activations 10 | `pdt_0NnyeIYh7eg5s2udMzUGZ` | `pdt_0Nnye4HFHXLRKq4WkVJXG` |
 
