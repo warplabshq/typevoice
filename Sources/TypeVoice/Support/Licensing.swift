@@ -19,7 +19,8 @@ final class Licensing {
     static let revalidateEvery: TimeInterval = 7 * 86400
     static let offlineGrace: TimeInterval = 30 * 86400
     /// True once the checkout link in `Brand` points at a real product.
-    static var isConfigured: Bool { !Brand.checkoutURL.absoluteString.contains("REPLACE-ME") }
+    /// The Buy button works once the website is real (its thank-you page is the return URL), or in test mode.
+    static var isConfigured: Bool { UserDefaults.standard.bool(forKey: "dodoTest") || !Brand.checkoutURL.absoluteString.contains("REPLACE-ME") }
 
     private(set) var state: State = .trial(daysLeft: Licensing.trialDays)
     private(set) var licenseKeyMasked: String?

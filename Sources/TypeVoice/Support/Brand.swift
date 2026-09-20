@@ -21,10 +21,19 @@ enum Brand {
     static var supportURL: URL { website.appendingPathComponent("support.html") }
     static let supportEmail = "support@REPLACE-ME.example"
 
-    /// Dodo Payments hosted checkout for the one-time purchase. The product id comes from
-    /// the Dodo dashboard (Products › your product › Share); test mode uses
-    /// https://test.checkout.dodopayments.com/buy/… instead.
-    static let checkoutURL = URL(string: "https://checkout.dodopayments.com/buy/REPLACE-ME")!
+    /// Dodo Payments hosted checkout for the one-time purchase (live product
+    /// pdt_0NnyeIUl5lH6A5vMnNQl0; its test-mode twin is pdt_0Nnye4FRV4gyNve43FkdY on
+    /// test.checkout.dodopayments.com, used when the `dodoTest` default is on). The return
+    /// page hands the new key back to the app.
+    static var checkoutURL: URL {
+        let test = UserDefaults.standard.bool(forKey: "dodoTest")
+        let base = test ? "https://test.checkout.dodopayments.com/buy/pdt_0Nnye4FRV4gyNve43FkdY"
+                        : "https://checkout.dodopayments.com/buy/pdt_0NnyeIUl5lH6A5vMnNQl0"
+        // Test mode returns to the locally served site, so the whole flow can be tried before launch.
+        let page = test ? "http://localhost:8787/thanks.html" : website.appendingPathComponent("thanks.html").absoluteString
+        let back = page.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
+        return URL(string: base + "?redirect_url=" + back)!
+    }
     /// Shown next to the Buy button; keep it in step with the Dodo product price.
     static let price = "$79"
     /// Custom URL scheme, registered in Info.plist. The site's thank-you page opens
