@@ -140,6 +140,9 @@ One-time setup (owner):
    back up the private key (`.build/artifacts/sparkle/Sparkle/bin/generate_keys -x file`). Losing it
    means shipped copies can't take updates.
 4. `gh auth login` (done on the owner's Mac; org warplabshq).
+5. `python3 -m pip install --user dmgbuild` — `make dmg` lays the image out from `Packaging/dmg.py`
+   (app left, Applications right, arrow between) over `Packaging/dmg-background{,@2x}.png`, which
+   `swift Tools/dmgbg.swift Packaging/dmg-background` redraws. Icon centres live in both files.
 
 Per release:
 1. Top entry in `CHANGELOG.md` (user's words); bump `CFBundleShortVersionString` and
