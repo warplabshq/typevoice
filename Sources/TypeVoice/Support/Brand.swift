@@ -19,6 +19,7 @@ enum Brand {
     static var termsURL: URL { website.appendingPathComponent("terms") }
     static var eulaURL: URL { website.appendingPathComponent("eula") }
     static var supportURL: URL { website.appendingPathComponent("support") }
+    static var changelogURL: URL { website.appendingPathComponent("changelog") }
     static let supportEmail = "mail@warplabs.co"
 
     /// Dodo Payments hosted checkout for the one-time purchase (live product

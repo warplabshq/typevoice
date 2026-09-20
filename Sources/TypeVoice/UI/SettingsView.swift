@@ -4,10 +4,6 @@ import SwiftUI
 struct SettingsView: View {
     let state: AppState
     @AppStorage(Prefs.Key.trigger) private var trigger = Prefs.Trigger.fn.rawValue
-    @AppStorage(Prefs.Key.smartCleanup) private var smart = true
-    @AppStorage(Prefs.Key.numbersAsDigits) private var numbers = true
-    @AppStorage(Prefs.Key.voiceCommands) private var voiceCommands = true
-    @AppStorage(Prefs.Key.pauseParagraphs) private var pauseParagraphs = true
     @AppStorage(Prefs.Key.showPreview) private var showPreview = true
     @AppStorage(Prefs.Key.hudPosition) private var hudPosition = Prefs.HUDPosition.bottomCenter.rawValue
     @AppStorage(Prefs.Key.accent) private var accent = Prefs.Accent.mono.rawValue
@@ -24,7 +20,6 @@ struct SettingsView: View {
     @State private var devices = InputDevices.all()
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var advanced = false
-    @State private var aiStatus = SmartCleaner.status
 
     /// "AppleUSBAudioEngine:RØDE:RØDE VideoMic GO II:82C5FB6E:1,2" → "RØDE VideoMic GO II".
     static func deviceName(fromUID uid: String) -> String {
@@ -46,14 +41,6 @@ struct SettingsView: View {
                 Toggle("Show in menu bar", isOn: $showMenuBarIcon)
                 Text(showMenuBarIcon ? "\(Brand.name) lives in the menu bar; there is no Dock icon." : "With the icon hidden, open \(Brand.name) again from Finder or Spotlight to get here.")
                     .font(.callout).foregroundStyle(.secondary)
-                UpdatesRows()
-                LabeledContent("Help") {
-                    HStack(spacing: 12) {
-                        Button("What you can say") { CheatsheetWindow.show() }.buttonStyle(.link)
-                        Button("Online help") { NSWorkspace.shared.open(Brand.supportURL) }.buttonStyle(.link)
-                        Button("Report a problem") { Support.reportProblem(state: state) }.buttonStyle(.link)
-                    }
-                }
             }
             Section("Dictating") {
                 Picker("Hold to dictate", selection: $trigger) {
@@ -86,31 +73,7 @@ struct SettingsView: View {
                     Text("One tap starts, the next tap stops. The pill stays up the whole time.")
                         .font(.callout).foregroundStyle(.secondary)
                 }
-                Toggle("Smart cleanup", isOn: $smart)
-                Text("Fixes false starts and self-corrections with Apple Intelligence, on this Mac. Never adds anything. Tone lives under Style.")
-                    .font(.callout).foregroundStyle(.secondary)
-                // A definite answer, not a shrug: is Apple's model doing the cleanup right now?
-                HStack(alignment: .top, spacing: 8) {
-                    Circle().fill(aiStatus.isReady ? Color.green : Color.orange).frame(width: 8, height: 8).padding(.top, 5)
-                    VStack(alignment: .leading, spacing: 3) {
-                        Text(aiStatus.title).font(.callout.weight(.medium))
-                        Text(aiStatus.detail).font(.callout).foregroundStyle(.secondary)
-                        if aiStatus.canOpenSettings {
-                            Button("Open Siri & Apple Intelligence settings") { Permissions.openAppleIntelligencePane() }
-                                .buttonStyle(.link).font(.callout).padding(.top, 2)
-                        }
-                    }
-                }
-                .onAppear { aiStatus = SmartCleaner.status }
-                .onReceive(Timer.publish(every: 5, on: .main, in: .common).autoconnect()) { _ in aiStatus = SmartCleaner.status }
-                Toggle("Numbers as digits", isOn: $numbers)
-                Text("“twenty twenty four” becomes 2024, “five dollars fifty” becomes $5.50. Small numbers stay as words.")
-                    .font(.callout).foregroundStyle(.secondary)
-                Toggle("Voice commands", isOn: $voiceCommands)
-                Text("Say “new line”, “new paragraph”, “bullet …”, or “number one …, number two …” to shape the text.")
-                    .font(.callout).foregroundStyle(.secondary)
-                Toggle("Paragraph after a pause", isOn: $pauseParagraphs)
-                Text("Finish a sentence, pause a second, and the next one starts a new paragraph.")
+                Text("How the text reads — numbers, paragraphs, spoken commands, cleanup — is under Style.")
                     .font(.callout).foregroundStyle(.secondary)
             }
 
@@ -154,8 +117,10 @@ struct SettingsView: View {
                                 look: Prefs.PillLook(rawValue: pillLook) ?? .black,
                                 shadow: Prefs.PillShadow(rawValue: pillShadow) ?? .soft)
                 }
-                Toggle("Show the text after each dictation", isOn: $showPreview)
-                Toggle("Offer the audio after each dictation", isOn: $keepRecordings)
+            }
+            Section("After each dictation") {
+                Toggle("Show the text on the indicator", isOn: $showPreview)
+                Toggle("Offer the audio", isOn: $keepRecordings)
                 Text("Keeps a small recording of each dictation and shows a Drag audio chip on the pill. Drag it, or a row in Summary, into iMessage, Slack or WhatsApp to send your voice instead of the words. Stored only on this Mac.")
                     .font(.callout).foregroundStyle(.secondary)
                 if keepRecordings {
@@ -184,6 +149,18 @@ struct SettingsView: View {
                     LabeledContent("Speech model") {
                         Text("Parakeet TDT 0.6B v2 · Neural Engine")
                             .foregroundStyle(.secondary)
+                    }
+                }
+            }
+
+            Section("About") {
+                UpdatesRows()
+                LabeledContent("Help") {
+                    HStack(spacing: 12) {
+                        Button("What you can say") { CheatsheetWindow.show() }.buttonStyle(.link)
+                        Button("What's new") { NSWorkspace.shared.open(Brand.changelogURL) }.buttonStyle(.link)
+                        Button("Online help") { NSWorkspace.shared.open(Brand.supportURL) }.buttonStyle(.link)
+                        Button("Report a problem") { Support.reportProblem(state: state) }.buttonStyle(.link)
                     }
                 }
             }

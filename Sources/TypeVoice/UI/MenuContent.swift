@@ -49,9 +49,8 @@ struct MenuContent: View {
         Button("Dictionary…") { openMainWindow(.dictionary) }
         Button("Settings…") { openMainWindow(.settings) }
             .keyboardShortcut(",")
-        if Updater.isConfigured {
-            Button("Check for Updates…") { Updater.shared.check() }
-        }
+        Button("Check for Updates…") { Updater.shared.check() }
+            .disabled(!Updater.isConfigured)
         Menu("Help") {
             Button("What You Can Say…") { CheatsheetWindow.show() }
             Button("Help Online…") { NSWorkspace.shared.open(Brand.supportURL) }

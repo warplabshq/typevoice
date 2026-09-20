@@ -190,6 +190,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let appItem = NSMenuItem(); menu.addItem(appItem)
         let app = NSMenu()
         app.addItem(withTitle: "Settings…", action: #selector(showSettingsFromMenu), keyEquivalent: ",")
+        app.addItem(withTitle: "Check for Updates…", action: #selector(checkForUpdatesFromMenu), keyEquivalent: "")
         app.addItem(.separator())
         app.addItem(withTitle: "Hide \(Brand.name)", action: #selector(NSApplication.hide(_:)), keyEquivalent: "h")
         app.addItem(withTitle: "Quit \(Brand.name)", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
@@ -221,6 +222,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     @objc private func showSettingsFromMenu() { showMain(tab: .settings) }
+    @objc private func checkForUpdatesFromMenu() { Updater.shared.check() }
     @objc private func openHelp() { NSWorkspace.shared.open(Brand.supportURL) }
 
     func setMainTitle(_ t: MainTab) { main?.title = t.label }
