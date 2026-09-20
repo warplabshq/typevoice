@@ -85,7 +85,9 @@ Each is set up once.
    key). Put the personal checkout link into `Brand.checkoutURL` and the price into
    `Brand.price`; the team link goes into the site's `SITE.teamCheckoutURL`. Set both products'
    return URL to the site's `thanks.html`, which hands the key to the app through
-   `typevoice://activate?key=…`.
+   `typevoice://activate?key=…`. For fair prices by country: Settings › Business › enable
+   *Adaptive Currency*, then *Purchasing Power Parity* percentages per country (30–100 % of
+   the US price); it applies at checkout from the billing country, and the link stays the same.
 
 Then, per version: bump `CFBundleShortVersionString` and `CFBundleVersion` in
 `Packaging/Info.plist`, write the entry at the top of `CHANGELOG.md` (it becomes the release
