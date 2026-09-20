@@ -38,8 +38,13 @@ app: build
 	@mkdir -p $(BUNDLE)/Contents/MacOS $(BUNDLE)/Contents/Resources $(BUNDLE)/Contents/Frameworks
 	@cp .build/$(CONFIG)/$(APP) $(BUNDLE)/Contents/MacOS/$(APP)
 	@cp Packaging/Info.plist $(BUNDLE)/Contents/Info.plist
-	@# SPM resource bundles (if any) live next to the binary; ship them in Resources.
-	@for b in .build/$(CONFIG)/*.bundle; do [ -d "$$b" ] && cp -R "$$b" $(BUNDLE)/Contents/Resources/ || true; done
+	@# SPM resource bundles live next to the binary; ship only the ones from current
+	@# dependencies (a stale build directory can hold bundles of packages since removed).
+	@for b in .build/$(CONFIG)/*.bundle; do \
+	  [ -d "$$b" ] || continue; \
+	  name=$$(basename "$$b" | cut -d_ -f1); \
+	  grep -q "name: \"$$name\"" Package.swift && cp -R "$$b" $(BUNDLE)/Contents/Resources/ || echo "skipping stale $$b"; \
+	done
 	@[ -f Packaging/AppIcon.icns ] && cp Packaging/AppIcon.icns $(BUNDLE)/Contents/Resources/ || true
 	@# Sparkle ships as a dynamic framework; embed it where the rpath expects it. Its XPC
 	@# services only matter for sandboxed apps, so they stay out of the bundle.

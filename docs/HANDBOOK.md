@@ -132,9 +132,10 @@ Support playbook:
 
 One-time setup (owner):
 1. Developer ID Application certificate: Xcode › Settings › Accounts › Manage Certificates › +.
-2. Notarization credentials: an app-specific password from account.apple.com › Sign-In and
-   Security › App-Specific Passwords, then
-   `xcrun notarytool store-credentials TypeVoice --apple-id <email> --team-id <TEAMID>`.
+2. Notarization credentials: an App Store Connect API key (Users and Access › Integrations › Team
+   Keys; role Developer is enough), stored once with
+   `xcrun notarytool store-credentials TypeVoice --key AuthKey_<ID>.p8 --key-id <ID> --issuer <UUID>`.
+   The `.p8` then belongs in the password manager, not in Downloads. Team ID J3QE43KTMT.
 3. Sparkle keys: `make keys` → paste the public key into `SUPublicEDKey` in `Packaging/Info.plist`;
    back up the private key (`.build/artifacts/sparkle/Sparkle/bin/generate_keys -x file`). Losing it
    means shipped copies can't take updates.
@@ -145,10 +146,16 @@ Per release:
    `CFBundleVersion` in `Packaging/Info.plist`; commit.
 2. `make release` → signs with Developer ID, notarizes (2–10 min), staples, writes
    `dist/TypeVoice-<v>.zip` (Sparkle), `dist/TypeVoice.dmg` (downloads), `dist/TypeVoice-<v>.html`
-   (notes) and `dist/appcast.xml`.
+   (notes) and `dist/appcast.xml`. The appcast is generated from `dist/updates/` (zip + notes only;
+   `generate_appcast` refuses a zip and a dmg of the same version side by side) with the notes
+   embedded, so no per-version page is needed on the site.
 3. `make publish` → GitHub release `v<v>` in warplabshq/typevoice-releases with both files, copies
    the appcast into the site repo and deploys the site. Commit the site repo afterwards.
-4. Update `changelog.html` on the site (mirror the CHANGELOG entry; replace "coming soon").
+4. Update `changelog.html` on the site (mirror the CHANGELOG entry), then `git tag -a v<v>` in
+   this repo so the source of every shipped build is findable.
+5. Sanity: download the DMG from the release page, `spctl -a -vv -t exec` on the app inside
+   (expect "Notarized Developer ID"), and open the appcast URL. The `make app` build only copies
+   resource bundles of packages still in `Package.swift`; a stale `.build` cannot leak others.
 
 Installed copies check `https://typevoice.ai/appcast.xml` daily (`SUFeedURL`), show the notes and
 install in place. Updates are verified by Apple notarization + the Sparkle EdDSA signature.
@@ -197,9 +204,15 @@ Nothing secret is in either repository.
 
 ## 11. Open work
 
-- DNS: point typevoice.ai at the Pages project (needs the DNS token); add `www`.
-- Apple: Developer ID cert, notarytool credentials; Sparkle keys; first `make release` / `make publish`
-  as 1.0.0; clean-Mac test (download → open → onboard → trial → test purchase → activate → update check).
+- Shipped: 1.0.0 (build 100) on 20 September 2026 — notarized, stapled, on the releases repo,
+  appcast live, site on typevoice.ai (root + www, Cloudflare proxied, HSTS). Source tagged `v1.0.0`.
+- Not yet done by hand: a test-mode purchase (`defaults write com.priyamventures.typevoice dodoTest
+  -bool YES`, site served locally on :8787) to see a key arrive and activate; a clean-Mac run
+  (download → open → onboard → trial → activate → update check). Dodo issues keys through the
+  License Key entitlement on `payment.succeeded` and appends `license_key=` to the return URL.
+- Cloudflare: add a Redirect Rule "www → root" in the dashboard (Rules › Redirect Rules; the
+  Pages `_redirects` file cannot redirect by host, so `site.js` does it in JS meanwhile). The
+  stale `_railway-verify` TXT record can go once the Railway service is deleted.
 - Delete the Railway service of the old product.
 - Parked (usage limit): the dictation-quality implementation on the `quality` branch/worktree
   (`../TypeVoice-quality`: TextPipeline scaffold + `--test text` runner; modules cleaner, numbers,

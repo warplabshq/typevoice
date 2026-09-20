@@ -13,12 +13,12 @@ enum Brand {
     static let company = "Priyam Ventures"
     static let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
 
-    /// Website. Replace the host once the site is deployed (the typevoice-site repo).
+    /// Website (the typevoice-site repo, Cloudflare Pages). Clean paths; Pages redirects `.html`.
     static let website = URL(string: "https://typevoice.ai")!
-    static var privacyURL: URL { website.appendingPathComponent("privacy.html") }
-    static var termsURL: URL { website.appendingPathComponent("terms.html") }
-    static var eulaURL: URL { website.appendingPathComponent("eula.html") }
-    static var supportURL: URL { website.appendingPathComponent("support.html") }
+    static var privacyURL: URL { website.appendingPathComponent("privacy") }
+    static var termsURL: URL { website.appendingPathComponent("terms") }
+    static var eulaURL: URL { website.appendingPathComponent("eula") }
+    static var supportURL: URL { website.appendingPathComponent("support") }
     static let supportEmail = "mail@warplabs.co"
 
     /// Dodo Payments hosted checkout for the one-time purchase (live product
@@ -36,7 +36,7 @@ enum Brand {
     /// served site, so the whole flow can be tried before launch.
     private static var returnPage: String {
         let test = UserDefaults.standard.bool(forKey: "dodoTest")
-        let page = test ? "http://localhost:8787/thanks.html" : website.appendingPathComponent("thanks.html").absoluteString
+        let page = test ? "http://localhost:8787/thanks.html" : website.appendingPathComponent("thanks").absoluteString
         return page.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
     }
     /// Shown next to the Buy buttons; keep them in step with the Dodo products.
