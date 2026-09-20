@@ -5,24 +5,10 @@ import SwiftUI
 @main
 struct TypeVoiceApp: App {
     @NSApplicationDelegateAdaptor(AppDelegate.self) private var delegate
-    @AppStorage(Prefs.Key.showMenuBarIcon) private var showMenuBarIcon = true
-
     var body: some Scene {
-        MenuBarExtra(isInserted: $showMenuBarIcon) {
-            MenuContent(state: delegate.state, history: delegate.history, licensing: delegate.licensing)
-        } label: {
-            MenuBarGlyph(target: MenuBarIcon.look(for: delegate.state.phase, paused: delegate.state.paused))
-                .accessibilityLabel(menuBarLabel)
-        }
-    }
-
-    private var menuBarLabel: String {
-        if delegate.state.paused { return "\(Brand.name), paused" }
-        switch delegate.state.phase {
-        case .listening: return "\(Brand.name), listening"
-        case .processing: return "\(Brand.name), typing"
-        default: return Brand.name
-        }
+        // The menu bar item is AppKit (StatusItemController); SwiftUI needs a scene, and the
+        // Settings scene is the one that doesn't open a window on its own.
+        Settings { EmptyView() }
     }
 }
 
@@ -36,6 +22,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     let licensing = Licensing()
     private(set) var controller: DictationController!
     private(set) var hud: HUDController!
+    private var statusItem: StatusItemController?
     private var onboarding: NSWindow?
     private var main: NSWindow?
     private var mainTab: MainTab = .history
@@ -50,6 +37,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         Log.d("didFinishLaunching ax=\(Permissions.accessibility) mic=\(Permissions.mic) onboarded=\(Prefs.hasOnboarded)")
         Self.shared = self
         installMainMenu()
+        statusItem = StatusItemController(state: state, history: history, licensing: licensing)
         RecordingStore.cleanDragLinks()
         RecordingStore.prune()
         Timer.scheduledTimer(withTimeInterval: 86400, repeats: true) { _ in Task { @MainActor in RecordingStore.prune() } }
@@ -61,6 +49,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
                     if let raw = n.object as? String, let t = MainTab(rawValue: raw) { openMainWindow(t) }
                     else if (n.object as? String) == "onboarding" { self?.showOnboarding() }
                     else if (n.object as? String) == "cheatsheet" { CheatsheetWindow.show() }
+                    else if (n.object as? String) == "menu" { self?.statusItem?.debugFlashMenu() }
                     else if let raw = n.object as? String, raw.hasPrefix("appearance:") {
                         // Force light/dark for design review; "system" follows the Mac again.
                         let name: NSAppearance.Name? = raw.hasSuffix("light") ? .aqua : raw.hasSuffix("dark") ? .darkAqua : nil

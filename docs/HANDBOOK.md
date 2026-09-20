@@ -163,7 +163,12 @@ Per release:
    the appcast into the site repo and deploys the site. Commit the site repo afterwards.
 4. Update `changelog.html` on the site (mirror the CHANGELOG entry), then `git tag -a v<v>` in
    this repo so the source of every shipped build is findable.
-5. Sanity: download the DMG from the release page, `spctl -a -vv -t exec` on the app inside
+5. `make release` also files the build's dSYM under `dist/symbols/` (keep that folder; it is
+   git-ignored). A crash report names the binary UUID; `dwarfdump --uuid` on the dSYM must match,
+   then `atos -o dist/symbols/TypeVoice-<v>.dSYM/Contents/Resources/DWARF/TypeVoice -l <load
+   address> <frame address>` gives the function. Without the dSYM a report only shows framework
+   frames, as the 1.0.6 menu crash did.
+6. Sanity: download the DMG from the release page, `spctl -a -vv -t exec` on the app inside
    (expect "Notarized Developer ID"), and open the appcast URL. The `make app` build only copies
    resource bundles of packages still in `Package.swift`; a stale `.build` cannot leak others.
 
@@ -220,6 +225,9 @@ Nothing secret is in either repository.
 - 2026-09-20 trial 3 → 7 days; personal key 2 Macs; team key 5 × 2 Macs at $299; PPP first, then
   replaced by fixed Localized Pricing for IN/PK/BD/EG/NG only (PPP defaults also discounted the UK, DE, JP…);
   14-day refund; downloads on a public releases repo; site on Cloudflare Pages.
+- 2026-09-21 the menu bar item moved from SwiftUI MenuBarExtra to AppKit (`UI/StatusItem.swift`)
+  after a user's 1.0.6 crash in a menu action callback SwiftUI had already released; the menu is
+  rebuilt on every open and every item is owned for the app's lifetime.
 - 2026-09-20 open source (GPL v3) later the same day, for trust; revenue from the signed build,
   updates and support. Trademarks on the name and icon keep forks distinguishable.
 - Name collision noted: a third-party iPhone "TypeVoice: AI Voice Keyboard" exists at

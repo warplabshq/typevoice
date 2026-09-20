@@ -93,6 +93,10 @@ release: app notes
 	@xcrun stapler staple $(BUNDLE) && rm -f dist/$(APP)-$(VERSION).zip && ditto -c -k --keepParent $(BUNDLE) dist/$(APP)-$(VERSION).zip
 	@$(MAKE) --no-print-directory dmg
 	@$(MAKE) --no-print-directory appcast
+	@# Keep the symbols of every shipped build: crash reports carry the binary's UUID, and
+	@# only the matching dSYM turns their addresses back into function names.
+	@mkdir -p dist/symbols && rm -rf dist/symbols/$(APP)-$(VERSION).dSYM && cp -R .build/$(CONFIG)/$(APP).dSYM dist/symbols/$(APP)-$(VERSION).dSYM
+	@echo "→ dist/symbols/$(APP)-$(VERSION).dSYM  ($$(dwarfdump --uuid $(BUNDLE)/Contents/MacOS/$(APP) | awk '{print $$2}'))"
 	@echo "→ dist/$(APP)-$(VERSION).zip  dist/$(APP).dmg  dist/appcast.xml"
 
 notarize:

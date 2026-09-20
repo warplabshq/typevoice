@@ -4,6 +4,10 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.7 — 21 September 2026
+
+- Fixes a crash when choosing an item in the menu bar menu.
+
 ## 1.0.6 — 21 September 2026
 
 - Apple Intelligence bug fixes. Smart cleanup is now off by default; turn it on under Style

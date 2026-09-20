@@ -1,5 +1,4 @@
 import AppKit
-import SwiftUI
 
 /// The menu bar glyph: the brand waveform as a template image so it follows the menu
 /// bar's light and dark appearance. Three states so the menu bar tells you what the app
@@ -41,30 +40,3 @@ enum MenuBarIcon {
     static func image(for phase: AppState.Phase, paused: Bool) -> NSImage { look(for: phase, paused: paused).image }
 }
 
-/// The menu bar label: eases between looks over ~240 ms (eight small frames), so listening
-/// lifts the bars instead of swapping in a different icon.
-struct MenuBarGlyph: View {
-    let target: MenuBarIcon.Look
-    @State private var shown: MenuBarIcon.Look = .resting
-    @State private var animator: Task<Void, Never>?
-
-    var body: some View {
-        Image(nsImage: shown.image)
-            .onAppear { shown = target }
-            .onChange(of: target) { _, next in
-                animator?.cancel()
-                let from = shown
-                animator = Task { @MainActor in
-                    let steps = 8
-                    for i in 1...steps {
-                        try? await Task.sleep(for: .milliseconds(30))
-                        if Task.isCancelled { return }
-                        let t = CGFloat(i) / CGFloat(steps)
-                        let eased = 1 - pow(1 - t, 3)   // ease-out
-                        shown = MenuBarIcon.Look.mix(from, next, eased)
-                    }
-                    shown = next
-                }
-            }
-    }
-}
