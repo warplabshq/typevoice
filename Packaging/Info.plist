@@ -21,7 +21,7 @@
 
     <!-- Sparkle. SUFeedURL is the appcast the site hosts; SUPublicEDKey is the public half of
          the EdDSA key from `make keys` (the private half stays in your login keychain). -->
-    <key>SUFeedURL</key>                          <string>https://REPLACE-ME.example/appcast.xml</string>
+    <key>SUFeedURL</key>                          <string>https://typevoice.app/appcast.xml</string>
     <key>SUPublicEDKey</key>                      <string>REPLACE-ME</string>
     <key>SUEnableAutomaticChecks</key>            <true/>
     <key>SUScheduledCheckInterval</key>           <integer>86400</integer>

@@ -14,12 +14,12 @@ enum Brand {
     static let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
 
     /// Website. Replace the host once the site is deployed (the typevoice-site repo).
-    static let website = URL(string: "https://REPLACE-ME.example")!
+    static let website = URL(string: "https://typevoice.app")!
     static var privacyURL: URL { website.appendingPathComponent("privacy.html") }
     static var termsURL: URL { website.appendingPathComponent("terms.html") }
     static var eulaURL: URL { website.appendingPathComponent("eula.html") }
     static var supportURL: URL { website.appendingPathComponent("support.html") }
-    static let supportEmail = "support@REPLACE-ME.example"
+    static let supportEmail = "mail@warplabs.co"
 
     /// Dodo Payments hosted checkout for the one-time purchase (live product
     /// pdt_0NnyeIUl5lH6A5vMnNQl0; its test-mode twin is pdt_0Nnye4FRV4gyNve43FkdY on
