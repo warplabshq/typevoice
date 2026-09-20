@@ -58,7 +58,9 @@ Debug hooks in the running app (all via a distributed notification; the app must
 
 ```bash
 # helper: swift Tools/… or the one-liner below posts "typevoice.debug.showTab"
-post() { swift -e 'import Foundation; DistributedNotificationCenter.default().postNotificationName(Notification.Name("typevoice.debug.showTab"), object: CommandLine.arguments[1], userInfo: nil, deliverImmediately: true)' -- "$1"; }
+post() { TAB="$1" swift -e 'import Foundation; DistributedNotificationCenter.default().postNotificationName(Notification.Name("typevoice.debug.showTab"), object: ProcessInfo.processInfo.environment["TAB"]!, userInfo: nil, deliverImmediately: true)'; }
+# (swift -e does not pass "--" arguments through, hence the environment variable)
+# Screenshot the main window: WID=$(swift -e 'import CoreGraphics; for w in CGWindowListCopyWindowInfo([.optionOnScreenOnly], kCGNullWindowID) as! [[String: Any]] where (w["kCGWindowOwnerName"] as? String) == "TypeVoice" { if ((w["kCGWindowBounds"] as? [String: Any])?["Height"] as? Double ?? 0) > 200 { print(w["kCGWindowNumber"]!); break } }'); screencapture -x -l $WID out.png
 post history | dictionary | style | settings | license | privacy   # open a main-window tab
 post onboarding | cheatsheet
 post hud:listening | hud:locked | hud:processing | hud:done | hud:audio | hud:copy | hud:copied | hud:error | hud:notheard | hud:silent | hud:idle
