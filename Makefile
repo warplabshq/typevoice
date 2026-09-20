@@ -20,7 +20,7 @@ endif
 RELEASE_ID ?= $(shell security find-identity -v -p codesigning 2>/dev/null | grep -oE '"Developer ID Application[^"]*"' | head -1 | tr -d '"')
 NOTARY_PROFILE ?= TypeVoice
 # Where the zip is published; the appcast points here. GitHub Releases works with no server.
-DOWNLOAD_URL ?= https://github.com/priyam-raj/typevoice/releases/download/v$(VERSION)/
+DOWNLOAD_URL ?= https://github.com/warplabshq/typevoice/releases/download/v$(VERSION)/
 VERSION  := $(shell /usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Packaging/Info.plist)
 
 .PHONY: all build app run debug clean release notarize appcast keys icon notes
