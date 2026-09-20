@@ -21,6 +21,7 @@ Owner: Priyam Raj, Priyam Ventures / Warplabs. Support: mail@warplabs.co. Site: 
 |---|---|---|
 | App source (private) | github.com/warplabshq/typevoice | local `~/Desktop/Projects/TypeVoice`, branch `main` |
 | Website | github.com/warplabshq/typevoice-site | local `~/Desktop/Projects/TypeVoiceSite`; deployed by `make deploy` to Cloudflare Pages project `typevoice` (account Priyam Ventures) → https://typevoice.pages.dev and https://typevoice.ai |
+| Source (public, GPL v3) | github.com/warplabshq/typevoice | the name and icon are trademarks; official builds also ship under the EULA |
 | Downloads + release notes (public) | github.com/warplabshq/typevoice-releases | only release assets; the site's Download button and the Sparkle appcast point here |
 | Old forms product (unrelated) | github.com/warplabshq/typevoice-forms | the previous "TypeVoice" (Next.js on Railway) — retired; its Railway service should be deleted |
 
@@ -214,7 +215,9 @@ Nothing secret is in either repository.
   back; RevenueCat out — it has no Dodo integration; Dodo license keys; Sparkle).
 - 2026-09-20 trial 3 → 7 days; personal key 2 Macs; team key 5 × 2 Macs at $299; PPP first, then
   replaced by fixed Localized Pricing for IN/PK/BD/EG/NG only (PPP defaults also discounted the UK, DE, JP…);
-  14-day refund; closed source; downloads on a public releases repo; site on Cloudflare Pages.
+  14-day refund; downloads on a public releases repo; site on Cloudflare Pages.
+- 2026-09-20 open source (GPL v3) later the same day, for trust; revenue from the signed build,
+  updates and support. Trademarks on the name and icon keep forks distinguishable.
 - Name collision noted: a third-party iPhone "TypeVoice: AI Voice Keyboard" exists at
   typevoice.app (App Store id 6769261600). Owner chose to keep the name; domain is typevoice.ai.
 - Parakeet stays the engine: Apple's SpeechTranscriber measured equal on the owner's voice and
