@@ -160,6 +160,7 @@ struct SettingsView: View {
                         Button("What you can say") { CheatsheetWindow.show() }.buttonStyle(.link)
                         Button("What's new") { NSWorkspace.shared.open(Brand.changelogURL) }.buttonStyle(.link)
                         Button("Online help") { NSWorkspace.shared.open(Brand.supportURL) }.buttonStyle(.link)
+                        Button("Source code") { NSWorkspace.shared.open(Brand.sourceURL) }.buttonStyle(.link)
                         Button("Report a problem") { Support.reportProblem(state: state) }.buttonStyle(.link)
                     }
                 }

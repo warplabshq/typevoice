@@ -54,6 +54,7 @@ struct MenuContent: View {
         Menu("Help") {
             Button("What You Can Say…") { CheatsheetWindow.show() }
             Button("Help Online…") { NSWorkspace.shared.open(Brand.supportURL) }
+            Button("Source Code…") { NSWorkspace.shared.open(Brand.sourceURL) }
             Button("Report a Problem…") { Support.reportProblem(state: state) }
         }
         Divider()

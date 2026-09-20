@@ -4,6 +4,11 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.3 — 20 September 2026
+
+- TypeVoice is open source: the code is on GitHub under the GPL v3, linked from the Privacy
+  tab, Settings › About and the Help menu. Nothing about the app changed; now you can check.
+
 ## 1.0.2 — 20 September 2026
 
 - The License tab shows the price for your country, where there is one: a flag, the local

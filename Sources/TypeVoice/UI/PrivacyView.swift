@@ -25,6 +25,9 @@ struct PrivacyView: View {
                 row("sparkles", "Smart cleanup uses Apple Intelligence's on-device model. Text stays on this Mac.")
                 row("network", "Network use is limited to: the one-time model download from huggingface.co, the update check against \(Brand.name)'s own appcast, one request to \(Brand.website.host ?? "the site") from the License tab to show the price for your country (nothing about you is sent), and, once you buy a license, activating and re-checking that key with Dodo Payments. No analytics, no accounts.")
                 row("internaldrive", "History is a small database and your dictionary a text file, both on this Mac, both yours to open, back up or delete.")
+                row("chevron.left.forwardslash.chevron.right", "None of this asks for trust: the source is public under the GPL v3, so anyone can read exactly what the app does and build it themselves.")
+                Button("Read the source on GitHub") { NSWorkspace.shared.open(Brand.sourceURL) }
+                    .buttonStyle(.link).padding(.leading, 28)
             }
             Section("Legal") {
                 LabeledContent("Privacy Policy") { Button("Read online") { NSWorkspace.shared.open(Brand.privacyURL) } }

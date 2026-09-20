@@ -1,11 +1,22 @@
 # TypeVoice
 
 Local dictation for Mac. Hold a key, talk, release: clean, punctuated text lands at your
-cursor in any app. Everything runs on the Mac — no account, no server, no telemetry.
+cursor in any app. Everything runs on the Mac — no account, no server, no telemetry — and
+the code is here so you don't have to take our word for it.
 
-Sold directly at [typevoice.ai](https://typevoice.ai) (free for seven days, then one purchase,
-no subscription) and updated in place with Sparkle. This repository is private; downloads and
-release notes are published from the public `warplabshq/typevoice-releases` repository.
+**[typevoice.ai](https://typevoice.ai)** · free for seven days, then one purchase, no subscription.
+
+## Open source, and paid
+
+The source is under the [GNU GPL v3](LICENSE). Read it, build it, change it, keep the
+changes under the same license. What we sell at typevoice.ai is the signed, notarized build:
+it installs in one drag, updates itself, comes with support, and pays for the work. If you
+build it yourself the License tab will tell you the checkout isn't configured, and
+everything else works; we'd still be glad if you bought a key.
+
+The name **TypeVoice** and the icon are trademarks of Priyam Ventures and are not covered by
+the GPL. A fork needs its own name and icon, so that nobody mistakes it for the build we
+stand behind.
 
 ## How it works
 
@@ -44,10 +55,10 @@ build/TypeVoice.app/Contents/MacOS/TypeVoice --test clip.wav   # run the text pi
 build/TypeVoice.app/Contents/MacOS/TypeVoice --test vocab      # dictionary matcher self-test
 ```
 
-There is nothing secret in the tree. The checkout link and price live in
+There is nothing secret in the tree. The checkout links and prices live in
 `Sources/TypeVoice/Support/Brand.swift`; the update feed and its public key in
-`Packaging/Info.plist`. Until those are filled in, the License tab says the checkout isn't
-configured and the updater stays off, which is the right behaviour for a fork.
+`Packaging/Info.plist`. A fork should replace those (or blank them: the License tab then says
+the checkout isn't configured and the updater stays off), along with the name and icon.
 
 ### Signing during development
 
@@ -61,18 +72,17 @@ Data lives in `~/Library/Application Support/TypeVoice` (history, dictionary, re
 and `~/Library/Application Support/FluidAudio` (the model). A Mac that ran the earlier
 sandboxed builds has its data moved out of the container on first launch.
 
-## Releasing
+## Releasing (how we ship the official build)
 
-Direct distribution needs three things from your Apple Developer account and one from Dodo.
-Each is set up once.
+Direct distribution needs three things from an Apple Developer account and one from Dodo.
+Each is set up once; `docs/HANDBOOK.md` has the longer version.
 
 1. **Developer ID Application certificate** — Xcode › Settings › Accounts › Manage
    Certificates › + › Developer ID Application. `make release` picks it up from the keychain.
-2. **Notarization credentials** — an app-specific password for your Apple ID
-   (appleid.apple.com › Sign-In and Security › App-Specific Passwords), stored once:
+2. **Notarization credentials** — an App Store Connect API key, stored once:
 
    ```bash
-   xcrun notarytool store-credentials TypeVoice --apple-id you@example.com --team-id TEAMID
+   xcrun notarytool store-credentials TypeVoice --key AuthKey_ID.p8 --key-id ID --issuer UUID
    ```
 3. **Sparkle keys** — `make keys` prints a public key; paste it into `SUPublicEDKey` in
    `Packaging/Info.plist`. The private key stays in your login keychain; export a backup with
@@ -83,10 +93,9 @@ Each is set up once.
    laptop) and **Team, $299, activations limit 10** (five people, two Macs each, one shared
    key). Put the personal checkout link into `Brand.checkoutURL` and the price into
    `Brand.price`; the team link goes into the site's `SITE.teamCheckoutURL`. Set both products'
-   return URL to the site's `thanks.html`, which hands the key to the app through
-   `typevoice://activate?key=…`. For fair prices by country: Settings › Business › enable
-   *Adaptive Currency*, then *Purchasing Power Parity* percentages per country (30–100 % of
-   the US price); it applies at checkout from the billing country, and the link stays the same.
+   return URL to the site's `/thanks`, which hands the key to the app through
+   `typevoice://activate?key=…`. Country prices are Localized Pricing rules on the products
+   (`by_country`); the site's `/geo` and the app's License tab read the same table.
 
 Then, per version: bump `CFBundleShortVersionString` and `CFBundleVersion` in
 `Packaging/Info.plist`, write the entry at the top of `CHANGELOG.md` (it becomes the release
@@ -115,9 +124,14 @@ To try a purchase against Dodo's test mode: use the test-mode checkout link and
 
 The landing page, Support, Privacy Policy, Terms and the license agreement live in their
 own repository, `typevoice-site` (locally `../TypeVoiceSite`), together with `appcast.xml`
-and the thank-you page. Everything brand-specific is in its `site.js`. Deploy that
-repository anywhere static (GitHub Pages works), then put the real host into `Brand.website`
-in `Sources/TypeVoice/Support/Brand.swift` and into `SUFeedURL` in `Packaging/Info.plist`.
+and the thank-you page. Everything brand-specific is in its `site.js`. It deploys to
+Cloudflare Pages; a fork puts its own host into `Brand.website` in
+`Sources/TypeVoice/Support/Brand.swift` and into `SUFeedURL` in `Packaging/Info.plist`.
+
+## Contributing
+
+Issues and pull requests are welcome; see [CONTRIBUTING.md](CONTRIBUTING.md). Security
+problems: [SECURITY.md](SECURITY.md).
 
 ## Layout
 

@@ -211,6 +211,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         let helpItem = NSMenuItem(); menu.addItem(helpItem)
         let help = NSMenu(title: "Help")
         help.addItem(withTitle: "\(Brand.name) Help", action: #selector(openHelp), keyEquivalent: "?")
+        help.addItem(withTitle: "Source Code", action: #selector(openSource), keyEquivalent: "")
         helpItem.submenu = help
 
         let windowItem = NSMenuItem(); menu.addItem(windowItem)
@@ -224,6 +225,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     @objc private func showSettingsFromMenu() { showMain(tab: .settings) }
     @objc private func checkForUpdatesFromMenu() { Updater.shared.check() }
     @objc private func openHelp() { NSWorkspace.shared.open(Brand.supportURL) }
+    @objc private func openSource() { NSWorkspace.shared.open(Brand.sourceURL) }
 
     func setMainTitle(_ t: MainTab) { main?.title = t.label }
 

@@ -20,6 +20,8 @@ enum Brand {
     static var eulaURL: URL { website.appendingPathComponent("eula") }
     static var supportURL: URL { website.appendingPathComponent("support") }
     static var changelogURL: URL { website.appendingPathComponent("changelog") }
+    /// The source, under the GPL v3. The name and icon are trademarks and stay ours.
+    static let sourceURL = URL(string: "https://github.com/warplabshq/typevoice")!
     static let supportEmail = "mail@warplabs.co"
 
     /// Dodo Payments hosted checkout for the one-time purchase (live product

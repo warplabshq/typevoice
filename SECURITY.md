@@ -1,6 +1,6 @@
 # Security
 
-TypeVoice runs entirely on the Mac: no accounts, no servers of ours, and the only network
+TypeVoice runs entirely on the Mac: no accounts, no servers of ours (the source is public, so this is checkable), and the only network
 requests are a one-time model download from Hugging Face, the Sparkle update check against
 our own appcast (EdDSA-signed updates over HTTPS), and license activation and re-checks
 with Dodo Payments. The threat model is therefore mostly local: the Accessibility
