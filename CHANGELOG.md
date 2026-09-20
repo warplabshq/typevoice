@@ -4,7 +4,7 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
-## 1.0.1 — in progress
+## 1.0.1 — 20 September 2026
 
 - Everything about how the text reads now lives under Style: numbers as digits, paragraphs from
   pauses, spoken commands, filler and stutter cleanup, and Smart cleanup with its Apple
