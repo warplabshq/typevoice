@@ -4,10 +4,13 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
-## 1.0.5 — in progress
+## 1.0.5 — 20 September 2026
 
 - After an update installs, the window comes back where it was instead of the app quietly
   relaunching in the menu bar.
+- The menu bar glyph eases between states. Listening lifts the bars a little rather than
+  swapping in a different, fatter icon.
+- Settings › About says Changelog, like the site.
 
 ## 1.0.4 — 20 September 2026
 

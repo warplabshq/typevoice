@@ -11,7 +11,7 @@ struct TypeVoiceApp: App {
         MenuBarExtra(isInserted: $showMenuBarIcon) {
             MenuContent(state: delegate.state, history: delegate.history, licensing: delegate.licensing)
         } label: {
-            Image(nsImage: MenuBarIcon.image(for: delegate.state.phase, paused: delegate.state.paused))
+            MenuBarGlyph(target: MenuBarIcon.look(for: delegate.state.phase, paused: delegate.state.paused))
                 .accessibilityLabel(menuBarLabel)
         }
     }
