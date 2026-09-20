@@ -5,9 +5,11 @@ import SwiftUI
 /// (SUFeedURL) once a day; the user can also check by hand. Updates are signed with
 /// the EdDSA key whose public half is in Info.plist (SUPublicEDKey).
 @MainActor
-final class Updater {
+final class Updater: NSObject, SPUUpdaterDelegate {
     static let shared = Updater()
-    let controller: SPUStandardUpdaterController
+    private(set) var controller: SPUStandardUpdaterController!
+    /// Set just before Sparkle relaunches us; read once at the next launch.
+    static let reopenKey = "reopenAfterUpdate"
 
     /// True once a real appcast URL and public key are in Info.plist.
     static var isConfigured: Bool {
@@ -16,8 +18,25 @@ final class Updater {
         return !feed.isEmpty && !feed.contains("REPLACE-ME") && !key.isEmpty && !key.contains("REPLACE-ME")
     }
 
-    private init() {
-        controller = SPUStandardUpdaterController(startingUpdater: Self.isConfigured, updaterDelegate: nil, userDriverDelegate: nil)
+    private override init() {
+        super.init()
+        controller = SPUStandardUpdaterController(startingUpdater: Self.isConfigured, updaterDelegate: self, userDriverDelegate: nil)
+    }
+
+    /// A menu bar app relaunches invisibly after an update, which reads as "nothing happened".
+    /// Note which window was open so the next launch brings it straight back.
+    nonisolated func updaterWillRelaunchApplication(_ updater: SPUUpdater) {
+        // Sparkle calls this on the main thread; never block it waiting for itself.
+        let read = { (NSApp.delegate as? AppDelegate)?.openMainTab?.rawValue ?? MainTab.settings.rawValue }
+        let tab = Thread.isMainThread ? read() : DispatchQueue.main.sync(execute: read)
+        UserDefaults.standard.set(tab, forKey: Updater.reopenKey)
+    }
+
+    /// Called once at launch: reopen the window an update closed, on the tab it was showing.
+    static func reopenIfUpdated(_ show: (MainTab) -> Void) {
+        guard let raw = UserDefaults.standard.string(forKey: reopenKey) else { return }
+        UserDefaults.standard.removeObject(forKey: reopenKey)
+        show(MainTab(rawValue: raw) ?? .settings)
     }
 
     func check() { controller.checkForUpdates(nil) }

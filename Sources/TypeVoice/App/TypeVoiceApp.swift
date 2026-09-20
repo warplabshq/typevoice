@@ -122,6 +122,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             // Warm the model in the background so the last card is quick.
             controller.warm()
         }
+        // Back from an update: put the window where it was, so the update visibly "finished".
+        Updater.reopenIfUpdated { [weak self] tab in self?.showMain(tab: tab) }
         Log.app.info("\(Brand.name) launched")
         Log.d("launch complete; screens=\(NSScreen.screens.count)")
     }
@@ -156,6 +158,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     }
 
     // MARK: Main window
+
+    /// The tab the main window is showing, or nil when it is closed.
+    var openMainTab: MainTab? { (main?.isVisible ?? false) ? mainTab : nil }
 
     func showMain(tab: MainTab? = nil) {
         if let tab { mainTab = tab }

@@ -4,6 +4,11 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.5 — in progress
+
+- After an update installs, the window comes back where it was instead of the app quietly
+  relaunching in the menu bar.
+
 ## 1.0.4 — 20 September 2026
 
 - Style › Sign-off: a fixed note on the end of every dictation, for places where spelling
