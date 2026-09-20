@@ -17,6 +17,13 @@ final class SmartCleaner {
     private var strikes = 0
     private var restingUntil: Date = .distantPast
     private var warmedOnce = false
+    /// How long the model took last time it finished, so Settings can say what it costs.
+    private(set) static var lastDuration: Duration?
+    static var costNote: String {
+        guard let d = lastDuration else { return " Adds up to about a second per dictation." }
+        let ms = Int(d / .milliseconds(1))
+        return ms < 150 ? " Adds under 0.2 s per dictation." : String(format: " Adds about %.1f s per dictation.", Double(ms) / 1000)
+    }
 
     private static func instructions(style: Style, dictionary: [String]) -> String {
         var lines = [
@@ -225,6 +232,7 @@ final class SmartCleaner {
             return nil
         }
         strikes = 0
+        Self.lastDuration = ContinuousClock.now - t0
         Log.timing("smart.clean", since: t0)
         return Self.validate(input: text, output: out)
         #else

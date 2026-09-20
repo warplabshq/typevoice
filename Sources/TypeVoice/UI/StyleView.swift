@@ -6,7 +6,7 @@ struct StyleView: View {
     @AppStorage(Prefs.Key.tone) private var tone = Style.Tone.natural.rawValue
     @AppStorage(Prefs.Key.removeFillers) private var removeFillers = true
     @AppStorage(Prefs.Key.fixStutters) private var fixStutters = true
-    @AppStorage(Prefs.Key.smartCleanup) private var smart = true
+    @AppStorage(Prefs.Key.smartCleanup) private var smart = false
     @AppStorage(Prefs.Key.numbersAsDigits) private var numbers = true
     @AppStorage(Prefs.Key.pauseParagraphs) private var pauseParagraphs = true
     @AppStorage(Prefs.Key.voiceCommands) private var voiceCommands = true
@@ -77,14 +77,14 @@ struct StyleView: View {
             }
             Section("Smart cleanup") {
                 Toggle("Smart cleanup", isOn: $smart)
-                Text("Fixes false starts and self-corrections with Apple Intelligence, on this Mac. Never adds anything.")
+                Text("Fixes false starts and self-corrections with Apple Intelligence, on this Mac. Never adds anything. It does add a moment per dictation while the model runs; off if you'd rather have the words instantly.")
                     .font(.caption).foregroundStyle(.secondary)
                 // A definite answer, not a shrug: is Apple's model doing the cleanup right now?
                 HStack(alignment: .top, spacing: 8) {
                     Circle().fill(aiStatus.isReady ? Color.green : Color.orange).frame(width: 8, height: 8).padding(.top, 5)
                     VStack(alignment: .leading, spacing: 3) {
                         Text(aiStatus.title).font(.callout.weight(.medium))
-                        Text(aiStatus.detail).font(.caption).foregroundStyle(.secondary)
+                        Text(aiStatus.isReady ? aiStatus.detail + SmartCleaner.costNote : aiStatus.detail).font(.caption).foregroundStyle(.secondary)
                         if aiStatus.canOpenSettings {
                             Button("Open Siri & Apple Intelligence settings") { Permissions.openAppleIntelligencePane() }
                                 .buttonStyle(.link).font(.caption).padding(.top, 2)

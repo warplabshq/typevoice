@@ -102,7 +102,7 @@ enum Prefs {
         _ = Paths.support   // runs the sandbox-container migration before any default is read
         UserDefaults.standard.register(defaults: [
             Key.trigger: Trigger.fn.rawValue,
-            Key.smartCleanup: true,
+            Key.smartCleanup: false,   // off until the person turns it on: it costs a little time per dictation
             Key.showMenuBarIcon: true,
             Key.hasOnboarded: false,
             Key.casing: Style.Casing.sentence.rawValue,
