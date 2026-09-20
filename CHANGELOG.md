@@ -4,6 +4,12 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.6 — in progress
+
+- Smart cleanup no longer makes a dictation wait while Apple Intelligence loads: the model is
+  warmed once in the background when it first appears, the wait per dictation is shorter, and
+  if it keeps timing out the app stops asking for a couple of minutes instead of stalling.
+
 ## 1.0.5 — 20 September 2026
 
 - After an update installs, the window comes back where it was instead of the app quietly

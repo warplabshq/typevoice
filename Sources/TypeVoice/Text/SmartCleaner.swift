@@ -8,7 +8,15 @@ import FoundationModels
 /// caller ships the deterministic result.
 @MainActor
 final class SmartCleaner {
-    static let deadline: Duration = .milliseconds(1200)
+    /// How long a dictation waits for the model. Past this, the rule-based text ships as is.
+    static let deadline: Duration = .milliseconds(900)
+    /// After this many timeouts in a row the model is clearly not keeping up (first load after a
+    /// download, a busy machine): stop waiting for it, and quietly try again a little later.
+    static let strikesBeforeRest = 2
+    static let rest: TimeInterval = 120
+    private var strikes = 0
+    private var restingUntil: Date = .distantPast
+    private var warmedOnce = false
 
     private static func instructions(style: Style, dictionary: [String]) -> String {
         var lines = [
@@ -164,6 +172,22 @@ final class SmartCleaner {
         let s = LanguageModelSession(instructions: text)
         s.prewarm()
         session = s
+        warmOnce()
+        #endif
+    }
+
+    /// The first request after the model lands on disk takes seconds while macOS loads it.
+    /// Pay that once, in the background, on a throwaway sentence, so no dictation does.
+    private func warmOnce() {
+        #if canImport(FoundationModels)
+        guard !warmedOnce, isAvailable else { return }
+        warmedOnce = true
+        let probe = LanguageModelSession(instructions: "Return the text unchanged.")
+        Task { @MainActor in
+            let t0 = ContinuousClock.now
+            _ = try? await probe.respond(to: "so um the launch is wednesday", options: GenerationOptions(sampling: .greedy, maximumResponseTokens: 24)).content
+            Log.timing("smart.warm", since: t0)
+        }
         #endif
     }
 
@@ -172,8 +196,10 @@ final class SmartCleaner {
     func clean(_ text: String) async -> String? {
         #if canImport(FoundationModels)
         guard isAvailable else { return nil }
+        guard Date() >= restingUntil else { return nil } // it kept timing out; ship the rules' text now
         let words = text.split(separator: " ").count
         guard words >= 3 else { return nil }              // nothing to fix
+        if !warmedOnce { prewarm(); return nil }          // first sight of the model: warm it, don't wait for it
         if session == nil || sessionKey != Self.instructions(style: style, dictionary: dictionary) { prewarm() }
         guard let s = session else { return nil }
         session = nil                                     // sessions are one-shot here
@@ -189,9 +215,16 @@ final class SmartCleaner {
         defer { timer.cancel() }
 
         guard let out = try? await work.value else {
-            Log.asr.info("smart cleanup skipped (timeout/cancel/error)")
+            strikes += 1
+            Log.d("smart cleanup skipped (timeout/cancel/error), strike \(strikes)")
+            if strikes >= Self.strikesBeforeRest {
+                restingUntil = Date().addingTimeInterval(Self.rest)
+                strikes = 0
+                Log.d("smart cleanup resting for \(Int(Self.rest)) s: the model isn't keeping up")
+            }
             return nil
         }
+        strikes = 0
         Log.timing("smart.clean", since: t0)
         return Self.validate(input: text, output: out)
         #else
