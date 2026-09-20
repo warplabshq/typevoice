@@ -14,7 +14,7 @@ enum Brand {
     static let version = Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "0"
 
     /// Website. Replace the host once the site is deployed (the typevoice-site repo).
-    static let website = URL(string: "https://typevoice.app")!
+    static let website = URL(string: "https://typevoice.ai")!
     static var privacyURL: URL { website.appendingPathComponent("privacy.html") }
     static var termsURL: URL { website.appendingPathComponent("terms.html") }
     static var eulaURL: URL { website.appendingPathComponent("eula.html") }
