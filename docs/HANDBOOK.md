@@ -168,7 +168,14 @@ install in place. Updates are verified by Apple notarization + the Sparkle EdDSA
 Static HTML/CSS/JS; everything brand-specific in `site.js` (`SITE`): price, refund days, Mac limit,
 team price/seats, checkout links, download link, domain, email. Pages: index, support, privacy,
 terms, eula, changelog, thanks (Dodo return page, `noindex`), plus `appcast.xml`, `robots.txt`,
-`sitemap.xml`. `make deploy` publishes via wrangler direct upload. Legal copy states: 7-day trial,
+`sitemap.xml`, a `404.html`, `_headers` (HSTS, caching, `no-cache` on the appcast) and one Pages
+Function, `functions/geo.js`: it answers `/geo` with the visitor's country (from Cloudflare), the
+Dodo PPP percentage and an ECB exchange rate, and `site.js` rewrites the price lines to "about
+₹2,400 in India" (rounded up past Dodo's ~4% conversion margin). `PCT` in that file mirrors Dodo's
+default PPP table (World Bank PA.NUS.GDP.PLI 2024, rounded to 5, floor 30, cap 100); if the
+percentages are edited in the Dodo dashboard, edit `PCT` too. `?c=BR` previews another country.
+Umami (self-hosted) is scoped to typevoice.ai, drops query strings, and counts `download`, `buy`,
+`buy-team`, `activate` and `regional-price` events. `make deploy` publishes via wrangler direct upload. Legal copy states: 7-day trial,
 $79 / 2 Macs, team 5 × 2 Macs, 14-day refund, PPP, jurisdiction India, Dodo as merchant of record,
 closed source with third-party notices.
 
