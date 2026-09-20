@@ -4,7 +4,7 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
-## 1.0.0 — unreleased
+## 1.0.0 — 20 September 2026
 
 The first release.
 
