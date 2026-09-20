@@ -9,8 +9,8 @@ user's words: what changed for the person dictating, not which file moved.
 - Everything about how the text reads now lives under Style: numbers as digits, paragraphs from
   pauses, spoken commands, filler and stutter cleanup, and Smart cleanup with its Apple
   Intelligence status. Settings keeps the trigger, microphone, indicator and updates.
-- Check for Updates is easier to find: in the app menu, the menu bar menu, the bottom of the
-  sidebar, and Settings › About (with "What's new").
+- Settings has an About section: the version, Check for Updates, the automatic-check switch and
+  "What's new". Check for Updates is also in the app menu and the menu bar menu.
 - Links from the app open the site's clean addresses.
 
 ## 1.0.0 — 20 September 2026

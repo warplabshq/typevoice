@@ -108,27 +108,15 @@ private struct BrandRow: View {
 private struct StatusFooter: View {
     let state: AppState
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            HStack(spacing: 8) {
-                Circle()
-                    .fill(state.isReady ? Color.green : (state.warmError == nil ? Color.orange : Color.red))
-                    .frame(width: 7, height: 7)
-                Text(state.warmError ?? (state.isReady ? "On-device, ready" : state.warm.label))
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
-                    .lineLimit(1)
-                Spacer()
-            }
-            HStack(spacing: 4) {
-                Text("\(Brand.version) ·").font(.caption2).foregroundStyle(.tertiary)
-                Button { Updater.shared.check() } label: {
-                    Text("Check for updates").font(.caption2).foregroundStyle(.secondary)
-                }
-                .buttonStyle(.plain)
-                .disabled(!Updater.isConfigured)
-            }
-            .lineLimit(1)
-            .padding(.leading, 15)
+        HStack(spacing: 8) {
+            Circle()
+                .fill(state.isReady ? Color.green : (state.warmError == nil ? Color.orange : Color.red))
+                .frame(width: 7, height: 7)
+            Text(state.warmError ?? (state.isReady ? "On-device, ready" : state.warm.label))
+                .font(.caption)
+                .foregroundStyle(.secondary)
+                .lineLimit(1)
+            Spacer()
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 10)

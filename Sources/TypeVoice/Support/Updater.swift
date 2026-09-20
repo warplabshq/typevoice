@@ -24,29 +24,37 @@ final class Updater {
     var updater: SPUUpdater { controller.updater }
 }
 
-/// Settings rows: the automatic toggle plus a manual check.
+/// Settings › About: the app at a glance, with the update check where people expect it.
 struct UpdatesRows: View {
     @State private var automatic = Updater.shared.updater.automaticallyChecksForUpdates
     @State private var lastCheck = Updater.shared.updater.lastUpdateCheckDate
 
+    private var status: String {
+        guard Updater.isConfigured else { return "Version \(Brand.version)" }
+        guard let d = lastCheck else { return "Version \(Brand.version)" }
+        return "Version \(Brand.version) · checked \(d.formatted(.relative(presentation: .named)))"
+    }
+
     var body: some View {
+        HStack(spacing: 14) {
+            Image(nsImage: NSApp.applicationIconImage)
+                .resizable().interpolation(.high)
+                .frame(width: 44, height: 44)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(Brand.name).font(.headline)
+                Text(status).font(.callout).foregroundStyle(.secondary)
+                    .contentTransition(.numericText())
+            }
+            Spacer()
+            Button("Check for Updates…") { Updater.shared.check(); lastCheck = .now }
+                .disabled(!Updater.isConfigured)
+        }
+        .padding(.vertical, 4)
         if Updater.isConfigured {
             Toggle("Check for updates automatically", isOn: $automatic)
                 .onChange(of: automatic) { _, on in Updater.shared.updater.automaticallyChecksForUpdates = on }
-            LabeledContent("Version \(Brand.version)") {
-                HStack(spacing: 10) {
-                    if let d = lastCheck {
-                        Text("Checked \(d.formatted(.relative(presentation: .named)))")
-                            .font(.callout).foregroundStyle(.secondary)
-                    }
-                    Button("Check for Updates…") { Updater.shared.check(); lastCheck = .now }
-                }
-            }
-        } else {
-            LabeledContent("Version") {
-                Text("\(Brand.version) · this build has no update feed configured")
-                    .font(.callout).foregroundStyle(.secondary)
-            }
+            Text("Once a day, quietly. Updates are signed and install in place; nothing about you is sent.")
+                .font(.callout).foregroundStyle(.secondary)
         }
     }
 }

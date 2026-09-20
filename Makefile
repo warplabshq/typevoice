@@ -122,7 +122,8 @@ publish:
 # (`make keys`, once). Release notes: dist/updates/TypeVoice-<version>.html next to the zip.
 appcast:
 	@mkdir -p dist/updates && cp dist/$(APP)-$(VERSION).zip dist/$(APP)-$(VERSION).html dist/updates/
-	$(SPARKLE)/bin/generate_appcast --download-url-prefix "$(DOWNLOAD_URL)" --embed-release-notes -o dist/appcast.xml dist/updates/
+	@rm -f dist/updates/*.delta
+	$(SPARKLE)/bin/generate_appcast --download-url-prefix "$(DOWNLOAD_URL)" --embed-release-notes --maximum-versions 1 --maximum-deltas 0 -o dist/appcast.xml dist/updates/
 
 # Release notes for Sparkle: the top CHANGELOG.md entry as a small HTML page next to the zip.
 notes:
