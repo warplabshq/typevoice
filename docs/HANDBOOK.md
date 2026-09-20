@@ -176,7 +176,11 @@ Function, `functions/geo.js`: it answers `/geo` with the fixed price for the vis
 Its `PRICES` table mirrors the Dodo Localized Pricing rules (`pricing_mode: by_country`, PPP off,
 rules on all four products via `/products/{id}/localized-prices`): IN ₹2,499 / ₹9,499 (+GST),
 PK/BD/EG/NG $24 / $89. Everyone else pays $79 / $299 converted at checkout. Change a rule → change
-the table. `?c=NG` previews another country.
+the table. `?c=NG` previews another country. Visitors from those countries see it as a quiet
+special offer: a flag pill ("🇮🇳 A special price for you"), the local price, the list price struck
+through — no country name.
+Short checkout links (Dodo, live): **dodo.pe/typevoice** and **dodo.pe/typevoice-team**, created
+with `POST /products/{id}/short_links` and the `/thanks` return URL baked in.
 Umami (self-hosted) is scoped to typevoice.ai, drops query strings, and counts `download`, `buy`,
 `buy-team`, `activate` and `regional-price` events. `make deploy` publishes via wrangler direct upload. Legal copy states: 7-day trial,
 $79 / 2 Macs, team 5 × 2 Macs, 14-day refund, PPP, jurisdiction India, Dodo as merchant of record,
