@@ -1,5 +1,6 @@
 import AppKit
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct HistoryView: View {
     let history: HistoryStore
@@ -84,6 +85,20 @@ struct HistoryView: View {
                             .padding(.vertical, 6)
                         }
                     }
+                    if !history.isEmpty {
+                        // The one destructive thing, at the very end, where nobody hits it by accident.
+                        Section {
+                            HStack {
+                                Spacer()
+                                Button("Clear History…", role: .destructive) { confirmClear = true }
+                                    .buttonStyle(.plain).font(.callout).foregroundStyle(.red.opacity(0.85))
+                                Spacer()
+                            }
+                            .listRowSeparator(.hidden)
+                            .listRowBackground(Color.clear)
+                            .padding(.vertical, 10)
+                        }
+                    }
                 }
                 .listStyle(.inset)
                 .scrollContentBackground(.hidden)
@@ -106,23 +121,10 @@ struct HistoryView: View {
                 .help("How far back to show")
             }
             ToolbarItem(placement: .automatic) {
-                Menu {
-                    Button("Plain text (.txt)") { export(.txt) }
-                    Button("Markdown (.md)") { export(.md) }
-                    Button("CSV (.csv)") { export(.csv) }
-                    Button("JSON (.json)") { export(.json) }
-                } label: {
-                    Label("Export", systemImage: "square.and.arrow.up")
-                }
-                .disabled(history.isEmpty)
-                .help("Export all dictations")
-            }
-            ToolbarItem(placement: .destructiveAction) {
-                Button(role: .destructive) { confirmClear = true } label: {
-                    Label("Clear History", systemImage: "trash")
-                }
-                .disabled(history.isEmpty)
-                .help("Delete every dictation")
+                // One plain button; the save panel's own Format popup picks txt / md / csv / json.
+                Button { export() } label: { Label("Export", systemImage: "square.and.arrow.up") }
+                    .disabled(history.isEmpty)
+                    .help("Export all dictations")
             }
         }
         .confirmationDialog("Clear all \(history.stats.allCount.formatted()) dictations?", isPresented: $confirmClear, titleVisibility: .visible) {
@@ -237,14 +239,28 @@ struct HistoryView: View {
         switch history.range { case .today: "today"; case .week: "this week"; case .month: "this month"; case .all: "all time" }
     }
 
-    private enum ExportFormat: String { case txt, md, csv, json }
+    private enum ExportFormat: String, CaseIterable {
+        case txt, md, csv, json
+        var type: UTType {
+            switch self {
+            case .txt: .plainText
+            case .md: UTType("net.daringfireball.markdown") ?? .plainText
+            case .csv: .commaSeparatedText
+            case .json: .json
+            }
+        }
+    }
 
-    private func export(_ format: ExportFormat) {
+    private func export() {
         let panel = NSSavePanel()
-        panel.nameFieldStringValue = "\(Brand.name) history.\(format.rawValue)"
+        panel.nameFieldStringValue = "\(Brand.name) history"
         panel.canCreateDirectories = true
+        // Several allowed types give the panel its standard Format popup; the chosen extension decides.
+        panel.allowedContentTypes = ExportFormat.allCases.map(\.type)
+        panel.allowsOtherFileTypes = false
         panel.begin { resp in
             guard resp == .OK, let url = panel.url else { return }
+            let format = ExportFormat(rawValue: url.pathExtension.lowercased()) ?? .txt
             let items = history.all()
             let data: Data
             switch format {

@@ -95,11 +95,20 @@ final class TextInserter {
 
     // MARK: Accessibility path
 
+    /// Accessibility calls block the caller until the other app answers; a hung or busy app
+    /// would otherwise freeze insertion for the system default of several seconds. Ask for a
+    /// short answer and fall back to paste instead.
+    private static let axTimeout: Float = 0.3
+
     private static func focusedElement() -> AXUIElement? {
+        let system = AXUIElementCreateSystemWide()
+        AXUIElementSetMessagingTimeout(system, axTimeout)
         var v: CFTypeRef?
-        let err = AXUIElementCopyAttributeValue(AXUIElementCreateSystemWide(), kAXFocusedUIElementAttribute as CFString, &v)
+        let err = AXUIElementCopyAttributeValue(system, kAXFocusedUIElementAttribute as CFString, &v)
         guard err == .success, let v, CFGetTypeID(v) == AXUIElementGetTypeID() else { return nil }
-        return (v as! AXUIElement)
+        let element = v as! AXUIElement
+        AXUIElementSetMessagingTimeout(element, axTimeout)
+        return element
     }
 
     private static func string(_ el: AXUIElement, _ attr: String) -> String? {
@@ -144,6 +153,7 @@ final class TextInserter {
 
     private static func focusedWindowFrame(pid: pid_t) -> CGRect? {
         let app = AXUIElementCreateApplication(pid)
+        AXUIElementSetMessagingTimeout(app, axTimeout)
         var w: CFTypeRef?
         guard AXUIElementCopyAttributeValue(app, kAXFocusedWindowAttribute as CFString, &w) == .success,
               let w, CFGetTypeID(w) == AXUIElementGetTypeID() else { return nil }

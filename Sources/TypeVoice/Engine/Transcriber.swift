@@ -25,7 +25,7 @@ struct WarmProgress: Sendable, Equatable {
         switch phase {
         case .checking: return "Checking…"
         case .downloading: return "Downloading model…"
-        case .compiling: return "Optimising for Neural Engine…"
+        case .compiling: return "Warming up, once…"
         case .loading: return "Loading…"
         case .ready: return "Ready"
         }

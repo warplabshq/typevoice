@@ -8,18 +8,19 @@ struct DictionaryView: View {
 
     var body: some View {
         VStack(spacing: 0) {
-            HStack(spacing: 8) {
-                Image(systemName: "plus")
-                    .foregroundStyle(.secondary)
-                TextField("Add a word or phrase, e.g. VidAI", text: $draft)
+            HStack(spacing: 10) {
+                TextField("Add a name or a phrase, spelled the way you want it", text: $draft)
                     .textFieldStyle(.roundedBorder)
+                    .controlSize(.large)
                     .focused($focused)
                     .onSubmit(add)
                 Button("Add", action: add)
                     .keyboardShortcut(.defaultAction)
+                    .buttonStyle(.borderedProminent)
+                    .controlSize(.large)
                     .disabled(draft.trimmingCharacters(in: .whitespaces).isEmpty)
             }
-            .padding(16)
+            .padding(.horizontal, 20).padding(.vertical, 14)
 
             if dictionary.terms.isEmpty {
                 ContentUnavailableView {

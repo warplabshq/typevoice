@@ -23,11 +23,11 @@ struct PrivacyView: View {
                     : "Audio is captured only while you hold the key, and is discarded the moment it's transcribed. It is never written to disk.")
                 row("cpu", "Speech recognition runs on the Neural Engine using NVIDIA's Parakeet model. No audio is ever sent anywhere.")
                 row("sparkles", "Smart cleanup uses Apple Intelligence's on-device model. Text stays on this Mac.")
-                row("network", "Network use is limited to: the one-time model download from huggingface.co, the update check against \(Brand.name)'s own appcast, one request to \(Brand.website.host ?? "the site") from the License tab to show the price for your country (nothing about you is sent), and, once you buy a license, activating and re-checking that key with Dodo Payments. No analytics, no accounts.")
+                row("network", "Four network calls, ever: the one-time model download, the update check, the price for your country when you open the License tab, and your license key when you activate it. Nothing about you rides along with any of them.")
                 row("internaldrive", "History is a small database and your dictionary a text file, both on this Mac, both yours to open, back up or delete.")
                 row("chevron.left.forwardslash.chevron.right", "None of this asks for trust: the source is public under the GPL v3, so anyone can read exactly what the app does and build it themselves.")
                 Button("Read the source on GitHub") { NSWorkspace.shared.open(Brand.sourceURL) }
-                    .buttonStyle(.link).padding(.leading, 28)
+                    .buttonStyle(.link).padding(.leading, 32)
             }
             Section("Legal") {
                 LabeledContent("Privacy Policy") { Button("Read online") { NSWorkspace.shared.open(Brand.privacyURL) } }
@@ -84,7 +84,10 @@ struct PrivacyView: View {
     }
 
     private func row(_ icon: String, _ text: String) -> some View {
-        Label { Text(text) } icon: { Image(systemName: icon).foregroundStyle(Color.accentColor) }
-            .padding(.vertical, 2)
+        HStack(alignment: .firstTextBaseline, spacing: 12) {
+            Image(systemName: icon).foregroundStyle(Color.accentColor).frame(width: 20)
+            Text(text)
+        }
+        .padding(.vertical, 2)
     }
 }
