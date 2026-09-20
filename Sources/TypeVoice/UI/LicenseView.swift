@@ -55,10 +55,20 @@ struct LicenseView: View {
                             .disabled(!Licensing.isConfigured)
                     } label: {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("One purchase, no subscription · two Macs")
+                            Text("For you · one purchase, two Macs")
                             Text(Licensing.isConfigured
                                  ? "Checkout opens in your browser. The key arrives by email and lands here by itself."
                                  : "The checkout link isn't configured in this build.")
+                                .font(.callout).foregroundStyle(.secondary)
+                        }
+                    }
+                    LabeledContent {
+                        Button("Buy — \(Brand.teamPrice)") { NSWorkspace.shared.open(Brand.teamCheckoutURL) }
+                            .disabled(!Licensing.isConfigured)
+                    } label: {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("For a team · \(Brand.teamSeats) people, two Macs each")
+                            Text("One shared key for the whole team. Prices adjust to your country at checkout.")
                                 .font(.callout).foregroundStyle(.secondary)
                         }
                     }
@@ -83,7 +93,6 @@ struct LicenseView: View {
                         Button("License Agreement") { NSWorkspace.shared.open(Brand.eulaURL) }
                         Button("Privacy Policy") { NSWorkspace.shared.open(Brand.privacyURL) }
                         Button("Lost your key?") { NSWorkspace.shared.open(Brand.supportURL) }
-                        Button("Buying for a team?") { NSWorkspace.shared.open(Brand.website.appendingPathComponent("index.html#pricing")) }
                     }
                     .buttonStyle(.link)
                     .font(.callout)

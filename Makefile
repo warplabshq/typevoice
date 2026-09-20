@@ -19,11 +19,14 @@ endif
 # and a notarytool keychain profile (`xcrun notarytool store-credentials TypeVoice`).
 RELEASE_ID ?= $(shell security find-identity -v -p codesigning 2>/dev/null | grep -oE '"Developer ID Application[^"]*"' | head -1 | tr -d '"')
 NOTARY_PROFILE ?= TypeVoice
-# Where the zip is published; the appcast points here. GitHub Releases works with no server.
-DOWNLOAD_URL ?= https://github.com/warplabshq/typevoice/releases/download/v$(VERSION)/
+# Downloads live in the public releases-only repo (the source repo is private); the appcast
+# points there and the site's Download button serves its latest release.
+RELEASES_REPO ?= warplabshq/typevoice-releases
+DOWNLOAD_URL ?= https://github.com/$(RELEASES_REPO)/releases/download/v$(VERSION)/
+SITE_DIR ?= ../TypeVoiceSite
 VERSION  := $(shell /usr/libexec/PlistBuddy -c 'Print CFBundleShortVersionString' Packaging/Info.plist)
 
-.PHONY: all build app run debug clean release notarize appcast keys icon notes
+.PHONY: all build app run debug clean release notarize appcast keys icon notes publish
 
 all: app
 
@@ -98,6 +101,13 @@ dmg:
 	@codesign -f -s "$(RELEASE_ID)" --timestamp dist/$(APP).dmg
 	@$(MAKE) --no-print-directory notarize FILE=dist/$(APP).dmg
 	@xcrun stapler staple dist/$(APP).dmg
+
+# After `make release`: the GitHub release (zip + dmg + notes) and the appcast on the site.
+publish:
+	gh release create v$(VERSION) dist/$(APP)-$(VERSION).zip dist/$(APP).dmg --repo $(RELEASES_REPO) \
+	  --title "TypeVoice $(VERSION)" --notes-file dist/$(APP)-$(VERSION).html
+	cp dist/appcast.xml $(SITE_DIR)/appcast.xml && $(MAKE) -C $(SITE_DIR) deploy
+	@echo "→ https://github.com/$(RELEASES_REPO)/releases/tag/v$(VERSION)"
 
 # Sparkle appcast for everything in dist/. Needs the EdDSA private key in the login
 # keychain (`make keys`, once). Release notes: put dist/TypeVoice-<version>.html next to the zip.

@@ -3,10 +3,9 @@
 Local dictation for Mac. Hold a key, talk, release: clean, punctuated text lands at your
 cursor in any app. Everything runs on the Mac — no account, no server, no telemetry.
 
-Sold directly (free for seven days, then one purchase, no subscription) and updated in place
-with Sparkle. The source is here under the Apache 2.0 licence so you can see exactly what it
-does with your voice, build it yourself, or improve it. See `TRADEMARKS.md` about the name
-and icon.
+Sold directly at [typevoice.ai](https://typevoice.ai) (free for seven days, then one purchase,
+no subscription) and updated in place with Sparkle. This repository is private; downloads and
+release notes are published from the public `warplabshq/typevoice-releases` repository.
 
 ## How it works
 
@@ -99,9 +98,14 @@ make release
 
 which builds, signs with Developer ID, notarizes and staples, and writes
 `dist/TypeVoice-<version>.zip` (what Sparkle downloads), `dist/TypeVoice.dmg` (the site's
-Download button) and `dist/appcast.xml`. Upload the zip and the dmg to a GitHub release tagged
-`v<version>` (the appcast points there by default; override with `DOWNLOAD_URL=…`) and copy
-`appcast.xml` into the site repository. The site's Download button links to
+Download button), the release notes and `dist/appcast.xml`. Then
+
+```bash
+make publish
+```
+
+creates the GitHub release `v<version>` in `warplabshq/typevoice-releases` with both files,
+copies the appcast into the site and deploys it. The site's Download button links to
 `releases/latest/download/TypeVoice.dmg`, so it always serves the newest release.
 
 To try a purchase against Dodo's test mode: use the test-mode checkout link and
