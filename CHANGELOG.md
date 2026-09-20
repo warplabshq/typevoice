@@ -4,6 +4,11 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.2 — 20 September 2026
+
+- The License tab shows the price for your country, where there is one: a flag, the local
+  figure on the Buy buttons, and what the checkout will add for tax.
+
 ## 1.0.1 — 20 September 2026
 
 - Everything about how the text reads now lives under Style: numbers as digits, paragraphs from

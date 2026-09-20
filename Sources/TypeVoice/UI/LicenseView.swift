@@ -5,6 +5,7 @@ struct LicenseView: View {
     let licensing: Licensing
     var history: HistoryStore? = nil
     @State private var key = ""
+    @State private var regional: RegionalPrice?
     @FocusState private var keyFocused: Bool
 
     var body: some View {
@@ -49,8 +50,12 @@ struct LicenseView: View {
                 }
             } else {
                 Section("Buy \(Brand.name)") {
+                    if let r = regional {
+                        Text("\(r.flag) A special price for where you are: \(r.format(r.personal)) instead of \(Brand.price), plus \(r.tax). The checkout goes by billing country.")
+                            .font(.callout).foregroundStyle(.secondary)
+                    }
                     LabeledContent {
-                        Button("Buy — \(Brand.price)") { NSWorkspace.shared.open(Brand.checkoutURL) }
+                        Button("Buy — \(regional.map { $0.format($0.personal) } ?? Brand.price)") { NSWorkspace.shared.open(Brand.checkoutURL) }
                             .buttonStyle(.borderedProminent)
                             .disabled(!Licensing.isConfigured)
                     } label: {
@@ -63,12 +68,13 @@ struct LicenseView: View {
                         }
                     }
                     LabeledContent {
-                        Button("Buy — \(Brand.teamPrice)") { NSWorkspace.shared.open(Brand.teamCheckoutURL) }
+                        Button("Buy — \(regional.map { $0.format($0.team) } ?? Brand.teamPrice)") { NSWorkspace.shared.open(Brand.teamCheckoutURL) }
                             .disabled(!Licensing.isConfigured)
                     } label: {
                         VStack(alignment: .leading, spacing: 2) {
                             Text("For a team · \(Brand.teamSeats) people, two Macs each")
-                            Text("One shared key for the whole team. Prices adjust to your country at checkout.")
+                            Text(regional == nil ? "One shared key for the whole team. A few countries have their own price, shown at checkout."
+                                                 : "One shared key for the whole team.")
                                 .font(.callout).foregroundStyle(.secondary)
                         }
                     }
@@ -100,6 +106,7 @@ struct LicenseView: View {
             }
         }
         .formStyle(.grouped)
+        .task { if !licensing.isLicensed, regional == nil { regional = await RegionalPrice.fetch() } }
         .onAppear { keyFocused = licensing.isExpired }
         .onChange(of: licensing.state) { _, s in if s == .licensed { key = "" } }
     }
