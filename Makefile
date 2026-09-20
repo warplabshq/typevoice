@@ -109,10 +109,12 @@ publish:
 	cp dist/appcast.xml $(SITE_DIR)/appcast.xml && $(MAKE) -C $(SITE_DIR) deploy
 	@echo "→ https://github.com/$(RELEASES_REPO)/releases/tag/v$(VERSION)"
 
-# Sparkle appcast for everything in dist/. Needs the EdDSA private key in the login
-# keychain (`make keys`, once). Release notes: put dist/TypeVoice-<version>.html next to the zip.
+# Sparkle appcast from the zips in dist/updates/ (the dmg must not sit beside them: generate_appcast
+# refuses two archives of one version). Needs the EdDSA private key in the login keychain
+# (`make keys`, once). Release notes: dist/updates/TypeVoice-<version>.html next to the zip.
 appcast:
-	$(SPARKLE)/bin/generate_appcast --download-url-prefix "$(DOWNLOAD_URL)" -o dist/appcast.xml dist/
+	@mkdir -p dist/updates && cp dist/$(APP)-$(VERSION).zip dist/$(APP)-$(VERSION).html dist/updates/
+	$(SPARKLE)/bin/generate_appcast --download-url-prefix "$(DOWNLOAD_URL)" -o dist/appcast.xml dist/updates/
 
 # Release notes for Sparkle: the top CHANGELOG.md entry as a small HTML page next to the zip.
 notes:
