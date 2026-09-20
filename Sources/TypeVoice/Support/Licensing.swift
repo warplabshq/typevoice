@@ -24,6 +24,9 @@ final class Licensing {
 
     private(set) var state: State = .trial(daysLeft: Licensing.trialDays)
     private(set) var licenseKeyMasked: String?
+    /// Which key this Mac holds, from the product Dodo names on activation.
+    enum Plan: String { case personal, team }
+    private(set) var plan: Plan = .personal
     private(set) var busy = false
     var lastError: String?
 
@@ -33,11 +36,19 @@ final class Licensing {
         static let key = "licenseKey"
         static let instance = "licenseInstance"
         static let lastValidated = "licenseValidated"
+        static let plan = "licensePlan"
     }
+    /// Dodo product ids of the team key (live, test); anything else is a personal key.
+    private static let teamProducts: Set<String> = ["pdt_0NnyeIYh7eg5s2udMzUGZ", "pdt_0Nnye4HFHXLRKq4WkVJXG"]
 
     init() {
         refresh()
         Task { await revalidateIfDue() }
+        // A menu bar app runs for weeks: recount the trial days and re-check the key daily,
+        // not only at launch.
+        Timer.scheduledTimer(withTimeInterval: 6 * 3600, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.refresh(); await self?.revalidateIfDue() }
+        }
     }
 
     var isExpired: Bool { state == .expired }
@@ -63,6 +74,7 @@ final class Licensing {
         if let key = d.string(forKey: K.key) {
             let validated = d.object(forKey: K.lastValidated) as? Date ?? .distantPast
             licenseKeyMasked = Self.mask(key)
+            plan = Plan(rawValue: d.string(forKey: K.plan) ?? "") ?? .personal
             if Date().timeIntervalSince(validated) < Self.offlineGrace { state = .licensed; return }
             // Past the grace period: the trial rules apply until a re-check succeeds.
         } else {
@@ -80,7 +92,11 @@ final class Licensing {
         URL(string: d.bool(forKey: "dodoTest") ? "https://test.dodopayments.com" : "https://live.dodopayments.com")!
     }
 
-    private struct ActivateResponse: Decodable { let id: String }
+    private struct ActivateResponse: Decodable {
+        struct Product: Decodable { let product_id: String }
+        let id: String
+        let product: Product?
+    }
     private struct ValidateResponse: Decodable { let valid: Bool }
     private struct EmptyResponse: Decodable {}
     struct LicenseError: Error { let message: String }
@@ -95,11 +111,16 @@ final class Licensing {
         do {
             let name = Host.current().localizedName ?? "Mac"
             let r: ActivateResponse = try await post("licenses/activate", ["license_key": key, "name": name])
+            // Switching keys (say, from a personal to a team key): free the old seat, best effort.
+            if let old = d.string(forKey: K.key), old != key, let inst = d.string(forKey: K.instance) {
+                let _: EmptyResponse? = try? await post("licenses/deactivate", ["license_key": old, "license_key_instance_id": inst])
+            }
             d.set(key, forKey: K.key)
             d.set(r.id, forKey: K.instance)
             d.set(Date(), forKey: K.lastValidated)
+            d.set((r.product.map { Self.teamProducts.contains($0.product_id) } ?? false) ? Plan.team.rawValue : Plan.personal.rawValue, forKey: K.plan)
             refresh()
-            Log.app.info("license activated")
+            Log.app.info("license activated (\(self.plan.rawValue))")
         } catch let e as LicenseError {
             lastError = e.message
         } catch {
@@ -123,7 +144,7 @@ final class Licensing {
                 return
             }
         }
-        d.removeObject(forKey: K.key); d.removeObject(forKey: K.instance); d.removeObject(forKey: K.lastValidated)
+        d.removeObject(forKey: K.key); d.removeObject(forKey: K.instance); d.removeObject(forKey: K.lastValidated); d.removeObject(forKey: K.plan)
         refresh()
         Log.app.info("license deactivated")
     }
@@ -139,7 +160,7 @@ final class Licensing {
                 d.set(Date(), forKey: K.lastValidated)
             } else {
                 Log.app.warning("license no longer valid")
-                d.removeObject(forKey: K.key); d.removeObject(forKey: K.instance); d.removeObject(forKey: K.lastValidated)
+                d.removeObject(forKey: K.key); d.removeObject(forKey: K.instance); d.removeObject(forKey: K.lastValidated); d.removeObject(forKey: K.plan)
                 lastError = "This key is no longer valid on this Mac. It may have been deactivated or refunded."
             }
             refresh()

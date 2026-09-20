@@ -118,7 +118,7 @@ copies the appcast into the site and deploys it. The site's Download button link
 `releases/latest/download/TypeVoice.dmg`, so it always serves the newest release.
 
 To try a purchase against Dodo's test mode: use the test-mode checkout link and
-`defaults write com.priyamventures.typevoice dodoTest -bool YES`.
+`defaults write ~/Library/Preferences/com.priyamventures.typevoice dodoTest -bool YES`.
 
 ## Website and legal pages
 

@@ -11,6 +11,8 @@ struct StyleView: View {
     @AppStorage(Prefs.Key.pauseParagraphs) private var pauseParagraphs = true
     @AppStorage(Prefs.Key.voiceCommands) private var voiceCommands = true
     @State private var aiStatus = SmartCleaner.status
+    @AppStorage(Prefs.Key.signOff) private var signOff = false
+    @AppStorage(Prefs.Key.signOffText) private var signOffText = "(dictated with TypeVoice; spellings may be off)"
 
     private static let sample = "okay so um the the launch is Tuesday, no wait, Wednesday, and I think we're gonna need like two more days for QA, it's very very close"
 
@@ -102,6 +104,14 @@ struct StyleView: View {
                 Text(smart ? style.tone.detail : "Tone needs Smart cleanup, above.")
                     .font(.caption).foregroundStyle(.secondary)
             }
+            Section("Sign-off") {
+                Toggle("Add a note after each dictation", isOn: $signOff)
+                Text("For places where spelling gets judged, like a coding assistant or a ticket queue: a fixed line on the end of everything you dictate, so the reader knows it was spoken.")
+                    .font(.caption).foregroundStyle(.secondary)
+                if signOff {
+                    TextField("Note", text: $signOffText, prompt: Text("(dictated with TypeVoice; spellings may be off)"))
+                }
+            }
         }
         .formStyle(.grouped)
     }
@@ -124,6 +134,8 @@ struct StyleView: View {
         }
         s = Cleaner.fit(s, to: .unknown, style: style)
         if style.punctuation == .full, !s.hasSuffix(".") { s += "." }
-        return style.finish(s)
+        s = style.finish(s)
+        if signOff, !signOffText.trimmingCharacters(in: .whitespaces).isEmpty { s += " " + signOffText.trimmingCharacters(in: .whitespaces) }
+        return s
     }
 }

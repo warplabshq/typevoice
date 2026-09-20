@@ -55,7 +55,7 @@ TYPEVOICE_DEBUG=1 build/TypeVoice.app/Contents/MacOS/TypeVoice | Tools/latency.s
 ```
 
 Debug hooks in the running app (all via a distributed notification; the app must have
-`debugLog` on: `defaults write com.priyamventures.typevoice debugLog -bool YES`):
+`debugLog` on: `defaults write ~/Library/Preferences/com.priyamventures.typevoice debugLog -bool YES`):
 
 ```bash
 # helper: swift Tools/… or the one-liner below posts "typevoice.debug.showTab"
@@ -68,6 +68,10 @@ post hud:listening | hud:locked | hud:processing | hud:done | hud:audio | hud:co
 post appearance:light | appearance:dark | appearance:system
 post dictate:/path/to/clip.wav     # run a full session from a file (types into the frontmost app!)
 ```
+
+(On the owner's Mac the old sandbox container still exists, so `defaults write <domain>` lands in
+the container and the app never sees it; the `~/Library/Preferences/<domain>` path form works
+everywhere. Fresh installs have no container.)
 
 Other defaults: `dodoTest` (Bool) points licensing and the Buy buttons at Dodo's test mode and
 returns to `http://localhost:8787/thanks.html`; `NSRequiresAquaSystemAppearance` is not used.
@@ -228,7 +232,7 @@ Nothing secret is in either repository.
 - Shipped: 1.0.0, 1.0.1 (Style owns the text options; Settings › About), 1.0.2 (License tab shows
   the country price via `/geo`) — all on 20 September 2026. 1.0.0 (build 100) — notarized, stapled, on the releases repo,
   appcast live, site on typevoice.ai (root + www, Cloudflare proxied, HSTS). Source tagged `v1.0.0`.
-- Not yet done by hand: a test-mode purchase (`defaults write com.priyamventures.typevoice dodoTest
+- Not yet done by hand: a test-mode purchase (`defaults write ~/Library/Preferences/com.priyamventures.typevoice dodoTest
   -bool YES`, site served locally on :8787) to see a key arrive and activate; a clean-Mac run
   (download → open → onboard → trial → activate → update check). Dodo issues keys through the
   License Key entitlement on `payment.succeeded` and appends `license_key=` to the return URL.

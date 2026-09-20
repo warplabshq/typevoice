@@ -20,7 +20,9 @@ struct LicenseView: View {
                          text: "Dictation is paused until you enter a license key. Everything you dictated is still in your Summary.")
                 case .licensed:
                     hero(icon: "checkmark.seal.fill", title: "\(Brand.name) is yours",
-                         text: "Thank you. This Mac is activated; use the same key on the other Macs you work on.")
+                         text: licensing.plan == .team
+                             ? "Thank you. This Mac is activated with your team's key; each person can use it on two Macs."
+                             : "Thank you. This Mac is activated; use the same key on your other Mac.")
                 }
             }
             if !licensing.isLicensed, let line = benefitLine {
@@ -36,7 +38,9 @@ struct LicenseView: View {
                     LabeledContent("Key") {
                         Text(licensing.licenseKeyMasked ?? "").font(.system(.body, design: .monospaced))
                     }
-                    Text("Your key was emailed to you by Dodo Payments when you bought \(Brand.name); it covers two Macs. Deactivate this Mac before selling it or handing it on, so the seat is free for your next one.")
+                    Text(licensing.plan == .team
+                         ? "A team key: \(Brand.teamSeats) people, two Macs each. Deactivate this Mac before handing it on, so the seat is free for someone else."
+                         : "Your key was emailed to you by Dodo Payments when you bought \(Brand.name); it covers two Macs. Deactivate this Mac before selling it or handing it on, so the seat is free for your next one.")
                         .font(.callout).foregroundStyle(.secondary)
                     HStack(spacing: 12) {
                         Button(licensing.busy ? "…" : "Deactivate this Mac") { Task { await licensing.deactivate() } }
@@ -47,6 +51,30 @@ struct LicenseView: View {
                     if let e = licensing.lastError {
                         Label(e, systemImage: "exclamationmark.triangle").foregroundStyle(.red).font(.callout)
                     }
+                }
+                if licensing.plan == .personal {
+                    Section("Growing?") {
+                        LabeledContent {
+                            Button("Buy — \(regional.map { $0.format($0.team) } ?? Brand.teamPrice)") { NSWorkspace.shared.open(Brand.teamCheckoutURL) }
+                                .disabled(!Licensing.isConfigured)
+                        } label: {
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Team key · \(Brand.teamSeats) people, two Macs each")
+                                Text("One shared key. Enter it below when it arrives; this Mac moves over and your personal seat is freed.")
+                                    .font(.callout).foregroundStyle(.secondary)
+                            }
+                        }
+                    }
+                }
+                Section("Use a different key") {
+                    HStack {
+                        TextField("XXXX-XXXX-XXXX-XXXX", text: $key).textFieldStyle(.roundedBorder).focused($keyFocused)
+                            .onSubmit { Task { await licensing.activate(key); if licensing.isLicensed { key = "" } } }
+                        Button(licensing.busy ? "…" : "Switch") { Task { await licensing.activate(key); if licensing.isLicensed { key = "" } } }
+                            .disabled(key.trimmingCharacters(in: .whitespaces).isEmpty || licensing.busy)
+                    }
+                    Text("For moving this Mac onto a team key, or a new key after a refund. The old seat is released.")
+                        .font(.callout).foregroundStyle(.secondary)
                 }
             } else {
                 Section("Buy \(Brand.name)") {
@@ -106,7 +134,7 @@ struct LicenseView: View {
             }
         }
         .formStyle(.grouped)
-        .task { if !licensing.isLicensed, regional == nil { regional = await RegionalPrice.fetch() } }
+        .task { if !(licensing.isLicensed && licensing.plan == .team), regional == nil { regional = await RegionalPrice.fetch() } }
         .onAppear { keyFocused = licensing.isExpired }
         .onChange(of: licensing.state) { _, s in if s == .licensed { key = "" } }
     }

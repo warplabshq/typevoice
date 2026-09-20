@@ -4,6 +4,11 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.4 — 20 September 2026
+
+- Style › Sign-off: a fixed note on the end of every dictation, for places where spelling
+  gets judged — a coding assistant, a ticket queue. Off by default; the text is yours to change.
+
 ## 1.0.3 — 20 September 2026
 
 - TypeVoice is open source: the code is on GitHub under the GPL v3, linked from the Privacy

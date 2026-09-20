@@ -352,6 +352,8 @@ final class DictationController {
                     }
                 }
                 text = style.finish(text)
+                // The sign-off goes after the styling so punctuation rules never touch it.
+                if Prefs.signOff { text = Style.signed(text) }
                 let context = Prefs.insertion == .auto ? (target?.context ?? .unknown) : .unknown
                 text = Cleaner.fit(text, to: context, style: style)
                 // Blind paste (no readable field): Mac text views add the space themselves; web apps may not.

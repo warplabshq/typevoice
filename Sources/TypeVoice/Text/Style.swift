@@ -92,6 +92,14 @@ struct Style: Sendable, Equatable {
         return s.trimmingCharacters(in: .whitespaces)
     }
 
+    /// The fixed note from Settings › Style, on the end of a dictation: "… (dictated with
+    /// TypeVoice; spellings may be off)". Same line, one space, so a chat box still sends on Enter.
+    static func signed(_ text: String) -> String {
+        let note = Prefs.signOffText.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !note.isEmpty, !text.isEmpty else { return text }
+        return text.hasSuffix("\n") ? text + note : text + " " + note
+    }
+
     /// Extra lines for the model's instructions.
     var instructionLines: [String] {
         var out: [String] = []

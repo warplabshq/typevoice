@@ -14,6 +14,8 @@ enum Prefs {
         static let tone = "style.tone"
         static let removeFillers = "style.removeFillers"
         static let fixStutters = "style.fixStutters"
+        static let signOff = "style.signOff"           // Bool: add a fixed note after each dictation
+        static let signOffText = "style.signOffText"   // String
         static let hudPosition = "hudPosition"         // HUDPosition
         static let accent = "accent"                   // Accent
         static let numbersAsDigits = "numbersAsDigits" // Bool
@@ -108,6 +110,8 @@ enum Prefs {
             Key.tone: Style.Tone.natural.rawValue,
             Key.removeFillers: true,
             Key.fixStutters: true,
+            Key.signOff: false,
+            Key.signOffText: "(dictated with TypeVoice; spellings may be off)",
             Key.hudPosition: HUDPosition.bottomCenter.rawValue,
             Key.accent: Accent.mono.rawValue,
             Key.numbersAsDigits: true,
@@ -136,6 +140,8 @@ enum Prefs {
     static var tone: Style.Tone { Style.Tone(rawValue: d.string(forKey: Key.tone) ?? "") ?? .natural }
     static var removeFillers: Bool { d.bool(forKey: Key.removeFillers) }
     static var fixStutters: Bool { d.bool(forKey: Key.fixStutters) }
+    static var signOff: Bool { d.bool(forKey: Key.signOff) }
+    static var signOffText: String { d.string(forKey: Key.signOffText) ?? "" }
     static var hudPosition: HUDPosition { HUDPosition(rawValue: d.string(forKey: Key.hudPosition) ?? "") ?? .bottomCenter }
     static var accent: Accent { Accent(rawValue: d.string(forKey: Key.accent) ?? "") ?? .mono }
     static var numbersAsDigits: Bool { d.bool(forKey: Key.numbersAsDigits) }
