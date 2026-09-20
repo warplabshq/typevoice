@@ -222,7 +222,8 @@ Nothing secret is in either repository.
 
 ## 11. Open work
 
-- Shipped: 1.0.0 (build 100) on 20 September 2026 — notarized, stapled, on the releases repo,
+- Shipped: 1.0.0, 1.0.1 (Style owns the text options; Settings › About), 1.0.2 (License tab shows
+  the country price via `/geo`) — all on 20 September 2026. 1.0.0 (build 100) — notarized, stapled, on the releases repo,
   appcast live, site on typevoice.ai (root + www, Cloudflare proxied, HSTS). Source tagged `v1.0.0`.
 - Not yet done by hand: a test-mode purchase (`defaults write com.priyamventures.typevoice dodoTest
   -bool YES`, site served locally on :8787) to see a key arrive and activate; a clean-Mac run
