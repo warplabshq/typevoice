@@ -98,11 +98,14 @@ release: app notes
 notarize:
 	xcrun notarytool submit $(FILE) --keychain-profile $(NOTARY_PROFILE) --wait
 
-# A plain DMG: the app plus an Applications shortcut. Notarized and stapled on its own.
+# The download image: app on the left, Applications on the right, arrow between (layout in
+# Packaging/dmg.py, background from Tools/dmgbg.swift). Notarized and stapled on its own.
+# Needs dmgbuild once: `python3 -m pip install --user dmgbuild`.
+DMGBUILD ?= python3 -m dmgbuild
 dmg:
-	@rm -rf build/dmg && mkdir -p build/dmg
-	@cp -R $(BUNDLE) build/dmg/ && ln -s /Applications build/dmg/Applications
-	@hdiutil create -quiet -volname $(APP) -srcfolder build/dmg -ov -format UDZO dist/$(APP).dmg
+	@python3 -c "import dmgbuild" 2>/dev/null || { echo "dmgbuild missing: python3 -m pip install --user dmgbuild"; exit 1; }
+	@mkdir -p dist && rm -f dist/$(APP).dmg
+	@$(DMGBUILD) -s Packaging/dmg.py -D app=$(BUNDLE) "$(APP)" dist/$(APP).dmg
 	@codesign -f -s "$(RELEASE_ID)" --timestamp dist/$(APP).dmg
 	@$(MAKE) --no-print-directory notarize FILE=dist/$(APP).dmg
 	@xcrun stapler staple dist/$(APP).dmg
