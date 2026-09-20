@@ -27,8 +27,8 @@ final class Updater: NSObject, SPUUpdaterDelegate {
     /// Note which window was open so the next launch brings it straight back.
     nonisolated func updaterWillRelaunchApplication(_ updater: SPUUpdater) {
         // Sparkle calls this on the main thread; never block it waiting for itself.
-        let read = { (NSApp.delegate as? AppDelegate)?.openMainTab?.rawValue ?? MainTab.settings.rawValue }
-        let tab = Thread.isMainThread ? read() : DispatchQueue.main.sync(execute: read)
+        let read: @MainActor () -> String = { (NSApp.delegate as? AppDelegate)?.openMainTab?.rawValue ?? MainTab.settings.rawValue }
+        let tab = Thread.isMainThread ? MainActor.assumeIsolated(read) : DispatchQueue.main.sync { MainActor.assumeIsolated(read) }
         UserDefaults.standard.set(tab, forKey: Updater.reopenKey)
     }
 
