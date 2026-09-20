@@ -21,7 +21,9 @@ final class HUDController {
         hideTask?.cancel()
         let w = window ?? makeWindow()
         window = w
-        let screen = Self.screen(containing: target?.windowFrame) ?? Self.screenUnderMouse() ?? NSScreen.main ?? NSScreen.screens[0]
+        // A Mac with the lid shut and nothing plugged in has no screens at all; then there is
+        // nowhere to put the pill, and nothing to see it on.
+        guard let screen = Self.screen(containing: target?.windowFrame) ?? Self.screenUnderMouse() ?? NSScreen.main ?? NSScreen.screens.first else { return }
         w.place(on: screen, position: Prefs.hudPosition)
         w.orderFrontRegardless()
     }

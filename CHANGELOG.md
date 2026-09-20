@@ -4,6 +4,13 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.8 — in progress
+
+- Insertion can't be held hostage by a busy app: Accessibility questions time out in 0.3 s and
+  paste takes over.
+- Summary: one Export button (the save panel picks the format), and Clear History moved from
+  the toolbar to the end of the list. A tidier Dictionary row and Privacy page.
+
 ## 1.0.7 — 21 September 2026
 
 - Fixes a crash when choosing an item in the menu bar menu.
