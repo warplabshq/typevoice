@@ -45,13 +45,13 @@ struct MicMeter: View {
         stopTask = Task { try? await Task.sleep(for: .seconds(8)); if !Task.isCancelled { stop() } }
         let e = AVAudioEngine()
         let input = e.inputNode
-        if !deviceUID.isEmpty, let dev = InputDevices.device(uid: deviceUID), let unit = input.audioUnit {
+        if let dev = InputDevices.resolve(preference: deviceUID), let unit = input.audioUnit {
             var id = dev.id
             AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
         }
         let fmt = input.outputFormat(forBus: 0)
         guard fmt.sampleRate > 0 else { error = "No input"; return }
-        input.installTap(onBus: 0, bufferSize: 1024, format: fmt) { buf, _ in
+        input.installTap(onBus: 0, bufferSize: 1024, format: nil) { buf, _ in
             guard let ch = buf.floatChannelData else { return }
             let n = Int(buf.frameLength)
             var sum: Float = 0

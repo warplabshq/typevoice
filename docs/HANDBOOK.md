@@ -225,6 +225,13 @@ Nothing secret is in either repository.
 - 2026-09-20 trial 3 → 7 days; personal key 2 Macs; team key 5 × 2 Macs at $299; PPP first, then
   replaced by fixed Localized Pricing for IN/PK/BD/EG/NG only (PPP defaults also discounted the UK, DE, JP…);
   14-day refund; downloads on a public releases repo; site on Cloudflare Pages.
+- 2026-09-21 microphone policy: the built-in mic by default (`InputDevices.resolve`), the system
+  default only when chosen ("Whatever the Mac is using"), a device UID otherwise with fallback to
+  built-in. Reason: a Bluetooth headset switching to its HFP profile changed the input format
+  under a running engine; `installTap` with a stale format throws an Objective-C exception no
+  Swift `catch` sees, and dictation silently died until relaunch. The tap now uses `format: nil`,
+  the converter follows the buffers' real format, and `AVAudioEngineConfigurationChange` resets
+  the engine (and finishes a running session with what was heard).
 - 2026-09-21 the menu bar item moved from SwiftUI MenuBarExtra to AppKit (`UI/StatusItem.swift`)
   after a user's 1.0.6 crash in a menu action callback SwiftUI had already released; the menu is
   rebuilt on every open and every item is owned for the app's lifetime.

@@ -21,6 +21,15 @@ struct SettingsView: View {
     @State private var launchAtLogin = SMAppService.mainApp.status == .enabled
     @State private var advanced = false
 
+    /// Why the Mac's own mic is the default, and what a Bluetooth choice costs.
+    private var micNote: String {
+        let chosen = InputDevices.resolve(preference: inputDeviceUID)
+        if inputDeviceUID == InputDevices.followSystem || (chosen?.isBluetooth ?? false) {
+            return "Bluetooth headsets record through their narrow headset profile: quieter, muffled, a second to switch, and music on them drops in quality while you dictate. The Mac's own mic hears you fine from across a desk."
+        }
+        return "Press Test and speak normally: the bar should reach the middle. The Mac's own microphone gives the best recognition; pick a headset only if you need to whisper."
+    }
+
     /// "AppleUSBAudioEngine:RØDE:RØDE VideoMic GO II:82C5FB6E:1,2" → "RØDE VideoMic GO II".
     static func deviceName(fromUID uid: String) -> String {
         let parts = uid.split(separator: ":").map(String.init)
@@ -79,18 +88,19 @@ struct SettingsView: View {
 
             Section("Microphone") {
                 Picker("Input", selection: $inputDeviceUID) {
-                    Text("System default" + (InputDevices.defaultInput().map { " (\($0.name))" } ?? "")).tag("")
-                    ForEach(devices) { Text($0.name).tag($0.uid) }
+                    Text(InputDevices.builtIn().map { "\($0.name) (recommended)" } ?? "Built-in microphone").tag("")
+                    Text("Whatever the Mac is using" + (InputDevices.defaultInput().map { " · now \($0.name)" } ?? "")).tag(InputDevices.followSystem)
+                    ForEach(devices.filter { !$0.isBuiltIn }) { Text($0.name).tag($0.uid) }
                     // A remembered mic that isn't plugged in right now still needs a row, or the
-                    // picker shows nothing. The recorder already falls back to the system default.
-                    if !inputDeviceUID.isEmpty, !devices.contains(where: { $0.uid == inputDeviceUID }) {
-                        Text("\(Self.deviceName(fromUID: inputDeviceUID)) — not connected, using system default").tag(inputDeviceUID)
+                    // picker shows nothing. The recorder falls back to the built-in one.
+                    if !inputDeviceUID.isEmpty, inputDeviceUID != InputDevices.followSystem, !devices.contains(where: { $0.uid == inputDeviceUID }) {
+                        Text("\(Self.deviceName(fromUID: inputDeviceUID)) — not connected, using the built-in mic").tag(inputDeviceUID)
                     }
                 }
                 .onAppear { devices = InputDevices.all() }
                 .onReceive(Timer.publish(every: 3, on: .main, in: .common).autoconnect()) { _ in devices = InputDevices.all() }
                 LabeledContent("Level") { MicMeter(deviceUID: inputDeviceUID) }
-                Text("Press Test and speak normally: the bar should reach the middle. AirPods and other Bluetooth mics take a moment to wake up.")
+                Text(micNote)
                     .font(.callout).foregroundStyle(.secondary)
             }
             Section("Indicator") {

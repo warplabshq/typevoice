@@ -17,23 +17,42 @@ final class AudioRecorder: @unchecked Sendable {
     private var samples: [Float] = []
     private var peak: Float = 0
     private var converter: AVAudioConverter?
+    /// The format the converter and the spectrum were built for. AirPods and other Bluetooth
+    /// mics change the input format under us (48 kHz → 24 kHz when they switch to their headset
+    /// profile), so both are rebuilt from the buffer that actually arrives.
+    private var inFormat: AVAudioFormat?
     private var outFormat: AVAudioFormat
     private var tapInstalled = false
     private(set) var isRunning = false
+    private var configObserver: Any?
 
     static let sampleRate: Double = 16_000
 
     init() {
         outFormat = AVAudioFormat(commonFormat: .pcmFormatFloat32, sampleRate: Self.sampleRate, channels: 1, interleaved: false)!
+        // The engine says so itself when a device or its format changes; the next start must
+        // rebuild the graph instead of taping over a stale one (that raised an Objective-C
+        // exception inside installTap, which no Swift `catch` can see, and left dictation dead).
+        configObserver = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
+            guard let self else { return }
+            self.needsReset = true
+            // Choosing the device at start posts one of these too, a moment later; only a change
+            // well into a session counts as an interruption.
+            if self.isRunning, Date().timeIntervalSince(self.startedAt) > 1.0, let onInterrupted = self.onInterrupted {
+                Task { @MainActor in onInterrupted() }
+            }
+        }
     }
+    private var needsReset = false
+    private var startedAt = Date.distantPast
 
     func start() throws {
         guard !isRunning else { return }
         lock.withLock { samples.removeAll(keepingCapacity: true); peak = 0 }
 
         let input = engine.inputNode
-        // Chosen microphone, if any and still connected; otherwise the system default.
-        if let uid = Prefs.inputDeviceUID, let dev = InputDevices.device(uid: uid), let unit = input.audioUnit {
+        // The Mac's own mic unless the person chose otherwise (see InputDevices.resolve).
+        if let dev = InputDevices.resolve(preference: Prefs.inputDeviceUID), let unit = input.audioUnit {
             var id = dev.id
             let status = AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
             if status != noErr { Log.audio.warning("could not select input \(dev.name): \(status)") }
@@ -42,19 +61,50 @@ final class AudioRecorder: @unchecked Sendable {
         guard inFormat.sampleRate > 0, inFormat.channelCount > 0 else {
             throw RecorderError.noInput
         }
-        converter = AVAudioConverter(from: inFormat, to: outFormat)
-        converter?.sampleRateConverterQuality = .max
-        spectrum = Spectrum(bands: 10, sampleRate: inFormat.sampleRate)
-        Log.d("mic: \(Self.defaultInputName() ?? "?") \(Int(inFormat.sampleRate)) Hz ×\(inFormat.channelCount)")
+        Log.d("mic: \(Self.currentInputName() ?? Self.defaultInputName() ?? "?") \(Int(inFormat.sampleRate)) Hz ×\(inFormat.channelCount)")
 
-        if tapInstalled { input.removeTap(onBus: 0) }
-        input.installTap(onBus: 0, bufferSize: 512, format: inFormat) { [weak self] buffer, _ in
+        if tapInstalled { input.removeTap(onBus: 0); tapInstalled = false }
+        if needsReset { engine.stop(); engine.reset(); needsReset = false }
+        // `format: nil` taps whatever the node produces right now; a format of our own that
+        // disagrees with the hardware raises an uncatchable exception.
+        input.installTap(onBus: 0, bufferSize: 512, format: nil) { [weak self] buffer, _ in
             self?.consume(buffer)
         }
         tapInstalled = true
         engine.prepare()
-        try engine.start()
+        do {
+            try engine.start()
+        } catch {
+            // A mic that just vanished, or a headset mid-switch: one retry on the Mac's own mic,
+            // so the person keeps their sentence instead of an error.
+            Log.d("mic start failed (\(error.localizedDescription)); retrying on the built-in mic")
+            input.removeTap(onBus: 0); tapInstalled = false
+            engine.stop(); engine.reset()
+            if let dev = InputDevices.builtIn(), let unit = input.audioUnit {
+                var id = dev.id
+                AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
+            }
+            input.installTap(onBus: 0, bufferSize: 512, format: nil) { [weak self] buffer, _ in self?.consume(buffer) }
+            tapInstalled = true
+            engine.prepare()
+            try engine.start()
+        }
+        startedAt = Date()
         isRunning = true
+    }
+
+    /// Called on the main actor if the input device changes or disappears mid-session
+    /// (AirPods taken off, a USB mic unplugged). The controller finishes with what it has.
+    var onInterrupted: (@MainActor () -> Void)?
+
+    /// The converter and the spectrum follow the buffers' real format, whatever the mic became.
+    private func prepare(for format: AVAudioFormat) {
+        guard inFormat == nil || inFormat! != format else { return }
+        inFormat = format
+        converter = AVAudioConverter(from: format, to: outFormat)
+        converter?.sampleRateConverterQuality = .max
+        spectrum = Spectrum(bands: 10, sampleRate: format.sampleRate)
+        Log.d("mic format: \(Int(format.sampleRate)) Hz ×\(format.channelCount)")
     }
 
     /// Stops capture and returns everything recorded since `start()`.
@@ -71,6 +121,7 @@ final class AudioRecorder: @unchecked Sendable {
     func cancel() { _ = stop() }
 
     private func consume(_ buffer: AVAudioPCMBuffer) {
+        prepare(for: buffer.format)
         guard let converter, let ch = buffer.floatChannelData else { return }
         let n = Int(buffer.frameLength)
         guard n > 0 else { return }
@@ -122,7 +173,7 @@ final class AudioRecorder: @unchecked Sendable {
 
     /// The microphone a session records from: the chosen one if it's connected, else the default.
     static func currentInputName() -> String? {
-        if let uid = Prefs.inputDeviceUID, let dev = InputDevices.device(uid: uid) { return dev.name }
+        if let dev = InputDevices.resolve(preference: Prefs.inputDeviceUID) { return dev.name }
         return defaultInputName()
     }
 

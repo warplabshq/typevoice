@@ -9,7 +9,28 @@ enum InputDevices {
         let id: AudioDeviceID
         let uid: String
         let name: String
+        /// Built into the Mac (as opposed to USB, Bluetooth, aggregate…).
+        var isBuiltIn: Bool { InputDevices.transport(id) == kAudioDeviceTransportTypeBuiltIn }
+        var isBluetooth: Bool { let t = InputDevices.transport(id); return t == kAudioDeviceTransportTypeBluetooth || t == kAudioDeviceTransportTypeBluetoothLE }
     }
+
+    /// The preference's meaning: "" (the default) is the Mac's own microphone when it has one,
+    /// `system` follows whatever macOS currently uses, anything else is a device UID.
+    static let followSystem = "system"
+
+    /// The device a session should record from, or nil for the system default. The Mac's own
+    /// mic is preferred because a Bluetooth headset has to drop to its narrow "headset" profile
+    /// to record at all, which sounds worse, takes a second to switch, and degrades whatever
+    /// else is playing through it.
+    static func resolve(preference: String?) -> Device? {
+        switch preference ?? "" {
+        case "": return builtIn()
+        case followSystem: return nil
+        case let uid: return device(uid: uid) ?? builtIn()
+        }
+    }
+
+    static func builtIn() -> Device? { all().first { $0.isBuiltIn } }
 
     static func all() -> [Device] {
         var addr = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDevices,
@@ -34,6 +55,14 @@ enum InputDevices {
         guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size, &id) == noErr else { return nil }
         guard let name = string(id, kAudioObjectPropertyName), let uid = string(id, kAudioDevicePropertyDeviceUID) else { return nil }
         return Device(id: id, uid: uid, name: name)
+    }
+
+    static func transport(_ id: AudioDeviceID) -> UInt32 {
+        var addr = AudioObjectPropertyAddress(mSelector: kAudioDevicePropertyTransportType,
+                                              mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+        var t: UInt32 = 0; var size = UInt32(MemoryLayout<UInt32>.size)
+        guard AudioObjectGetPropertyData(id, &addr, 0, nil, &size, &t) == noErr else { return 0 }
+        return t
     }
 
     private static func inputChannels(_ id: AudioDeviceID) -> Int {

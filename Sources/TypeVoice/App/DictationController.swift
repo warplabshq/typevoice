@@ -37,6 +37,12 @@ final class DictationController {
         self.state = state
         self.history = history
         self.dictionary = dictionary
+        recorder.onInterrupted = { [weak self] in
+            guard let self, self.state.phase.isListening else { return }
+            Log.d("mic changed mid-session; finishing with what was heard")
+            self.lockWindow?.cancel(); self.lockWindow = nil
+            self.finish()
+        }
         recorder.onLevel = { [weak self] l in
             Task { @MainActor in self?.level(l) }
         }

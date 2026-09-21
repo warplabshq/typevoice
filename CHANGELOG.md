@@ -4,8 +4,13 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
-## 1.0.8 — in progress
+## 1.0.8 — 21 September 2026
 
+- Microphones, sorted out. The Mac's own mic is now the default even when AirPods or another
+  Bluetooth headset is connected: it hears you better, starts instantly, and doesn't drop the
+  music on your headset to headset quality while you talk. Pick a headset under Settings ›
+  Microphone if you need to whisper. A mic that changes or disappears mid-sentence no longer
+  kills dictation until the next launch; the sentence finishes with what was heard.
 - Insertion can't be held hostage by a busy app: Accessibility questions time out in 0.3 s and
   paste takes over.
 - Summary: one Export button (the save panel picks the format), and Clear History moved from
