@@ -66,10 +66,13 @@ enum Packs {
         Index.invalidate()
     }
 
-    private static func lineCount(_ url: URL) -> Int {
-        guard let s = try? String(contentsOf: url, encoding: .utf8) else { return 0 }
-        return s.split(separator: "\n").filter { !$0.trimmingCharacters(in: .whitespaces).isEmpty }.count
+    /// The terms in a pack file: one per line; blank lines and `#` comments are skipped.
+    static func terms(in url: URL) -> [String] {
+        guard let s = try? String(contentsOf: url, encoding: .utf8) else { return [] }
+        return s.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty && !$0.hasPrefix("#") }
     }
+
+    private static func lineCount(_ url: URL) -> Int { terms(in: url).count }
 
     // MARK: The index
 
@@ -120,11 +123,7 @@ enum Packs {
             let enabled = Set(ids ?? Prefs.packs)
             Task.detached(priority: .utility) {
                 var terms: [String] = []
-                for pack in Packs.all() where enabled.contains(pack.id) {
-                    if let s = try? String(contentsOf: pack.url, encoding: .utf8) {
-                        terms += s.split(separator: "\n").map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
-                    }
-                }
+                for pack in Packs.all() where enabled.contains(pack.id) { terms += Packs.terms(in: pack.url) }
                 let t0 = ContinuousClock.now
                 let index = Index(terms: terms)
                 Log.timing("packs.index(\(terms.count))", since: t0)
@@ -194,6 +193,11 @@ enum English {
     static func isWord(_ w: String) -> Bool {
         let core = w.lowercased().trimmingCharacters(in: .punctuationCharacters)
         guard !core.isEmpty else { return true }
-        return words.contains(core)
+        if words.contains(core) { return true }
+        for (suffix, stem) in [("ies", "y"), ("es", ""), ("s", ""), ("ed", ""), ("ed", "e"), ("ing", ""), ("ing", "e"), ("'s", "")]
+        where core.hasSuffix(suffix) && core.count > suffix.count + 2 {
+            if words.contains(String(core.dropLast(suffix.count)) + stem) { return true }
+        }
+        return false
     }
 }

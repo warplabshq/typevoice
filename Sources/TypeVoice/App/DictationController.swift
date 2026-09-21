@@ -355,6 +355,7 @@ final class DictationController {
                 var text = Cleaner.clean(raw, style: style)
                 if Prefs.voiceCommands { text = Structure.commands(text) }
                 if Prefs.numbersAsDigits { text = Numbers.apply(text) }
+                text = Spoken.apply(text)
                 text = Vocabulary.apply(dictionary.terms, to: text)
                 if Prefs.smartCleanup {
                     smart.style = style

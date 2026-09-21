@@ -63,6 +63,28 @@ enum PipelineTest {
             print(failures == 0 ? "all good" : "\(failures) failed")
             exit(failures == 0 ? 0 : 1)
         }
+        if files.first == "spoken" {
+            let cases: [(String, String)] = [
+                ("go to typevoice dot ai", "go to typevoice.ai"),
+                ("it's on logs dot so", "it's on logs.so"),
+                ("send it to jane at example dot com", "send it to jane@example.com"),
+                ("the docs are at typevoice dot ai slash support", "the docs are at typevoice.ai/support"),
+                ("we ship to bbc dot co dot uk", "we ship to bbc.co.uk"),
+                ("Typevoice. Ai is live", "Typevoice.ai is live"),
+                ("Check the logs. So we should ship.", "Check the logs. So we should ship."),
+                ("It is hosted on Cloudflare. It works.", "It is hosted on Cloudflare. It works."),
+                ("Try Composio. Dev tools are great.", "Try Composio. Dev tools are great."), ("it lives on logs. So.", "it lives on logs.so."), ("Get it at typevoice. Ai today", "Get it at typevoice.ai today"),
+                ("I was at home. So was she.", "I was at home. So was she."),
+            ]
+            var failures = 0
+            for (input, expected) in cases {
+                let got = Spoken.apply(input)
+                let ok = got == expected; if !ok { failures += 1 }
+                print("\(ok ? "ok " : "FAIL") \(input) → \(got)\(ok ? "" : "   (wanted \(expected))")")
+            }
+            print(failures == 0 ? "all good" : "\(failures) failed")
+            exit(failures == 0 ? 0 : 1)
+        }
         if files.first == "itn" {
             let n = TextNormalizer.shared
             for c in ["the launch is in twenty twenty four", "I was born in nineteen ninety nine", "we need twenty four hours",
@@ -112,6 +134,7 @@ enum PipelineTest {
                 var cleaned = Cleaner.clean(raw)
                 if Prefs.voiceCommands { cleaned = Structure.commands(cleaned) }
                 if Prefs.numbersAsDigits { cleaned = Numbers.apply(cleaned) }
+                cleaned = Spoken.apply(cleaned)
                 let t2 = ContinuousClock.now
                 let smartOut = await smart.clean(cleaned)
                 let smartMs = Int((ContinuousClock.now - t2).ms)
@@ -128,13 +151,15 @@ enum PipelineTest {
     }
 
     private static func vocabSelfTest() {
-        let terms = ["VidAI", "Priyam", "Wispr Flow", "Kubernetes", "Timenite"]
+        let terms = ["VidAI", "Priyam", "Wispr Flow", "Kubernetes", "Timenite", "Logs.so"]
         let cases = [
             "I was talking to the team at vid AI about the export flow.",
             "Send it to pre-um and the video AI folks, and cc Wisper flow.",
             "we deployed to cuber netties last night, timenight is up.",
             "Vidai looks good. Video looks good too. AI is fine.",
             "Priya said hi.",
+            "Check logs. So and tell me what you see.",
+            "Open logs dot so in the browser.",
         ]
         for c in cases { print("\(c)\n  → \(Vocabulary.apply(terms, to: c))") }
     }

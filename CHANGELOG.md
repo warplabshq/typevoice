@@ -4,6 +4,14 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.10 — 22 September 2026
+
+- Web addresses, spoken: "typevoice dot ai", "logs dot so", "jane at example dot com", "slash
+  support" come out as typevoice.ai, logs.so, jane@example.com, typevoice.ai/support. When the
+  model hears "dot" as a full stop ("logs. So"), that's repaired too, wherever it can't be a
+  real sentence.
+- Import a list… now explains the file format before asking for the file.
+
 ## 1.0.9 — 22 September 2026
 
 - Word packs. The Dictionary tab now carries lists of spellings the model has no way to know:
