@@ -32,6 +32,37 @@ enum PipelineTest {
             }
             exit(0)
         }
+        if files.first == "packs" {
+            // Heard → expected, with every word marked uncertain (0.5) unless suffixed with a bang (confident).
+            // Pack terms come from the built-in packs; a term missing there fails loudly.
+            let cases: [(String, String)] = [
+                ("rip grep", "ripgrep"), ("neo vim", "Neovim"), ("tail scale", "Tailscale"), ("supa base", "Supabase"),
+                ("ver sell", "Vercel"), ("ray cast", "Raycast"), ("ff mpeg", "ffmpeg"), ("tera form", "terraform"), ("compose io", "Composio"), ("kube cuttle", "kubectl"),
+                ("the meeting!", "the meeting!"), ("ripped", "ripped"), ("really", "really"), ("sell it", "sell it"),
+            ]
+            Packs.Index.warm(ids: Packs.all().map(\.id))   // every pack, without touching the preference
+            while Packs.Index.current == nil { Thread.sleep(forTimeInterval: 0.05) }
+            print("index: \(Packs.Index.current!.count) terms")
+            var failures = 0
+            for (heard, expected) in cases {
+                let words = heard.split(separator: " ").map { w -> Structure.Word in
+                    let confident = w.hasSuffix("!")
+                    return Structure.Word(text: String(w), gapBefore: 0, confidence: confident ? 0.99 : 0.5)
+                }
+                let got = Packs.correct(words).map(\.text).joined(separator: " ")
+                let ok = got == expected
+                if !ok { failures += 1 }
+                print("\(ok ? "ok " : "FAIL") \(heard) → \(got)\(ok ? "" : "   (wanted \(expected))")")
+            }
+            // Cost on a long dictation with a few doubtful words.
+            let long = Array(repeating: "the quick brown fox jumps over the lazy dog near the river bank today", count: 6).joined(separator: " ")
+            var many = long.split(separator: " ").enumerated().map { Structure.Word(text: String($0.element), gapBefore: 0, confidence: $0.offset % 9 == 0 ? 0.4 : 0.98) }
+            let t0 = ContinuousClock.now
+            for _ in 0..<20 { many = Packs.correct(many) }
+            print("packs.correct on \(many.count) words: \(String(format: "%.2f", Double((ContinuousClock.now - t0) / .milliseconds(1)) / 20)) ms")
+            print(failures == 0 ? "all good" : "\(failures) failed")
+            exit(failures == 0 ? 0 : 1)
+        }
         if files.first == "itn" {
             let n = TextNormalizer.shared
             for c in ["the launch is in twenty twenty four", "I was born in nineteen ninety nine", "we need twenty four hours",
@@ -72,8 +103,10 @@ enum PipelineTest {
                 if ProcessInfo.processInfo.environment["TYPEVOICE_TOKENS"] == "1" {
                     for t in transcript.tokens { print(String(format: "  %6.2f-%6.2f  %@", t.start, t.end, t.token)) }
                 }
-                if Prefs.pauseParagraphs, !transcript.tokens.isEmpty {
-                    raw = Structure.paragraphs(Structure.words(text: raw, tokens: transcript.tokens), pause: 1.0)
+                if !transcript.tokens.isEmpty {
+                    var words = Structure.words(text: raw, tokens: transcript.tokens)
+                    if !Prefs.packs.isEmpty { words = Packs.correct(words) }
+                    raw = Prefs.pauseParagraphs ? Structure.paragraphs(words, pause: 1.0) : words.map(\.text).joined(separator: " ")
                 }
                 let asrMs = Int((ContinuousClock.now - t1).ms)
                 var cleaned = Cleaner.clean(raw)

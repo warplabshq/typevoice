@@ -16,6 +16,7 @@ enum Prefs {
         static let fixStutters = "style.fixStutters"
         static let signOff = "style.signOff"           // Bool: add a fixed note after each dictation
         static let signOffText = "style.signOffText"   // String
+        static let packs = "packs"                     // [String]: enabled word-pack ids
         static let hudPosition = "hudPosition"         // HUDPosition
         static let accent = "accent"                   // Accent
         static let numbersAsDigits = "numbersAsDigits" // Bool
@@ -112,6 +113,7 @@ enum Prefs {
             Key.fixStutters: true,
             Key.signOff: false,
             Key.signOffText: "(dictated with TypeVoice; spellings may be off)",
+            Key.packs: ["developer-tools"],
             Key.hudPosition: HUDPosition.bottomCenter.rawValue,
             Key.accent: Accent.mono.rawValue,
             Key.numbersAsDigits: true,
@@ -142,6 +144,10 @@ enum Prefs {
     static var fixStutters: Bool { d.bool(forKey: Key.fixStutters) }
     static var signOff: Bool { d.bool(forKey: Key.signOff) }
     static var signOffText: String { d.string(forKey: Key.signOffText) ?? "" }
+    static var packs: [String] {
+        get { d.stringArray(forKey: Key.packs) ?? [] }
+        set { d.set(newValue, forKey: Key.packs) }
+    }
     static var hudPosition: HUDPosition { HUDPosition(rawValue: d.string(forKey: Key.hudPosition) ?? "") ?? .bottomCenter }
     static var accent: Accent { Accent(rawValue: d.string(forKey: Key.accent) ?? "") ?? .mono }
     static var numbersAsDigits: Bool { d.bool(forKey: Key.numbersAsDigits) }

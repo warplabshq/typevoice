@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 struct DictionaryView: View {
     let dictionary: DictionaryStore
@@ -47,6 +48,8 @@ struct DictionaryView: View {
             }
 
             Divider()
+            PacksSection()
+            Divider()
             Text("Applied after recognition, on this Mac. Recognition itself stays unchanged, so the model never sees your list.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
@@ -59,5 +62,59 @@ struct DictionaryView: View {
 
     private func add() {
         if dictionary.add(draft) { draft = "" }
+    }
+}
+
+/// Word packs: thousands of spellings the model tends to mangle, shipped inside the app, each
+/// a switch. Packs only fire where the model was unsure; your own words above always win.
+private struct PacksSection: View {
+    @State private var packs: [Packs.Pack] = Packs.all()
+    @State private var enabled = Set(Prefs.packs)
+    @State private var importError: String?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Packs").font(.headline)
+                Spacer()
+                Button("Import a list…") { importList() }.controlSize(.small)
+            }
+            ForEach(packs) { pack in
+                HStack(spacing: 10) {
+                    Text(pack.name)
+                    Text("\(pack.count.formatted()) words").foregroundStyle(.secondary)
+                    Spacer()
+                    if !pack.builtIn {
+                        Button(role: .destructive) { Packs.remove(pack); reload() } label: { Image(systemName: "minus.circle") }
+                            .buttonStyle(.borderless).foregroundStyle(.secondary).help("Remove this list")
+                    }
+                    Toggle("", isOn: Binding(get: { enabled.contains(pack.id) }, set: { on in
+                        Packs.setEnabled(pack, on); enabled = Set(Prefs.packs)
+                    }))
+                    .labelsHidden().toggleStyle(.switch).controlSize(.small)
+                }
+                .padding(.vertical, 2)
+            }
+            Text(footnote).font(.caption).foregroundStyle(.secondary)
+            if let importError { Text(importError).font(.caption).foregroundStyle(.red) }
+        }
+        .padding(.horizontal, 16).padding(.vertical, 12)
+    }
+
+    private var footnote: String {
+        "Developer tools is built from Homebrew, PyPI and Wikidata; Internet slang is hand-picked. Files inside the app, never fetched. A pack only steps in where the model was unsure of a word."
+    }
+
+    private func reload() { packs = Packs.all(); enabled = Set(Prefs.packs) }
+
+    private func importList() {
+        let panel = NSOpenPanel()
+        panel.allowedContentTypes = [.plainText]
+        panel.message = "A text file with one word or phrase per line."
+        panel.begin { resp in
+            guard resp == .OK, let url = panel.url else { return }
+            do { try Packs.importFile(url); importError = nil } catch { importError = error.localizedDescription }
+            reload()
+        }
     }
 }

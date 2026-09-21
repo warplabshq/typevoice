@@ -12,8 +12,10 @@ protocol Transcriber: Sendable {
 
 struct Transcript: Sendable {
     var text: String
-    /// Per-token timings when the engine provides them (SentencePiece pieces, ▁ marks a word start).
-    var tokens: [(token: String, start: TimeInterval, end: TimeInterval)]
+    /// Per-token timings when the engine provides them (SentencePiece pieces, ▁ marks a word start),
+    /// with the model's own confidence in each piece (0…1).
+    var tokens: [Token]
+    struct Token: Sendable { var token: String; var start: TimeInterval; var end: TimeInterval; var confidence: Float }
 }
 
 struct WarmProgress: Sendable, Equatable {

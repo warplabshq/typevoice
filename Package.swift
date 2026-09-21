@@ -16,6 +16,7 @@ let package = Package(
                 .product(name: "Sparkle", package: "Sparkle"),
             ],
             path: "Sources/TypeVoice",
+            resources: [.copy("Resources/Packs")],
             swiftSettings: [
                 .swiftLanguageMode(.v5),
             ],

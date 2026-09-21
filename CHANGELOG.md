@@ -4,6 +4,14 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.9 — 22 September 2026
+
+- Word packs. The Dictionary tab now carries lists of spellings the model has no way to know:
+  Developer tools (3,600 names from Homebrew, PyPI and Wikidata, plus our own picks) and
+  Internet slang (hand-picked). A pack only steps in where the model was unsure of a word,
+  your own Dictionary always wins, and Import a list… takes any text file, one term per line.
+  Files inside the app; nothing is fetched.
+
 ## 1.0.8 — 21 September 2026
 
 - Microphones, sorted out. The Mac's own mic is now the default even when AirPods or another

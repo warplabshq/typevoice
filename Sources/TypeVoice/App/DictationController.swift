@@ -37,6 +37,7 @@ final class DictationController {
         self.state = state
         self.history = history
         self.dictionary = dictionary
+        Packs.Index.warm()
         recorder.onInterrupted = { [weak self] in
             guard let self, self.state.phase.isListening else { return }
             Log.d("mic changed mid-session; finishing with what was heard")
@@ -341,9 +342,14 @@ final class DictationController {
                 Log.asr.info("raw: \(raw)")
                 Log.d("raw(\(String(format: "%.1f", rec.seconds))s): \(raw)")
 
-                // Paragraphs from real pauses (≥ 1 s after a sentence end), using word timings.
-                if Prefs.pauseParagraphs, !transcript.tokens.isEmpty {
-                    raw = Structure.paragraphs(Structure.words(text: raw, tokens: transcript.tokens), pause: 1.0)
+                // Word packs fix spellings the model was unsure of; paragraphs come from real
+                // pauses (≥ 1 s after a sentence end). Both work on the timed words.
+                if !transcript.tokens.isEmpty {
+                    var words = Structure.words(text: raw, tokens: transcript.tokens)
+                    let doubtful = words.filter { $0.confidence < Packs.confidenceGate }
+                    if !doubtful.isEmpty { Log.d("doubtful: " + doubtful.map { "\($0.text)(\(String(format: "%.2f", $0.confidence)))" }.joined(separator: " ")) }
+                    if !Prefs.packs.isEmpty { let t = ContinuousClock.now; words = Packs.correct(words); Log.timing("packs.correct", since: t) }
+                    raw = Prefs.pauseParagraphs ? Structure.paragraphs(words, pause: 1.0) : words.map(\.text).joined(separator: " ")
                 }
                 let style = Style.current
                 var text = Cleaner.clean(raw, style: style)

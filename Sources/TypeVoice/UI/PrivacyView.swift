@@ -25,6 +25,7 @@ struct PrivacyView: View {
                 row("sparkles", "Smart cleanup uses Apple Intelligence's on-device model. Text stays on this Mac.")
                 row("network", "Four network calls, ever: the one-time model download, the update check, the price for your country when you open the License tab, and your license key when you activate it. Nothing about you rides along with any of them.")
                 row("internaldrive", "History is a small database and your dictionary a text file, both on this Mac, both yours to open, back up or delete.")
+                row("text.book.closed", "Word packs are text files inside the app, built from Homebrew, PyPI and Wikidata (CC0) plus our own lists. Nothing is fetched; a list you import stays in your Application Support folder.")
                 row("chevron.left.forwardslash.chevron.right", "None of this asks for trust: the source is public under the GPL v3, so anyone can read exactly what the app does and build it themselves.")
                 Button("Read the source on GitHub") { NSWorkspace.shared.open(Brand.sourceURL) }
                     .buttonStyle(.link).padding(.leading, 32)

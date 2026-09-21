@@ -5,12 +5,12 @@ import Foundation
 /// model's word timestamps, paragraph breaks at real pauses.
 enum Structure {
     /// A word with when it was spoken. `gapBefore` is the silence before it.
-    struct Word { var text: String; var gapBefore: TimeInterval }
+    struct Word { var text: String; var gapBefore: TimeInterval; var confidence: Float = 1 }
 
     /// Turns a transcript into words with the pause before each, using token timings.
     /// Sub-word tokens are merged: a token that starts with the SentencePiece word
     /// boundary (▁) or a space starts a new word.
-    static func words(text: String, tokens: [(token: String, start: TimeInterval, end: TimeInterval)]) -> [Word] {
+    static func words(text: String, tokens: [Transcript.Token]) -> [Word] {
         guard !tokens.isEmpty else {
             return text.split(separator: " ").map { Word(text: String($0), gapBefore: 0) }
         }
@@ -18,7 +18,8 @@ enum Structure {
         var lastEnd: TimeInterval = 0
         var current = ""
         var currentGap: TimeInterval = 0
-        func flush() { if !current.isEmpty { out.append(Word(text: current, gapBefore: currentGap)); current = "" } }
+        var currentConf: Float = 1
+        func flush() { if !current.isEmpty { out.append(Word(text: current, gapBefore: currentGap, confidence: currentConf)); current = ""; currentConf = 1 } }
         for t in tokens {
             let raw = t.token
             let startsWord = raw.hasPrefix("▁") || raw.hasPrefix(" ") || current.isEmpty
@@ -28,6 +29,7 @@ enum Structure {
                 currentGap = max(0, t.start - lastEnd)
             }
             current += piece
+            currentConf = min(currentConf, t.confidence)
             lastEnd = max(lastEnd, t.end)
         }
         flush()

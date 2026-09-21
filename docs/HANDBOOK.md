@@ -196,6 +196,23 @@ Umami (self-hosted) is scoped to typevoice.ai, drops query strings, and counts `
 $79 / 2 Macs, team 5 × 2 Macs, 14-day refund, PPP, jurisdiction India, Dodo as merchant of record,
 closed source with third-party notices.
 
+## 7a. Word packs
+
+`Text/Packs.swift`: lists of spellings the model mangles, matched by sound like the Dictionary
+(`Vocabulary`), but only on spans whose every piece scored below `Packs.confidenceGate` (0.85,
+from Parakeet's per-token `token_prob`), and only with a closer match (≥ 0.85) when the heard
+words are real English (`/usr/share/dict/words`) — "sell it" must never become "sqlite". The
+index buckets terms by first phonetic letter + length; a long dictation costs ~0.5 ms.
+Packs are text files in `Sources/TypeVoice/Resources/Packs/` (a SwiftPM resource bundle),
+built by `python3 Tools/packs/build.py [dev|slang|all]` from Homebrew analytics, top-PyPI,
+Wikidata (software classes, 5+ sitelinks) and the hand-picked `Tools/packs/core-*.txt`.
+Wiktionary's slang categories were evaluated and rejected: even minus its offensive categories
+they skew to slurs and dog whistles. Imported lists live in `~/Library/Application Support/
+TypeVoice/Packs/`. `--test packs` runs the heard → expected cases and prints the cost.
+The `doubtful:` debug log line lists each dictation's low-confidence words, for tuning the gate.
+Next step (Dictionary v2): decode-time boosting — re-export the v2 joint CoreML model with
+top-K logits and port sherpa-onnx's Aho-Corasick hotword boost into FluidAudio's decoder.
+
 ## 8. Brand
 
 One waveform (`Sources/TypeVoice/UI/BrandWave.swift`): eight bars, gap 0.82× bar width, tallest

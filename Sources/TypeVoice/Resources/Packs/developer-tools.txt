@@ -1,0 +1,3656 @@
+0 A.D.
+17LIVE
+1Password
+1Password CLI
+2GIS
+3D Construction Kit
+3D Slicer
+3DMark
+3DSlicer
+4DOS
+86Box
+8BitDo Firmware Updater
+a2wsgi
+Aadhaar
+AaPanel
+Aarogya Setu
+ABC
+Abema
+Ableton Live
+ABrowse
+abseil
+ABSYS
+ABViewer
+Accessibility Toolkit
+Acronis
+actionlint
+ActionScript
+Active Desktop
+Active Server Pages
+ActiveSync
+ActivityWatch
+ada-url
+ADABAS
+adal
+Adaware Antivirus
+AdBlock
+Address programming language
+AdGuard
+adlfs
+AdMob
+Adobe Digital Editions
+Adobe Dreamweaver
+Adobe Fireworks
+Adobe GoLive
+Adobe ImageReady
+Adobe InCopy
+Adobe InDesign
+Adobe LiveCycle Designer
+Adobe OnLocation
+Adobe PageMaker
+Adobe PageMill
+Adobe Photoshop Express
+Adobe RoboHelp
+Adobe VoCo
+Advanced SystemCare
+AdwCleaner
+aenum
+Agda
+agent-browser
+AgentsView
+AGESA
+agrep
+aioboto3
+aiobotocore
+aiodns
+aiofile
+aiofiles
+aiohappyeyeballs
+aiohttp
+aioitertools
+aiokafka
+aiolimiter
+aiomysql
+AionUi
+aioquic
+aiosignal
+aiosmtplib
+aiosqlite
+AirBuddy
+Airflow
+AirHelp
+AIRI
+AirStats
+AirSync
+Airtable
+Airtel
+akamai
+Akonadi
+Akregator
+Al-Maktaba Al-Shamela
+Alacritty
+Alarms & Clock
+AlDente
+Alexa Toolbar
+AlexNet
+ALGOL 58
+ALGOL 60
+ALGOL 68
+aliyun-cli
+AlphaFold
+alsa-lib
+alsamixer
+Altair GraphQL Client
+altgraph
+ALTRAN
+AltServer
+AltTab
+ALZip
+Amazon Corretto JDK
+Amazon DocumentDB
+Amazon DynamoDB Local
+Amazon Workspaces
+AMD CodeXL
+Amiga Basic
+Amiga E
+Amnezia VPN
+ampl-asl
+amqp
+AMS-LaTeX
+Amsoft
+Anarlog
+andcards
+Android NDK
+Android SDK
+Android SDK Platform-Tools
+Angband
+Angry IP Scanner
+angular-cli
+AngularJS
+Anki
+anoNet
+ansible
+ansible-lint
+ansicolors
+ANSYS
+Antinote
+AnTuTu
+AnyDesk
+AnyDVD
+anyio
+AnyLogic
+AnythingLLM
+Anytype
+AOL Explorer
+Apache Jena
+Apache MXNet
+Apache OpenOffice
+Apache Portable Runtime
+Apache Xalan
+Apache Xerces
+apache-arrow
+apache-serf
+Apertus
+Apifox
+apispec
+apktool
+appdirs
+AppFlowy
+appium
+Appium Inspector GUI
+Apple HomeKit
+Apple Remote Desktop
+ApplePi-Baker
+Applesoft BASIC
+applicant tracking system
+Applite
+AppSheet
+appstream
+apr-util
+apscheduler
+ArcInfo
+ArcView
+Arduino IDE
+arduino-cli
+ARexx
+argcomplete
+Argo CD
+argocd
+argp-standalone
+argparse
+Arial
+arp-scan
+ARToolKit
+aRts
+arxiv
+asciidoc
+asciidoctor
+asciinema
+asdf
+Aseprite
+asgiref
+ASIC
+asm.js
+asn1crypto
+AspectC++
+AspectJ
+aspell
+Aspen HYSYS
+Asset Catalog Tinkerer
+assimp
+ast-grep
+Astro
+asttokens
+astunparse
+ASUS ZenUI
+asyncio
+asyncpg
+asyncssh
+Atari BASIC
+Atari Microsoft BASIC
+ATI Avivo
+Atlas VPN
+Atlassian
+Atlassian SourceTree
+AtomCode
+ATOS
+ATS
+attr
+attrs
+atuin
+ATV Remote
+Audio MIDI Setup
+Auroracoin
+AusweisApp
+Auth0
+authlib
+AutoCAD Architecture
+autocode
+autoconf
+autoconf-archive
+autocorrection
+Autodesk AliasStudio
+Autodesk Fusion 360
+Autodesk MotionBuilder
+AutoHotkey
+AutoIt
+AutoLISP
+automake
+Automatic Data Processing
+Automatically Programmed Tool
+Automatix
+autopep8
+autossh
+AutoSubs
+AV-Comparatives
+Avalonia
+Avast SecureLine VPN
+AVEVA
+AVG
+AVG Technologies
+Avira
+Avogadro
+avro
+Avro Keyboard
+AWS Client VPN
+AWS Corretto JDK
+AWS Elastic Beanstalk
+AWS Vault
+aws-cdk
+aws-checksums
+aws-vault
+awscli
+awscrt
+awscurl
+awswrangler
+AyuGram
+azcopy
+azure-cli
+B4X
+Backblaze
+Backbone.js
+backcall
+backoff
+backrefs
+Baidu NetDisk
+Bambu Studio
+BartPE
+basedpyright
+bash-completion
+bash-preexec
+bashlex
+Basic4android
+BasicTeX
+BatFi
+bats-core
+bazelisk
+BBC BASIC
+BBEdit
+bbrew
+BCPL
+bcrypt
+beads
+BeanShell
+BearShare
+beartype
+beautifulsoup4
+Beeper
+Befunge
+BentoBox
+Beonex Communicator
+BetterCapture
+BetterCmdTab
+BetterDisplay
+betterleaks
+BetterMouse
+BetterTouchTool
+BetterZip
+Bhuvan
+Biber
+BibTeX
+bidict
+BigQuery
+Bilibili
+binaryen
+binaryornot
+Bing Maps Platform
+binutils
+binwalk
+Bioconductor
+BioPerl
+Biopython
+bitarray
+Bitbucket
+Bitcoin Classic
+Bitcoin Unlimited
+Bitfocus Companion
+BitLord
+BitSpirit
+Bitwarden
+bitwarden-cli
+Bizagi
+BlackHole 16ch
+BlackHole 2ch
+BlackHole 64ch
+blake3
+Blazor
+Blender LTS
+BLEUnlock
+blis
+Blizzard Battle.net
+blobfile
+BlockBlock
+Blockly
+BlueBubbles
+Bluesnooze
+BlueStacks
+Bluetooth File Exchange
+blueutil
+BMDP
+BMPx
+Bochs
+boltons
+Bonjour
+Bonzi Buddy
+Borland Graphics Interface
+boto3
+botocore
+Bourne shell
+bracex
+Brainfuck
+broot
+brotli
+BrowserOS
+bs4
+btop
+bubblewrap
+bubus
+BullGuard
+bundletool
+bytecode
+ByteDance
+CA Technologies
+cabal-install
+cabextract
+cachebox
+cachecontrol
+cachelib
+cachetools
+cadwyn
+Cafe Bazaar
+Caido
+Cainiao
+caio
+cairocffi
+cairosvg
+Calendly
+Calendr
+Calligra Flow
+Calligra Suite
+Cameleon
+CameraController
+Camo Studio
+Camtasia
+Camunda Modeler
+Canva
+CapCut
+capnp
+Carbon Copy Cloner
+cargo-binstall
+Carlito
+CarPlay
+carthage
+Cascadia Code NF
+Cascading Style Sheets
+CaskHub
+Catboost
+Catrobat
+cattrs
+cbor2
+CC Switch
+ccache
+cchardet
+CDF Player
+cdxgen
+Cegid
+Cerebras
+ceres-solver
+certbot
+certifi
+cfdisk
+cffi
+cfgv
+cfitsio
+cfn-lint
+CFosSpeed
+cgal
+cgif
+cgns
+chafa
+Chainlink
+chardet
+CHARMM
+Chatbox
+check-jsonschema
+checkov
+Checkstyle
+Chef Workstation
+ChemDraw
+Chemsketch
+CherryOS
+chezmoi
+chibi-scheme
+CHIP-8
+Chocolatey
+chromadb
+chromaprint
+Chrome Remote Desktop
+ChromeDriver
+Chuchel
+CICS
+cilium-cli
+Cilk
+circleci
+CircuitPython
+ciso8601
+Citavi
+Citect
+Citrix Systems
+Citrix Virtual Apps
+Citrix Workspace
+cjson
+clamav
+clang-format
+ClanLib
+Classilla
+Claude DevTools
+ClaudeBar
+Clawd on Desk
+CleanMyMac
+CleanMyMac CLI
+CleanShot
+CleanupBuddy
+cleo
+CLever Audio Plug-in
+Cleverbot
+ClickHouse
+ClickOnce
+ClickUp
+cliclick
+CLion
+ClipGrab
+cliproxyapi
+Clipy
+CLISP
+CLIST
+cloc
+Clojure
+CloneDVD
+CloudCompare
+cloudevents
+Cloudflare
+Cloudflare WARP
+cloudflare-wrangler
+cloudflared
+CloudMagic
+cloudpathlib
+cloudpickle
+CLU
+cmake
+cmake-docs
+cmatrix
+CMU Common Lisp
+cmux
+CNTK
+COBOL
+cocoapods
+coconutBattery
+Cocos2d-x
+CodeAnalyst
+CodeBuddy
+CodeBuddy CN
+codeburn
+codeowners
+CodeQL
+CodeRabbit
+CodeSandbox
+codespell
+CodexBar
+CoffeeScript
+ColdFusion Markup Language
+colmap
+colorama
+colorclass
+coloredlogs
+colorlog
+ColorSync
+Comarch
+Comfy Desktop
+ComicFesta
+Comico
+COMIT
+comm
+commitizen
+Comodo Internet Security
+Composio
+Computer-aided technologies
+COMSOL Multiphysics
+conan
+Conda
+configargparse
+configparser
+conftest
+conmon
+Consensys
+contextlib2
+contourpy
+Contrastive Language-Image Pre-Training
+cookiecutter
+Cool Retro Term
+coolname
+CoolNovo
+Copilot for Xcode
+CopyClip
+CopyQ
+Coral 66
+Core ML
+Corel Presentations
+Corel Ventura
+CorelDRAW
+corepack
+coreutils
+cosign
+CotEditor
+Cotypist
+cowsay
+CPL
+cppcheck
+cppunit
+cppzmq
+cramjam
+crashtest
+crc32c
+create-dmg
+Creatio
+CRED
+crewai
+croniter
+cronsim
+Crowdin
+Crowdsource
+crun
+Crunchyroll
+Crypter
+Cryptomator
+Crystal Reports
+Crystalfetch
+CSPro
+cssselect
+cssselect2
+ctlptl
+ctranslate2
+CubicSDR
+CUDA
+cups
+CurseForge
+curses
+CutePDF
+cxxopts
+Cyberdog
+Cyberduck
+CyberGhost VPN
+CyberLink
+CycL
+cyclopts
+cycode
+Cygwin
+cymem
+cyrus-sasl
+cython
+D-Bus
+D2 Coding
+Daemon Tools
+Dafny
+Dagster
+DaisyDisk
+DarkBASIC
+darktable
+dart-sdk
+dartaotruntime
+Dartmouth BASIC
+dartsim
+Dashcode
+Dashlane
+dask
+Data Transformation Services
+DataArt
+Databricks
+Datadog
+DataFlex
+DataGrip
+dataproperty
+datasets
+dateparser
+datetime
+DaVinci Resolve
+Dayflow
+daytona
+DAZ Studio
+DBeaver
+DBeaver Community Edition
+DbGate
+DBngin
+dbt
+dbus
+DBX
+DCOP
+dcraw
+ddrescue
+ddtrace
+debugpy
+deepdiff
+DeepFace
+DeepL
+Deeplearning4j
+DeepSeek
+Deezer
+defusedxml
+DejaVu
+Delphi
+deltalake
+Deno
+deprecated
+deptry
+DeskPad
+Deskreen
+Desmos
+devcontainer
+Devin CLI
+Devin Desktop
+DEVONthink
+DevPod
+DevToys
+DevUtils
+dfu-util
+Dia
+dialog
+DIAlux
+DiDi
+Diella
+difftastic
+diffutils
+digiKam
+Digsby
+DingTalk
+DipTrace
+Direct3D
+DirectFB
+DirectMusic
+DirectSound
+direnv
+dirtyjson
+diskcache
+Diskeeper
+DiskImageMounter
+displayplacer
+distlib
+distro
+DistroAV
+Django
+djangorestframework
+DNSCrypt
+dnsmasq
+dnspython
+docbook
+docbook-xsl
+DockDoor
+Docker Desktop
+docker-buildx
+docker-completion
+docker-compose
+docker-machine
+dockey
+DockFlow
+Dockspace
+docopt
+doctl
+docutils
+Dodo Payments
+Dojo
+Domark Software
+DoNotPay
+Doom modding
+doPDF
+DOSBox
+DOSBox Staging
+DOSBox-X
+dotenv
+dotnet
+double-conversion
+Downie
+doxygen
+dpath
+dpkg
+dprint
+DraftSight
+DRAKON
+Draw Things
+draw.io Desktop
+DreamBooth
+Dremel
+DriveDX
+Droid
+Dropbox
+Dropmire
+dselect
+dSniff
+DSSI
+dua-cli
+Dubsmash
+DuckDB
+DuckDuckGo
+dulwich
+dunamai
+dupeGuru
+durationpy
+Durell Software
+duti
+DVBViewer
+DVD Player
+DVD Shrink
+DVD Studio Pro
+DVDFab
+dwarfutils
+Dynamic Language Runtime
+Dynatrace
+dysk
+Dzen
+E-on Vue
+EarMaster
+EasyBCD
+Easydict
+EasyDMG
+EB Garamond
+ecdsa
+Echolink
+Eclipse Temurin 11
+Eclipse Temurin 21
+Eclipse Temurin 25
+Eclipse Temurin 8
+Ecofont
+edencommon
+editables
+EF English Live
+EGL
+eigen
+einops
+eksctl
+elasticsearch
+Elasticvue
+Ele.me
+electerm
+ElevenLabs
+elfutils
+Elgato Stream Deck
+Elgato Wave Link
+Elmedia Player
+ELMo
+ELSTER
+Embedded C
+Ember.js
+Emdash
+emoji
+emscripten
+Enlightenment Foundation Libraries
+Enscape
+Ente Auth
+entrypoints
+Environmental Audio Extensions
+EPANET
+Epic Games Launcher
+eqMac
+erlang
+esbuild
+ESET Home Security
+eslint
+eSobi
+Espanso
+eSpeak NG
+esphome
+esptool
+Essbase
+Ethereum
+Etoys
+Eurisko
+EuroBillTracker
+Evasi0n
+events
+Evercookie
+ExcalidrawZ
+exceptiongroup
+Exchange ActiveSync
+execnet
+executing
+eXeem
+exiftool
+EXO
+ExPASy
+expat
+expiringdict
+exploitdb
+Expo
+Expo Orbit
+Extragear
+f.lux
+faac
+Facetune
+fakeredis
+Fantom
+FastAPI
+fastar
+fastavro
+fastboot
+fastcore
+fasteners
+fastfetch
+fastjsonschema
+fastlane
+fastmcp
+fastparquet
+fastspec
+fastuuid
+fbthrift
+feedparser
+Feishu
+Ferdium
+ffmpeg
+ffmpeg-full
+ffmpegthumbnailer
+fftw
+ffuf
+fglrx
+figlet
+Figma
+FileBot
+Filecoin
+FileFillet
+Filelight
+filelock
+filetype
+FileZilla
+Finastra
+FindFace
+findpython
+findutils
+FineReader PDF
+FineTune
+Fing Desktop
+Finicky
+Fira Code
+Fira Mono
+Fira Sans
+Firebase
+firebase-cli
+Firefox 2
+Firefox 3.5
+Firesheep
+FirstClass
+flac
+flake8
+Flameshot
+flann
+FlashFXP
+FlashPaper
+FlashSpace
+flatbuffers
+Flipkart
+Fliqlo
+Floorp browser
+FLOW-MATIC
+Flowgorithm
+FlowVision
+flox
+fluid-synth
+FluidVoice
+FLUKA
+Flutter SDK
+Fluxbox
+Flycast
+flyctl
+Flycut
+Folx
+fontconfig
+FontForge
+FontLab
+fonttools
+foobar2000
+ForkLift
+FORMAC
+FormatFactory
+Formatting Objects Processor
+Fortran
+Foxit Reader
+Foxmail
+FoxPro
+fpdf2
+fqdn
+Fraps
+Free Download Manager
+FreeBASIC
+FreeCAD
+FreeFem++
+FreeFileSync
+Freeform
+freeglut
+freeimage
+Freelens
+FreeMacSoft AppCleaner
+Freemake Audio Converter
+Freemake Video Downloader
+Freepik
+Freeplane
+freerdp
+FreeSync
+freetds
+FreeTube
+freetype
+freexl
+freezegun
+fresh-editor
+fribidi
+Fring
+frozendict
+frozenlist
+frpc
+FRRouting
+FSNotes
+fsspec
+fswatch
+ftfy
+Funimation
+Funkwhale
+fuse-overlayfs
+FUSE-T
+Fusion 360
+FutureBASIC
+fuzzywuzzy
+G Data CyberDefense
+G'MIC
+G-code
+G.ho.st
+Gambas
+gambit-scheme
+GameHub
+GameRanger
+Games for Windows
+GameSpy
+GAMESS
+GarageBand
+Garmin Express
+gascity
+GCC ARM Embedded
+gcovr
+gcsfs
+GD Graphics Library
+gdal
+gdbm
+gdk-pixbuf
+Geant4
+Geany
+Geekbench
+GEGL
+Geist Mono
+Geist Sans
+gemini-cli
+Generative Modelling Language
+generative pre-trained transformer
+Genymotion
+GeoDA
+geographiclib
+geoip2
+geopandas
+geopy
+geos
+gepa
+Gephi
+Gett
+gettext
+getty
+gevent
+geventhttpclient
+GFA BASIC
+gflags
+ggml
+ggplot2
+ggshield
+gguf
+ghapi
+ghdl
+Ghemical
+ghidra
+Ghost Downloader
+ghostscript
+Ghostty
+giflib
+gifsicle
+GigaTribe
+GiNaC
+git-crypt
+git-delta
+git-flow
+git-gui
+git-lfs
+git-pkgs
+GitButler
+GitComet
+gitdb
+GitHub Actions
+GitHub Desktop
+Gitify
+GitKraken
+GitKraken CLI
+gitlab-runner
+gitleaks
+GitMind
+gitpython
+GitUp
+giturlparse
+Gizmo5
+glab
+glances
+glew
+glfw
+glib-networking
+glibc
+Globus Toolkit
+glog
+glslang
+GLX
+Gmsh
+GnomeVFS
+GNU Aspell
+GNU Classpath
+GNU Gettext
+GNU LibreDWG
+GNU Libtool
+GNU Readline
+gnu-getopt
+gnu-sed
+gnu-tar
+gnu-which
+GnuCash
+GnuCOBOL
+gnupg
+gnuplot
+Gnutella2
+gnutls
+Go-oo
+GObject
+gobject-introspection
+Godot Engine
+goenv
+gogcli
+Goland
+Golang
+golang-migrate
+golangci-lint
+Gollum browser
+gomplate
+GoodReader
+Google AdSense
+Google Antigravity
+Google Antigravity CLI
+Google Antigravity IDE
+Google Chrome Experiments
+Google Colab
+Google Docs
+Google Docs Editors
+Google Drawings
+Google Forms
+Google Guice
+Google Mashup Editor
+Google Sidewiki
+Google Sites
+Google Spaces
+Google Takeout
+Google Tasks
+Google Toolbar
+Google Translator Toolkit
+Google Videos
+google-benchmark
+Googlepedia
+googletest
+googleworkspace-cli
+gopls
+goreleaser
+gotestsum
+GoTo
+govulncheck
+gperf
+GPG Suite
+gpgme
+gpgmepp
+gping
+GPSBabel
+GPSS
+GPT fdisk
+GPT-5.2
+GPT-5.4
+GPT-5.6
+GPTZero
+GPUOpen
+gql
+Gqrx
+GraalVM
+gradio
+gradle
+gradle-completion
+Grafana
+grafana-alloy
+Graffiti
+Grammarly Desktop
+Gramps
+GrandPerspective
+granian
+Granola
+graphene
+Grapher
+Graphical Editing Framework
+graphicsmagick
+GraphQL
+graphviz
+Grasshopper 3d
+Greenfield
+gremlinpython
+grep
+gridMathematica
+griffecli
+griffelib
+Grok Bot
+Grok Build
+Grokster
+groonga
+Groq
+Groww
+grpc
+grpcio
+grpclib
+grpcui
+grpcurl
+grype
+gsasl
+gspread
+GstarCAD
+gstreamer
+GStreamer development package
+GStreamer runtime package
+gSwitch
+GT.M
+Gtk#
+gtkmm
+GTKWave
+Guayadeque Music Player
+gumbo-parser
+gunicorn
+Gurobi
+Gutenprint
+Gyroflow
+GZDoom
+h11
+h5py
+habluetooth
+HackGen
+HackGenNerd
+hadolint
+Halloy
+Hamachi
+Haml
+Hammerspoon
+Hamster Kombat
+Hancom Office
+handbrake
+HandWallet
+Happ
+Harbour
+harfbuzz
+Hashcash
+hashcat
+Haskell
+Hauptwerk
+Haxe
+HBuilderX
+hcloud
+Headlamp
+HEC-RAS
+Hello Games
+helmfile
+help authoring tool
+Helsing
+herdr
+HERE WeGo
+Hermes Agent Desktop
+hermes-agent
+Heroic Games Launcher
+heroku
+Hewlett Packard Enterprise
+Hewlett-Packard
+HFSS
+hidapi
+High Performance Fortran
+Hily
+HipHop for PHP
+HipHop Virtual Machine
+hiredis
+HKmap.live
+hledger
+hMailServer
+HNSKY
+holidays
+Homebrew
+Homerow
+Hoppscotch
+Horos
+HotJava
+Hotspot Shieldxnxx
+Houdini
+Houseparty
+HP OpenView
+hpack
+HPC Challenge Benchmark
+HTC Sense
+html2text
+html5lib
+htmldate
+htmx
+htop
+HTTP Toolkit
+httpcore
+httpcore2
+httpd
+httpie
+HTTPie for Desktop
+httplib2
+httptools
+httpx
+httpx2
+httrack
+Huawei Mobile Services
+HubSpot
+Hugin
+humanfriendly
+hunspell
+hvac
+hwloc
+HyperACCESS
+HyperCam
+hyperframe
+Hyperkey
+hyperlink
+Hyphanet
+I-Doser
+IBATIS
+iblinter
+IBM
+IBM BASIC
+IBM Bluemix
+IBM Cloud CLI
+IBM Informix-4GL
+IBM Lotus Approach
+IBM Lotus Domino
+IBM Plex Mono
+IBM Plex Sans
+IBM Rational DOORS
+IBM WebSphere
+iBooks Author
+iCab
+icalendar
+icarus-verilog
+Icecast
+IconChanger
+iDempiere
+ideviceinstaller
+idna
+Idris
+iGO
+iGoogle
+IINA
+ijson
+iLife
+iloader
+iLok License Manager
+ILSpy
+ILWIS
+iMacros
+imageio
+imagemagick
+imagemagick-full
+ImageOptim
+imagesize
+imath
+iMazing
+iMesh
+immutabledict
+Imo.im
+Impactor
+IMVU
+Inconsolata
+Incr Tcl
+inetutils
+infisical
+Infor Global Solutions
+Information Processing Language
+iniconfig
+Inkscape
+innoextract
+inputimeout
+inquirerpy
+inSSIDer
+Insta360 Link Controller
+Insta360 Studio
+Instapaper
+IntelliCAD
+intelligent tutoring system
+IntelliJ
+IntelliJ IDEA Ultimate
+InterBase
+INTERCAL
+Interlisp
+InterTrust Technologies
+Intetics
+Invision Community
+iOS
+ios-deploy
+Iosevka
+Ioskeley Mono
+iPadOS
+iPadOS 13
+ipatool
+ipaverse
+ipdb
+ipopt
+IPPOLIT
+ipsw
+IPTVnator
+ipykernel
+ipython
+ipywidgets
+IRAF
+IRIS GL
+ISLISP
+iso-codes
+iso8601
+IsoBuster
+isodate
+isoduration
+isort
+iStats Menus
+istioctl
+ISWIM
+iTerm
+iTerm2
+iTerm2 AI Plugin
+iTerm2 Browser Plugin
+iText
+itsdangerous
+Itsycal
+iTunes Connect
+iTunes LP
+iTunes Remote
+IUCLID
+Jabra Direct
+jackett
+jadx
+Jajah
+Jakarta Connectors
+Jakarta Expression Language
+Jakarta Mail
+JAL
+jansson
+Java 3D
+Java Advanced Imaging
+Java applet
+Java Database Connectivity
+JavaBeans
+JavaFX Script
+jax
+jaxlib
+jaydebeapi
+JD-GUI
+JDK Mission Control
+JDownloader
+jdtls
+jedi
+jeepney
+Jellyfin
+Jellyfin Media Player
+jemalloc
+Jenkins
+jenkins-lts
+jenv
+Jeskola Buzz
+JetBrains
+JetBrains Air
+JetBrains Mono
+JetBrains PhpStorm
+JetBrains Rider
+JetBrains Toolbox
+jfrog-cli
+JHOVE
+Jigdo
+Jiggler
+Jini
+jinja2
+Jio
+Jira
+jira-cli
+jiter
+jmespath
+jmeter
+JMP
+joblib
+JOGL
+john-jumbo
+Joost
+Joplin
+joserfc
+JOSM
+jpeg
+jpeg-turbo
+jpype1
+jQuery UI
+JRockit
+JScript
+JScript .NET
+JSFuck
+json-glib
+json5
+jsonconversion
+jsoncpp
+jsondiff
+jsonlines
+jsonnet
+jsonpatch
+jsonpickle
+jsonpointer
+jsonref
+jsonschema
+Juce
+juliaup
+Jump Desktop
+Jump Desktop Connect
+Jumpcut
+junitparser
+jupyter
+jupyterlab
+JupyterLab App
+justext
+JWB
+jwcrypto
+kaitaistruct
+KAlarm
+Kaleida Labs
+kaleido
+KAlgebra
+Kaltura
+Kalzium
+Kanagram
+Kap
+Karabiner Elements
+Karing
+Kaspersky Lab
+Katapult
+KAtomic
+Kazaa Lite
+kcat
+KColorEdit
+kcov
+KDE Accessibility Project
+KDE Connect
+KDE Display Manager
+KDE Frameworks
+KDE Partition Manager
+KDE Software Compilation
+KDE System Guard
+Kdemultimedia
+Kdenetwork
+Kdenlive
+KDesktop
+KDESvn
+Kdewebdev
+KDiff3
+KEduca
+KeePassXC
+KeepingYouAwake
+Keka
+Keka External Helper
+Kelkoo
+keras
+kexec
+Kexi
+KeyboardCleanTool
+KeyCastr
+keychain
+KeyClu
+KeyHoleTV
+keyring
+Keysight VEE
+KeyStore Explorer
+Keyty
+keyutils
+kfp
+KGeography
+KGPG
+KHangMan
+KiCad
+Kid3
+kimi
+kimi-code
+Kinect
+Kinfocenter
+KIO
+kiro
+Kiro CLI
+Kiro Crew
+Kisekae Set System
+KisMAC
+Kiten
+Kivy
+kiwisolver
+KJS
+KLayout
+KLettres
+Klik
+Klipper
+Klogg
+KMail
+KnockKnock
+Kodi
+Kojo
+Kolab
+Kompare
+KopiaUI
+KOrganizer
+Kotlin
+Kotlin LSP
+Kotobank
+KPackage
+KParts
+KRename
+Krita
+Kross
+Krusader
+KryoFlux
+KSnapshot
+KStars
+ktlint
+KTooN
+KTurtle
+kube-linter
+kubecolor
+kubeconform
+kubectl
+kubectx
+kubelogin
+kubernetes-cli
+kubescape
+kubeseal
+KuGou
+Kurnik
+Kurso de Esperanto
+kustomize
+KXMLGUI
+L3cos
+L4 microkernel family
+Labelflash
+LabPlot
+lancedb
+LangChain
+langcodes
+langdetect
+langfuse
+langgraph
+langsmith
+lapack
+Laplink
+Laravel
+Laravel Herd
+LaTeXiT
+Lato
+LaunchControl
+LaunchOS
+Launchy
+Lavarand
+lazydocker
+lazygit
+lazysql
+LBRY
+lcov
+ldap3
+ldid
+ldns
+LDraw
+League of Legends
+lefthook
+Legcord
+leiningen
+Lemmy
+leptonica
+levenshtein
+Lexend
+lftp
+libclang
+libcst
+libdvdcss
+libHaru
+libjpeg
+libNDI
+Libon
+libpng
+LibreCAD
+LibreOffice
+LibreOffice Basic
+LibreOffice Impress
+LibreOffice Language Pack
+LibreOffice Still
+LibreOffice Writer
+LibreSSL
+LibreWolf
+librosa
+librsvg
+librt
+LibTIFF
+libtmux
+libusb
+libvirt
+libwww
+libxml2
+license-eye
+licenseplist
+LidAngleSensor
+Life360
+LifeLock
+Lightbox
+lightgbm
+LightScribe
+Lightspark
+LimeSurvey
+limits
+LinearMouse
+Lingoes
+Linguee
+Linotte
+LINPACK
+LINPACK benchmarks
+Linphone
+linux-headers
+linux-pam
+LISREL
+LISTSERV
+litehtml
+litellm
+LiveChat
+LiveCode
+livekit
+livekit-cli
+LiveScript
+LiveStation
+llama.cpp
+LlamaIndex
+llhttp
+llmfit
+llvm
+llvmlite
+LM Studio
+LM Studio Bionic
+lmdb
+lmnr
+local shared object
+LocalSend
+LocalWiki
+LocationSimulator
+lockfile
+logcli
+logfire
+Logisim Evolution
+Logitech
+Logitech G HUB
+Logitech Options+
+LogiTune
+logrotate
+Logseq
+Logseq OG
+loguru
+Lokalise
+Lokalize
+LOLCODE
+LookAway
+Loopback
+LosslessCut
+LotusScript
+LPC
+lpeg
+LTspice
+lttng-ust
+Lua
+luajit
+Luanti
+luarocks
+Lumina Desktop
+lupa
+Lustre
+LXGW WenKai
+lxml
+lychee
+LyricsX
+LyX
+lz4
+lzip
+lzlib
+M4 Max
+macai
+Maccy
+MacDown
+MacDown 3000
+MacDraw
+MacDroid
+macFUSE
+Mach
+Macintosh Toolbox
+Maclisp
+MacMD Viewer
+macmon
+macOS
+MacPacker
+MacParakeet
+MacPass
+Macs Fan Control
+macshot
+MacsyZones
+MacTeX
+MacTools
+mactop
+macUSB
+macvim
+MacWhisper
+MacWrite
+MacZip
+Magic Bytes
+MagicISO
+Magik
+magika
+Magnetic Scrolls
+Mailchimp
+Maildir
+mailpit
+makefun
+makensis
+Malbolge
+Maltego
+Malwarebytes for Mac
+MAMP
+mandoc
+MangoDisk
+Mapbox
+Maple Mono NF
+Mapnik
+mariadb
+markdownify
+markdownlint-cli
+MarkEdit
+markitdown
+MarkText
+markupsafe
+MarkViewer
+marshmallow
+Marta File Manager
+mashumaro
+Mastercoin
+Mathcad
+Mathematica
+Mathomatic
+MATLAB
+matplotlib
+Mattermost
+maturin
+maven
+maxminddb
+MAXQDA
+Maxscript
+MBASIC
+mbed
+Mbed TLS
+mbedtls
+McAfee SiteAdvisor
+mccabe
+mcp
+mcp-grafana
+mdbtools
+mdurl
+mecab
+mecab-ipadic
+media-info
+MediaCoder
+MediaInfo
+Medibuntu
+Medis
+Meesho
+Meetily
+MeetingBar
+Meetro
+MEGAcmd
+MEGAsync
+Megurine Luka
+Meitu Pic
+Meld for macOS
+melonDS
+memcached
+memoQ
+memray
+mergedeep
+mermaid-cli
+merve
+mesa-glu
+MeshCore
+MeshLab
+metadata removal tool
+MetaPost
+MetaQuotes Language
+Metasploit
+Metasploit Framework
+Metro
+mGBA
+MiaoYan
+Micro frontend
+Micro-Cap
+micromamba
+micropython
+Microsoft 365 Copilot
+Microsoft Analysis Services
+Microsoft AutoRoute
+Microsoft BackOffice Server
+Microsoft BizTalk Server
+Microsoft CryptoAPI
+Microsoft Dev Tunnels
+Microsoft Dynamics 365
+Microsoft Dynamics NAV
+Microsoft Expression Encoder
+Microsoft HealthVault
+Microsoft Intune
+Microsoft Kaizala
+Microsoft MapPoint
+Microsoft Office 2010
+Microsoft Office 2013
+Microsoft Office BusinessPro
+Microsoft OneNote
+Microsoft Online Services
+Microsoft Power Automate
+Microsoft Power BI
+Microsoft PowerPoint
+Microsoft Remote Desktop
+Microsoft SharePoint Designer
+Microsoft SharePoint Foundation
+Microsoft SmartScreen
+Microsoft Teams
+Microsoft Visio
+Microsoft Visual SourceSafe
+Microsoft Vizact
+Microsoft Whiteboard
+MicroStation
+MidasWWW
+MiddleClick
+MiddleDrag
+Midjourney
+midnight-commander
+MiKTeX
+MilkShape 3D
+MindManager
+Mindomo
+Mindwtr
+Minecraft
+Mingw-w64
+minicom
+Miniconda
+miniforge
+minikube
+minio
+minisign
+miniupnpc
+minizip
+mIRC scripting language
+Misskey
+mistral-vibe
+mistralai
+mistune
+mit-scheme
+mitmproxy
+MixRadio
+Mixxx
+mkcert
+mkdocs
+MKS Toolkit
+mkvtoolnix
+MLflow
+mmh3
+MobileCoin
+MobileMe
+MobilePay
+Mobilizon
+Mobirise
+Mockoon
+Modelica
+ModelSim
+Modern CSV
+Modrinth App
+Modula
+Modula-2
+Modula-3
+MojoPac
+MoltenVK
+Monaspace
+Monaspace NF
+MongoDB Compass
+mongomock
+mongosh
+MonitorControl
+Monkey's Audio
+mono-libgdiplus
+MonoGame
+Montserrat
+Moom
+Moonfin
+MoonShell
+Moovit
+Mophun
+moreutils
+Mos
+mosh
+MOSIX
+mosquitto
+moto
+Motrix
+Motrix Beta
+Mounty for NTFS
+Mouseless
+Mozart Programming System
+Mozilla Firefox
+Mozilla Firefox ESR
+Mozilla Firefox Nightly
+Mozilla Persona
+Mozilla Prism
+Mozilla Thunderbird
+mozjpeg
+Mp3tag
+mpdecimal
+mpfr
+mpg123
+mpmath
+mpv
+MQTTX
+mruby
+msal
+MSCDEX
+msgpack
+msgspec
+msitools
+mSQL
+msrest
+msrestazure
+MSWLogo
+MSX BASIC
+muCommander
+Mudbox
+Muesli
+mujs
+Mullvad Browser
+Mullvad VPN
+multidict
+Multipass
+multiprocess
+multitasking
+Mumu Player Pro
+mupdf
+mupdf-tools
+murmurhash
+MuseScore
+MusicBrainz Picard
+Musixmatch
+mutagen
+MX Player
+Mxit
+My.com
+Mycin
+mycli
+mypy
+mysides
+MySpell
+mysql
+MySQL AB
+MySQL Shell
+MySQL Workbench
+mysql-client
+mysqlclient
+Mythic
+n8n
+NAMD
+nano
+Nanum Gothic
+Nanum Gothic Coding
+NAPS2
+Napster
+Narus
+narwhals
+nasm
+Nativ
+nats-server
+natsort
+NaturalMotion
+Naver Pay
+Navicat
+Navicat Premium Lite
+nbclient
+nbconvert
+nbformat
+nbytes
+ncdu
+ncurses
+Nemerle
+Nemexia
+NemID
+neo4j
+Neo4j Desktop
+Neodisk
+NeoHtop
+neonctl
+NeoOffice
+Neovide
+Neovim
+NEPOMUK
+Nero Digital
+nesC
+net-snmp
+netaddr
+NetBeans IDE
+netcat
+netcdf
+Netduino
+NetEase Cloud Music
+Netlify
+NetLogo
+NetNewsWire
+netpbm
+Netron
+Netscape
+Netscape Browser
+Netscape Communicator
+Netscape Messenger 9
+Netscape Navigator 9
+NetSpot
+Netwide Assembler
+networkx
+newLISP
+newrelic-cli
+Newsqueak
+Next.js
+Nextcloud
+nginx
+ngrok
+nh3
+NHK+
+NI Multisim
+Niconico
+nikto
+Nimbalyst
+Nimbuzz
+Ninite
+Nintendo
+Nintendo Switch Online
+nLite
+nlohmann-json
+nltk
+nmap
+node-build
+nodeenv
+Nokia PC Suite
+Nokia Store
+nono
+NORC
+NordPass
+NordVPN
+Norton
+Norton ConnectSafe
+Norton Utilities
+Notchi
+NotchNook
+Notepad.exe
+Notesnook
+Noto Color Emoji
+Noto Sans
+Noto Sans CJK
+Noto Sans JP
+Noto Sans KR
+Noto Sans SC
+Noto Serif CJK
+noTunes
+NovaKid
+NovelAI
+Novell eDirectory
+Novell ZENworks
+NoxPlayer
+npth
+npx
+nrfutil
+nspr
+Nuance Communications
+nuget
+Nukemap
+Nullsoft
+num2words
+numactl
+numba
+numexpr
+Numi
+NumPy
+nushell
+Nutch
+Nuvola
+Nuxt
+NVIDIA GeForce NOW
+Nvidia Shadowplay
+NX technology
+Nym Mixnet
+O3spaces
+OAuth
+oauth2client
+oauthlib
+Object REXX
+Objective-C
+Objective-J
+OBS
+obstore
+OCAD
+ocaml
+ocaml-findlib
+ocaml-zarith
+occam
+oci
+oci-cli
+ocrmypdf
+OCRopus
+Odigo Messenger
+Office Forms
+officecli
+Ogre3d
+Okta
+Okta Verify
+olefile
+Ollama
+Ollamac
+Olvid
+omegaconf
+Omeka
+OmniDiskSweeper
+Omnissa Horizon Client
+OmniWeb
+OmniWM
+OneDrive
+onefetch
+onigmo
+oniguruma
+ONLYOFFICE
+OnlySwitch
+onnx
+onnxruntime
+Opa
+opam
+Open 3D Engine
+Open Video Downloader
+Open WebUI
+Open weights
+open-mpi
+open-ocd
+openai-whisper
+OpenAM
+openapi-generator
+OpenBabel
+openblas
+Openbravo
+OpenBTS
+opencc
+OpenCD
+opencensus
+OpenChamber
+OpenCL
+OpenClaw
+OpenCode
+openconnect
+OpenCore Legacy Patcher
+opencore-amr
+opencv
+OpenDisplay
+OpenDoc
+OpenEmu
+openexr
+OpenFeint
+OpenFOAM
+OpenGL
+OpenGL ES
+OpenGL Shading Language
+OpenGL Utility Toolkit
+OpenH264
+OpenHuman
+openimageio
+OpenInEditor-Lite
+OpenInTerminal
+OpenInTerminal-Lite
+openjdk
+openjpeg
+openjph
+openldap
+OpenLens
+OpenLogi
+OpenLP
+OpenMG
+OpenML
+Openmodelica
+Openmoko
+OpenMP
+OpenMTP
+OpenNN
+OpenOffice Basic
+OpenPencil
+openpyxl
+OpenRA
+OpenRefine
+OpenRouter
+OpenSC
+OpenSCAD
+OpenSearch
+openshift-cli
+OpenShot Video Editor
+OpenSL ES
+openslide
+OpenSocial
+openspec
+openssh
+openssl
+OpenStep
+OpenSuperWhisper
+opentofu
+OpenTTD
+OpenUsage
+OpenVG
+openvino
+openvpn
+OpenVPN Connect client
+OpenWebStart
+OpenWhispr
+OpenXR
+optipng
+OptiX
+optree
+optuna
+opusfile
+Oracle VirtualBox
+oracledb
+oras
+OrbStack
+ORES
+orjson
+ormsgpack
+Orthanc
+Osaurus
+oscrypto
+osmium-tool
+osquery
+oss2
+osslsigncode
+ossp-uuid
+osv-scanner
+otel-cli
+Otty
+Outfit7
+overrides
+oxipng
+Oxygene
+p0f
+PackageKit
+packaging
+Paessler PRTG
+PairPods
+Panda3D
+pandas
+pandoc
+pandoc-crossref
+pandocfilters
+pango
+pap.er
+Paparazzi Project
+papermill
+Parallels Desktop
+parameterized
+paramiko
+ParaView
+parsedatetime
+parso
+partd
+PartitionMagic
+PascalABC.NET
+Paseo
+Passepartout
+passlib
+passt
+patchelf
+pathable
+pathspec
+pathvalidate
+PayMe
+PayPal Honey
+Paytm
+pbr
+pcap
+pcaudiolib
+PCL
+PCMark
+pcre
+pcsc-lite
+PCSX2
+PDF Expert
+PDF24 Creator
+pdf2image
+pdfplumber
+pdm
+Pearcleaner
+PeerGuardian
+peft
+PekWM
+Pencil2D
+Pentaho
+percona-toolkit
+Perforce IMSL
+Perforce P4
+perl
+personal wiki
+Peter Norton Computing
+Petrichor
+pexpect
+pfzy
+pg8000
+pgAdmin4
+pgcli
+pgvector
+Pharo
+Phaser
+Phatch
+Phoenix Technologies
+phonenumbers
+PhonePe
+PhotoDNA
+PhotoScape
+Photosynth
+PHP-GTK
+phrase-cli
+Piccoma
+pickleshare
+PicoLisp
+Picsart
+Pictoword
+PicView
+pigz
+pikepdf
+pinentry
+pinentry-mac
+pinotdb
+pinyin input method
+pipenv
+pipewire
+pipx
+Piriform
+Pixelfed
+pixi
+pixman
+PixPin
+pkgconf
+pkginfo
+PlanetScale
+plantuml
+Plarium
+platformdirs
+platformio
+Plaxis
+PlayCover
+Playfair Display
+PlayNow Arena
+PlayOnLinux
+PlayStation App
+PlayStation Mobile
+playwright-cli
+PlemolJP NF
+Plesk
+Plexamp
+plotly
+pluginval
+pmix
+pngquant
+pnpm
+Podman
+Podman Desktop
+podman-compose
+Poedit
+Point-to-Point Protocol daemon
+Polars
+Polkadot
+polyfactory
+PopClip
+Poppins
+poppler
+PopSQL
+popt
+portalocker
+portaudio
+Porting Kit
+Portmap
+Postback
+postgis
+Postgres
+PostgreSQL
+postgrest
+PostHog
+Postico
+Postini
+Postmodernism Generator
+potrace
+PowerArchiver
+PowerBASIC
+PowerDesigner
+PowerDNS Authoritative Server
+PowerISO
+Powerline Symbols
+powershell
+ppft
+pprintpp
+PPSSPP
+Praat
+pre-commit
+prek
+preshed
+Pretendard
+prettier
+prettytable
+Prime95
+PrimoPDF
+Prisma
+Pritunl
+Processing
+procs
+progeCAD
+Programmer's Notepad
+progressbar2
+proj
+ProjectLibre
+Prolog
+propcache
+ProRealTime
+protego
+protobuf
+ProtonVPN
+ProxyBridge
+Proxyman
+prrte
+PrusaSlicer
+PSIM
+PSpice
+pstoedit
+psutil
+psutils
+psycopg
+psycopg2
+PTGui
+ptyprocess
+publicsuffix2
+pugixml
+Pulsar
+pulseaudio
+pulumi
+PureBasic
+PureMac
+PureScript
+pwdump
+py4j
+py7zr
+pyarrow
+pyasn1
+pyathena
+pybase64
+pybind11
+pybreaker
+pycares
+PyCharm
+pyclipper
+pycodestyle
+pycountry
+pycparser
+pycryptodome
+pycryptodomex
+Pydantic
+pydash
+pydeck
+pydeequ
+pydocket
+pydot
+pydub
+pydyf
+pyee
+pyelftools
+pyenv
+pyenv-virtualenv
+pyflakes
+pygithub
+pygments
+pygtrie
+pyiceberg
+pyinstaller
+pyinstrument
+pyjwt
+pylint
+pylsqpack
+pymongo
+pymssql
+pymupdf
+pymupdf4llm
+pymysql
+pynacl
+pyodbc
+pyogrio
+pyopenssl
+pyotp
+pyparsing
+pypdf
+pypdf2
+pypdfium2
+pyperclip
+pyphen
+pypika
+pyproj
+pyrfc3339
+pyright
+pyroaring
+pyrsistent
+pyserial
+pysftp
+pysocks
+pyspark
+pyspnego
+pytablewriter
+pytesseract
+pytest
+python-gdbm
+python-matplotlib
+python-packaging
+python-setuptools
+PythonAnywhere
+pytimeparse
+pytokens
+PyTorch
+pytz
+pytzdata
+pyvespa
+pywavelets
+Pywikibot
+pywin32
+pyxlsb
+pyyaml
+pyzipper
+pyzmq
+Qalb
+QANDA
+QB64
+QBasic
+qBittorrent
+QCAD
+QDirStat
+qemu
+qFlipper
+QGIS
+QGroundControl
+qhull
+QLStephen
+QMK Toolbox
+QML
+qmmp
+qooxdoo
+qpdf
+QQ Music
+qrcode
+qrencode
+QSpace Pro
+Qt Creator
+qtbase
+qtcanvaspainter
+qtcharts
+qtconnectivity
+qtdeclarative
+qtgraphs
+qtgrpc
+qthttpserver
+qtimageformats
+qtlanguageserver
+qtlocation
+qtlottie
+qtmultimedia
+qtnetworkauth
+qtpositioning
+qtquickeffectmaker
+qtquicktimeline
+Qtrax
+qtremoteobjects
+qtscxml
+qtsensors
+qtserialbus
+qtserialport
+qtshadertools
+qtspeech
+qtsvg
+qttasktree
+qttools
+qttranslations
+qtvirtualkeyboard
+qtwebchannel
+qtwebengine
+qtwebsockets
+qtwebview
+Quarkus
+QuarkXPress
+QUEL
+QuickBASIC
+QuickDraw
+QuickLook Video
+Quickoffice
+Quire.io
+qutebrowser
+qView
+Qwen
+qwen-code
+R-Studio
+rabbitmq
+Ragel
+Rails
+Raindrop.io
+Rainlendar
+ramalama
+Rancher Desktop
+RandR
+rapid-mlx
+rapidfuzz
+rapidjson
+RapidQ
+Rapira
+RAR Archiver
+ratelimit
+Ratfor
+Rawstudio
+RawTherapee
+Raycast
+raylib
+Razorpay
+rbenv
+rclone
+Rclone UI
+rcmd
+rdflib
+Rdio
+reactivex
+Reactotron
+readchar
+Readeck
+Readest
+readline
+ReadyBoost
+Reaktor
+Real Time AudioSuite
+REALBasic
+RealFlow
+realtime
+RealVNC Connect
+REBOL
+Rediff
+Redis
+Redis Insight
+RedShift
+Refal
+referencing
+Regedit
+regex
+Registax
+rekordbox
+reManager
+Reminders MenuBar
+Remote Desktop Manager
+Renderscript
+Replit
+RepoBar
+reportlab
+Reqable
+Requestly
+requests
+resolvelib
+responses
+respx
+resterm
+restic
+restrictedpython
+resvg
+RetroArch
+retrying
+RETScreen
+RevPDF Editor
+REXX
+rfc3986
+RFEM
+RGL
+RGSS
+Rich Communication Services
+rignore
+ripgrep
+rlwrap
+Roblox
+Roblox Studio
+RoboMind
+Roboto
+Roboto Mono
+RockMelt
+Rockxy
+rocq
+Rosegarden
+Royal TSX
+RPG
+RPL
+rsa
+RStudio
+rswift
+rsync
+RsyncUI
+RTAI
+RTLinux
+rtmpdump
+rubberband
+ruby-build
+ruby-install
+RubyMine
+rulesync
+rumdl
+rust-analyzer
+Rustcast
+RustDesk
+rustls-ffi
+RustRover
+rustup
+S-Lang
+S-PLUS
+s3fs
+s3transfer
+SABnzbd
+SafeMoon
+SaferSurf
+safetensors
+sagemaker
+SakuraLauncher
+SalamWeb
+Salesforce
+Salesforce CLI
+SameBoy
+Samsung Kies
+Samsung Knox
+Samsung Wallet
+SaneSideButtons
+Santa Cruz Operation
+SAP Business ByDesign
+SAP Converged Cloud
+SAP HANA
+Sarasa Gothic
+SAS Institute
+Sather
+sbarex QLMarkdown
+sbcl
+sccache
+scikit-learn
+Scilab
+scipy
+SciTE
+scons
+scp
+scramp
+scrcpy
+screeninfo
+Scribus
+script.aculo.us
+Script.NET
+Scriptol
+ScummVM
+Scytl
+seaborn
+secretstorage
+secure coding
+Security-Enhanced Linux
+Seed7
+Sega Meganet
+SelfControl
+sem-cli
+semgrep
+semver
+send2trash
+sendgrid
+SenseTime
+sentencepiece
+sentinels
+Series 90
+Setapp
+SETL
+setproctitle
+Settings
+setuptools
+sevenzip
+SF Symbols
+sfcgal
+SFM
+SFML
+SFX
+sglang
+shadcn
+shaderc
+shellcheck
+shellingham
+shfmt
+Shoes
+Shortcuts
+shortuuid
+Shotcut
+Shottr
+SHOUTcast
+Shutter Encoder
+SignalR
+SiliconScope
+Silkypix
+SIMAP
+Simatic Step 7
+simdjson
+simdutf
+Simons' BASIC
+Simple DirectMedia Layer
+simpleeval
+simplejson
+SimSimi
+Simula
+SimulationX
+Simulink
+Sinclair Research
+sing-box
+Sioyek
+SiYuan
+SketchUp
+sketchybar-app-font
+Skills Manager
+skopeo
+skops
+Skyfire
+Skype
+Skype Translator
+sleef
+slowapi
+Slowloris
+Slrn
+Smallpdf
+Smalltalk
+Smallworld
+SmartBear SoapUI
+Smartcat
+SmartDraw
+SmartDrive
+smartmontools
+Smartsheet
+smbprotocol
+smcFanControl
+smmap
+Smule
+Snagit
+Snappy Gifts
+Snaptu
+Snapzy
+SnatchBot
+Snes9x
+sniffio
+Snipaste
+SNOBOL
+SNOMED CT
+snowballstemmer
+snowflake-cli
+SnowSQL
+snyk-cli
+SoapUI
+socat
+Socket.IO
+socksio
+SoftMaker Office
+Softtek
+Sogou Input Method
+SolidJS
+SolidThinking Embed
+SolveSpace
+sonar-scanner
+SonarQube CLI
+SonicStage
+Sonika
+Sonos S2
+Sophos
+sops
+sortedcontainers
+Soulseek
+sounddevice
+soundfile
+SoundSource
+soupsieve
+Source Filmmaker
+Source Sans 3
+Source SDK
+Source Serif 4
+source-highlight
+SourceGit
+sourcekitten
+sourcery
+soxr
+Space Grotesk
+Spaceman
+Spaces
+SpaceX Dragon 1
+sparklines
+spdlog
+Speedcoding
+SpeedFan
+Speedify
+Speedtest
+speedtest-cli
+speex
+speexdsp
+sphinx-doc
+spice-protocol
+spicetify-cli
+spirv-headers
+spirv-tools
+Spokenly
+SproutCore
+Sproutcube Shortcat
+SpywareBlaster
+sqlalchemy
+sqlcipher
+sqlcl
+sqlcmd
+sqlfluff
+sqlglot
+SQLite
+sqlmap
+sqlmodel
+SQLObject
+sqlparse
+SQLyog
+SQRL
+squashfs
+srsly
+srtp
+SSHFS
+sshpass
+sshtunnel
+sshuttle
+StackBlitz
+starlette
+StarLogo
+Stata
+Statgraphics
+STATISTICA
+Stats
+statsd
+statsmodels
+SteamCMD
+SteerMouse
+Steinberg Nuendo
+Stencyl
+Sticky Notes
+Stillcolor
+Stirling-PDF
+storage3
+STOS BASIC
+Streamlabs
+streamlit
+Stremio
+strenum
+Stretchly
+strictyaml
+stripe-cli
+STRIPS
+structlog
+Studio 3T
+stunnel
+stylua
+subfinder
+Subler
+SubRip
+SugarSync
+suite-sparse
+Sun Microsystems
+Sunbelt Personal Firewall
+sundials
+Sunflow
+Sunlogin Client
+Suno
+Supabase
+supacode
+SupaSidebar
+SuperBASIC
+SuperCollider
+SuperMemo
+Superset
+Superwhisper
+Surfshark
+svchost.exe
+SvelteKit
+SVGALib
+Swapnote
+Swarachakra
+swebench
+Sweet Home 3D
+swesmith
+swift-format
+swift-protobuf
+SwiftBar
+swiftDialog
+swiftformat
+SwiftFormat for Xcode
+swiftgen
+swiftlint
+swiftly
+SwiftUI
+Swiggy
+switchaudio-osx
+SwitchHosts
+syft
+Symbian Software
+sympy
+synchronicity
+syncthing
+Synfig
+Synology Drive
+Sysquake
+SystemC
+systemd
+Systems Tool Kit
+SystemTap
+SystemVerilog
+T3 Code
+T3 Code Nightly
+Tableau Desktop
+tableauserverclient
+tabledata
+TablePlus
+TablePro
+Tabularis
+TADS
+taglib
+tailcat
+Tailscale
+Tailwind
+talosctl
+Tango Desktop Project
+taplo
+TaskExplorer
+tblib
+TCP Viewer
+TCPDF
+tcpdump
+tealdeer
+Teamcenter
+TeamViewer
+Tekla Structures
+Telegram Desktop
+Telegram for macOS
+Teleport
+Teleport Connect
+Teleport TSH
+Tellico
+telnet
+temporalio
+Tencent Lemon Cleaner
+Tencent Meeting
+tensorboard
+TensorFlow
+tenv
+TeraCopy
+Termcap
+termcolor
+terminado
+terminal-browser
+terminal-notifier
+Termius
+Termora
+terraform
+terraform-docs
+terragrunt
+tesseract-lang
+testcontainers
+testdisk
+TestFlight
+teTeX
+TeX
+texinfo
+texlive
+TeXnicCenter
+TeXShop
+TeXstudio
+Text Processing Utility
+TextMate
+Textream
+texttable
+Tezos
+tfenv
+tfmigrate
+tfsec
+TG Pro
+tgenv
+The Chenab Times
+The Unarchiver
+thefuzz
+theora
+thinc
+Thonny
+Threading Building Blocks
+threadpoolctl
+ThreadWeaver
+TI-BASIC
+tidyverse
+tifffile
+TigerVNC
+TightVNC
+tiktoken
+Timberwolf
+TimeMachineEditor
+timm
+Tintin in Tibet
+tinycss2
+tinyhtml5
+tirith
+Tkinter
+TLA+
+tld
+tldextract
+tldr
+tldraw offline
+Tlen.pl
+tlrc
+TMG
+tmux
+tnftp
+Todoist
+todoist-cli
+Toggl Track
+tokei
+tokenizers
+Tolaria
+TomatoBar
+tombi
+toml
+tomli
+tomlkit
+toolz
+Toonz
+TOPCAT
+topgrade
+toposort
+torchmetrics
+torchvision
+TortoiseCVS
+TortoiseSVN
+TouchWiz
+TPT
+tqdm
+TRAC
+TradingView
+TradingView Desktop
+Trados Studio
+Trae
+Trae CN
+trafilatura
+traitlets
+Transact-SQL
+transformers
+Transkribus
+transmission-cli
+trash-cli
+tree-sitter
+Trendalyzer
+TressFX
+TRex
+Tribler
+Tricentis Tosca
+TriliumNext Notes
+Trimble 3D Warehouse
+trimesh
+trino
+TRIP Database
+tritonclient
+trivy
+troff
+tRPC
+TrueCaller
+TrueSpace
+trufflehog
+truststore
+Tsuita
+TTCN
+TTCN-3
+ttyd
+tuicr
+Tuist
+TuneIn
+Tungsten Automation
+Tunnelblick
+Turbo-BASIC XL
+Turbopack
+TurboTax
+TurboVNC
+TurboWarp
+Turing
+Turso
+Turtle F2F
+TVer
+TVPaint
+Twilio
+Twingate
+Twitter Color Emoji
+typedload
+Typeform
+typeguard
+Typeless
+typepy
+TypeWhisper
+Typora
+typos-cli
+typst
+tzdata
+tzlocal
+UAE
+Ubuntu
+Ubuntu Mono
+ubuntu-restricted-extras
+UC Browser
+UCBLogo
+uchardet
+uCoz
+UCSD Pascal
+UDEV Gothic NF
+UFRaw
+ugrep
+uhubctl
+UI-TARS Desktop
+ujson
+Ukelele
+Ultamatix
+UltiMaker Cura
+Ultimate Boot CD
+Ultrasurf
+UltraVNC
+Umami
+unar
+Undetectable.ai
+Ungoogled Chromium
+unibilium
+Unicon
+unidecode
+unidiff
+Unity Technologies
+Universal USB Installer
+unixodbc
+Unlambda
+UnnaturalScrollWheels
+UnrealScript
+Unsloth Desktop
+unzip
+Updatest
+UPI
+Uppaal Model Checker
+Upscayl
+Upstash
+Uptodown
+URBI
+Urbit
+urdfdom
+uriparser
+uritemplate
+uritools
+urllib3
+urwid
+userpath
+userspace-rcu
+Ushahidi platform
+uthash
+util-linux
+util-macros
+UTM
+UU Remote
+uuid6
+uuid7
+uutils-coreutils
+uutils-findutils
+uvicorn
+uvloop
+uvwasi
+UWIN
+V2Ray
+V2rayU
+Vagrant VMware Utility
+valgrind
+validators
+valkey
+Valknut
+VALO-CD
+vapoursynth
+vBulletin
+VCMI
+vcrpy
+Ve Interactive
+velero
+Ventusky
+Veo
+VeraCrypt
+VeraCrypt Fuse-T
+Vercel
+Vercel AI SDK
+verilator
+Vesktop
+Viber
+Vicinae
+VideoPoet
+Vimperator
+VimR
+Vimscript
+vips
+VirtualBuddy
+virtualenv
+Virtuozzo
+VisiCalc
+visionOS
+Visma
+VISSIM
+Visual DialogScript
+Visual FoxPro
+Visual Objects
+Visual Prolog
+VisualDiffer
+Visualization Toolkit
+VisualVM
+Vite
+Vitest
+Vivaldi
+Vivaldi Technologies
+VLC media player
+vMLX
+VMware ThinApp
+VMware vSphere
+VoiceInk
+Vorssaint
+Vorta
+Voyant Tools
+VS Code
+VSCO
+VSCodium
+Vue
+Vue.js
+VueScan
+Vulkan
+vulkan-headers
+vulkan-loader
+vvvv
+Vyond
+W3C Geolocation API
+Wacom Tablet
+WailBrew
+wakeonlan
+Waku
+Wallspace
+wandb
+wasmtime
+watchexec
+watchfiles
+watchOS
+Waterfox
+Watir
+wavpack
+wayland
+wayland-protocols
+WCF Data Services
+wcmatch
+wcwidth
+Weasis
+weasyprint
+webcolors
+WebCore
+WebCT
+webencodings
+Webex
+Webflow
+WebGL
+WebLOAD
+webMethods
+webp
+webpack
+WebPositive
+websocat
+websockets
+WebStorm
+Webtoon
+WebTorrent Desktop
+Wechat DevTools
+WeChat for Mac
+WeChat Work
+WeeChat
+Weights & Biases
+werkzeug
+WeType
+Weverse
+WezTerm
+wget
+WhatCable
+WhatPulse
+Wherigo
+WhichSpace
+whisper-cpp
+whisper.cpp
+whitenoise
+Whitespace
+Whoscall
+widgetsnbextension
+WiFiman Desktop
+Wii no Ma
+Wiki-Watch
+WikiBlame
+Wikimedia Enterprise
+WikiNodes
+Wikitude
+Wikiwand
+wimlib
+WIN.COM
+Win32s
+WinBox
+WinDev
+WindowBlinds
+Windows Anytime Upgrade
+Windows CardSpace
+Windows Desktop Gadgets
+Windows DreamScene
+Windows DVD Maker
+Windows Imaging Component
+Windows Live Alerts
+Windows Live Devices
+Windows Live Events
+Windows Live Favorites
+Windows Live Groups
+Windows Live OneCare
+Windows Live Spaces
+Windows SideShow
+Windows Task Scheduler
+Windows Ultimate Extras
+Windows Virtual PC
+Windscribe
+Windsurf
+WineHQ-devel
+WineHQ-stable
+WineHQ-staging
+winetricks
+WinGate
+WinMX
+WinRAR
+WinShell
+WinUSB
+WinWAP
+WinZip
+WireGuard
+wireguard-tools
+wireshark
+Wireshark-ChmodBPF
+Wispr Flow
+WMLScript
+Wolfram Demonstrations Project
+wolfSSL
+WoltLab Burning Board
+WordBASIC
+Wordfast
+WorkPLAN
+worktrunk
+WorldWide Telescope
+WOT Services
+WoW64
+WPS Office
+WQL
+wrapt
+wsproto
+wtforms
+WxDev-C++
+wxwidgets
+X Lossless Decoder
+X Toolkit Intrinsics
+X-12-ARIMA
+X-Road
+X10
+x264
+x265
+XACML
+xarray
+xbar
+XBase++
+Xbox App
+Xcas
+XCB
+xcb-util
+xcbeautify
+xclogparser
+Xcode
+xcodegen
+xcodes
+xcresultparser
+xctesthtmlreport
+XDoclet
+Xenomai
+XEphem
+Xfig
+Xfire
+Xft
+xgboost
+xkeyboard-config
+Xlib
+XLink Kai
+xlrd
+xlsxwriter
+xlwt
+Xmarks
+XMind
+xmlsec
+xmlstarlet
+xmltodict
+xMule
+XnViewMP
+Xojo
+Xor DDoS
+xorgproto
+xorriso
+XOTcl
+XPath
+XQuartz
+Xsan
+XSLT
+Xtend
+xtrans
+XULRunner
+xvid
+xxhash
+Yaak
+Yabasic
+YACReader
+yajl
+yaml-cpp
+yamlfmt
+yamllint
+Yandex Cloud CLI
+Yandex Disk
+Yandex.Browser
+Yandex.Navigator
+yandexcloud
+yara
+yasm
+YaST
+yazi
+ydb
+yellowTAB
+yfinance
+ykman
+YONO
+Yorick
+yosys
+YouOS
+YouTrack
+YouTube Downloader
+YSFlight
+Yubico Authenticator
+Yubo
+Yuzu
+yyjson
+Zapier
+Zapya
+zbar
+ZCode
+zeep
+zellij
+Zendesk
+Zenmap
+Zerodha
+zeromq
+ZeroTier One
+Zettlr
+Zhihu
+zimg
+zinit
+ZipGenius
+zipp
+zizmor
+zlib
+Zmodeler
+ZNC
+Zod
+zola
+Zomato
+zopfli
+Zotero
+zoxide
+ZPL
+zsh-autocomplete
+zsh-autosuggestions
+zsh-completions
+zstandard
+zstd
+Zune
+ZYpp

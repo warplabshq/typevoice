@@ -58,7 +58,7 @@ actor ParakeetTranscriber: Transcriber {
         let result = try await manager.transcribe(samples, decoderState: &state)
         Log.timing("asr.transcribe", since: t0)
         Log.asr.debug("asr \(String(format: "%.0f", result.duration * 1000))ms audio → \(String(format: "%.0f", result.processingTime * 1000))ms, conf \(result.confidence)")
-        let tokens = (result.tokenTimings ?? []).map { (token: $0.token, start: $0.startTime, end: $0.endTime) }
+        let tokens = (result.tokenTimings ?? []).map { Transcript.Token(token: $0.token, start: $0.startTime, end: $0.endTime, confidence: $0.confidence) }
         return Transcript(text: result.text, tokens: tokens)
     }
 
