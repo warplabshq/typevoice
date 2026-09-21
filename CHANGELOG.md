@@ -4,6 +4,15 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.11 — 22 September 2026
+
+- Lists, said the way people say them. "I want three things today. So first lights, second
+  camera and third glasses" becomes a numbered list; "add these to my list. Eggs, basket,
+  sugar, and that's all" becomes bullets, with the "and that's all" dropped. The ordinals no
+  longer have to start a sentence, a count ("three things", "a couple of points") announces
+  the list, and whatever you say after the list stays as a sentence below it.
+- Saying "bullet point" as a word ("it should be in a bullet point") no longer turns into one.
+
 ## 1.0.10 — 22 September 2026
 
 - Web addresses, spoken: "typevoice dot ai", "logs dot so", "jane at example dot com", "slash

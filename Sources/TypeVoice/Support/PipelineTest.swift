@@ -27,7 +27,22 @@ enum PipelineTest {
                       "First, we ship the build. Second, we write the changelog. Third, we post it and go home.",
                       "First of all, thanks for coming. It means a lot.",
                       "Things I need from you: the invoice, the signed contract, and the timeline.",
-                      "Packing list, passport, charger, headphones, a jacket."] {
+                      "Packing list, passport, charger, headphones, a jacket.",
+                      // From real dictations that stayed flat.
+                      "Hey, so I want three things to save today. So first lights, second camera and third glasses.",
+                      "Hey, add these things to my list. Eggs, basket, bear, some Jack Daniels, sugar, and that's all.",
+                      "Two things: first the lights and second the camera. Thanks.",
+                      "The first thing is speed, the second thing is privacy, and the third thing is price.",
+                      "Can you get these things? Milk, eggs, and bread. I'll be home late.",
+                      // Must stay as they are.
+                      "When I'm talking about three items, it should always be in a bullet point, you know.",
+                      "I hate bullet points in emails.",
+                      "At first I was unsure, but the second time it worked.",
+                      "First of all, thanks. Second, the build is green.",
+                      "I need three things done before Friday and I'm not sure we'll make it.",
+                      "I invited three people, Sam, Rohan and Priya, to the launch.",
+                      "Let me tell you some things, the launch went well, the numbers are up and the team is happy.",
+                      "Quick update on the launch.\n\nThings to buy: cake, candles and balloons.\n\nSee you at six."] {
                 print("\(c)\n  →\n\(Structure.commands(c).split(separator: "\n", omittingEmptySubsequences: false).map { "    |" + $0 }.joined(separator: "\n"))")
             }
             exit(0)

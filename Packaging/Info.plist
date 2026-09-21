@@ -2,37 +2,56 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <key>CFBundleDevelopmentRegion</key>          <string>en</string>
-    <key>CFBundleExecutable</key>                 <string>TypeVoice</string>
-    <key>CFBundleIdentifier</key>                 <string>com.priyamventures.typevoice</string>
-    <key>CFBundleInfoDictionaryVersion</key>      <string>6.0</string>
-    <key>CFBundleName</key>                       <string>TypeVoice</string>
-    <key>CFBundleDisplayName</key>                <string>TypeVoice</string>
-    <key>CFBundlePackageType</key>                <string>APPL</string>
-    <key>CFBundleShortVersionString</key>         <string>1.0.10</string>
-    <key>CFBundleVersion</key>                    <string>110</string>
-    <key>LSMinimumSystemVersion</key>             <string>26.0</string>
-    <key>LSUIElement</key>                        <true/>
-    <key>NSHighResolutionCapable</key>            <true/>
-    <key>NSMicrophoneUsageDescription</key>       <string>TypeVoice listens only while you hold the key, and everything stays on this Mac.</string>
-    <key>NSHumanReadableCopyright</key>           <string>© 2026 Priyam Raj</string>
-    <key>CFBundleIconFile</key>                   <string>AppIcon</string>
-    <key>LSApplicationCategoryType</key>          <string>public.app-category.productivity</string>
-
-    <!-- Sparkle. SUFeedURL is the appcast the site hosts; SUPublicEDKey is the public half of
-         the EdDSA key from `make keys` (the private half stays in your login keychain). -->
-    <key>SUFeedURL</key>                          <string>https://typevoice.ai/appcast.xml</string>
-    <key>SUPublicEDKey</key>                      <string>XKv8ItpvYON0SuobWGr3A1oLtVIHuwalNdLbEymYXz0=</string>
-    <key>SUEnableAutomaticChecks</key>            <true/>
-    <key>SUScheduledCheckInterval</key>           <integer>86400</integer>
-
-    <!-- typevoice://activate?key=… from the site's thank-you page fills the License tab. -->
-    <key>CFBundleURLTypes</key>
-    <array>
-        <dict>
-            <key>CFBundleURLName</key>    <string>com.priyamventures.typevoice</string>
-            <key>CFBundleURLSchemes</key> <array><string>typevoice</string></array>
-        </dict>
-    </array>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>en</string>
+	<key>CFBundleDisplayName</key>
+	<string>TypeVoice</string>
+	<key>CFBundleExecutable</key>
+	<string>TypeVoice</string>
+	<key>CFBundleIconFile</key>
+	<string>AppIcon</string>
+	<key>CFBundleIdentifier</key>
+	<string>com.priyamventures.typevoice</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>TypeVoice</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>1.0.11</string>
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleURLName</key>
+			<string>com.priyamventures.typevoice</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>typevoice</string>
+			</array>
+		</dict>
+	</array>
+	<key>CFBundleVersion</key>
+	<string>111</string>
+	<key>LSApplicationCategoryType</key>
+	<string>public.app-category.productivity</string>
+	<key>LSMinimumSystemVersion</key>
+	<string>26.0</string>
+	<key>LSUIElement</key>
+	<true/>
+	<key>NSHighResolutionCapable</key>
+	<true/>
+	<key>NSHumanReadableCopyright</key>
+	<string>© 2026 Priyam Raj</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>TypeVoice listens only while you hold the key, and everything stays on this Mac.</string>
+	<key>SUEnableAutomaticChecks</key>
+	<true/>
+	<key>SUFeedURL</key>
+	<string>https://typevoice.ai/appcast.xml</string>
+	<key>SUPublicEDKey</key>
+	<string>XKv8ItpvYON0SuobWGr3A1oLtVIHuwalNdLbEymYXz0=</string>
+	<key>SUScheduledCheckInterval</key>
+	<integer>86400</integer>
 </dict>
 </plist>

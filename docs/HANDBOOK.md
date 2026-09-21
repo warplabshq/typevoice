@@ -213,6 +213,21 @@ The `doubtful:` debug log line lists each dictation's low-confidence words, for 
 Next step (Dictionary v2): decode-time boosting — re-export the v2 joint CoreML model with
 top-K logits and port sherpa-onnx's Aho-Corasick hotword boost into FluidAudio's decoder.
 
+## 7b. Lists from speech
+
+`Text/Structure.swift`, after `Cleaner.clean` (fillers gone) and before `Numbers`. Four ways a
+list forms, each needing more than one hit so "number one priority" stays prose:
+spoken markers ("bullet", "number two", "step three"; ≥ 2, or one "bullet" followed by a
+comma series); ordinals at sentence starts (≥ 3); an in-order ordinal run anywhere in the
+sentence ("so first lights, second camera and third glasses"; ≥ 3, or ≥ 2 after a count cue
+like "two things"); and natural series, where the lead-in before a colon, a sentence end or a
+comma announces a list ("my list", "three things") and ≥ 3 short items follow. Every marker
+swallows its connector ("and third" → "3."), "bullet" is ignored as a noun ("in a bullet
+point", "bullet points"), closers like "and that's all" / "etc" are dropped, and a sentence
+said after the list goes below it. Ordinals give numbers, plain series give dashes. `tidy`
+does capitals, colons and periods. `--test structure` prints every case; the last block is
+real dictations that used to stay flat, then sentences that must never become lists.
+
 ## 8. Brand
 
 One waveform (`Sources/TypeVoice/UI/BrandWave.swift`): eight bars, gap 0.82× bar width, tallest
