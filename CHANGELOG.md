@@ -4,6 +4,12 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.12 — 22 September 2026
+
+- "Reddit" stays "Reddit". A word pack was turning it into "Rediff" because the two sound
+  alike and the model had been a little unsure. A spelling the app already knows, whether a
+  household name, a pack term or a word in your Dictionary, is now never replaced.
+
 ## 1.0.11 — 22 September 2026
 
 - Lists, said the way people say them. "I want three things today. So first lights, second

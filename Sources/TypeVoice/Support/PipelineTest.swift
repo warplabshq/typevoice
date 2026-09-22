@@ -54,6 +54,9 @@ enum PipelineTest {
                 ("rip grep", "ripgrep"), ("neo vim", "Neovim"), ("tail scale", "Tailscale"), ("supa base", "Supabase"),
                 ("ver sell", "Vercel"), ("ray cast", "Raycast"), ("ff mpeg", "ffmpeg"), ("tera form", "terraform"), ("compose io", "Composio"), ("kube cuttle", "kubectl"),
                 ("the meeting!", "the meeting!"), ("ripped", "ripped"), ("really", "really"), ("sell it", "sell it"),
+                // Heard right already: a household name, a pack term, a possessive, your own Dictionary.
+                ("through Reddit,", "through Reddit,"), ("Reddit.", "Reddit."), ("Neovide", "Neovide"), ("Reddit's", "Reddit's"),
+                ("Priyam", "Priyam"),
             ]
             Packs.Index.warm(ids: Packs.all().map(\.id))   // every pack, without touching the preference
             while Packs.Index.current == nil { Thread.sleep(forTimeInterval: 0.05) }
@@ -64,7 +67,7 @@ enum PipelineTest {
                     let confident = w.hasSuffix("!")
                     return Structure.Word(text: String(w), gapBefore: 0, confidence: confident ? 0.99 : 0.5)
                 }
-                let got = Packs.correct(words).map(\.text).joined(separator: " ")
+                let got = Packs.correct(words, dictionary: ["Priyam"]).map(\.text).joined(separator: " ")
                 let ok = got == expected
                 if !ok { failures += 1 }
                 print("\(ok ? "ok " : "FAIL") \(heard) → \(got)\(ok ? "" : "   (wanted \(expected))")")

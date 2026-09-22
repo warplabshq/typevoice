@@ -83,10 +83,18 @@ enum Packs {
         let buckets: [String: [Entry]]       // "\(firstChar)\(phonCount)" → entries
         let count: Int
         let maxWords: Int
+        /// Spellings that are right as they are: every term of every pack (enabled or not) and
+        /// the household names in known.txt. The model saying "Reddit" must stay "Reddit", not
+        /// become the pack's "Rediff" because the two sound alike.
+        let known: Set<String>
 
-        init(terms: [String]) {
+        init(terms: [String], known: [String] = []) {
             var b: [String: [Entry]] = [:]
             var maxW = 1
+            var k = Set<String>(minimumCapacity: known.count + terms.count)
+            for t in known { k.insert(Packs.key(t)) }
+            for t in terms { k.insert(Packs.key(t)) }
+            self.known = k
             for t in terms {
                 let key = Vocabulary.normalize(t)
                 let phon = Vocabulary.phonetic(key)
@@ -122,10 +130,13 @@ enum Packs {
             lock.withLock { if building || cached != nil { return }; building = true }
             let enabled = Set(ids ?? Prefs.packs)
             Task.detached(priority: .utility) {
-                var terms: [String] = []
-                for pack in Packs.all() where enabled.contains(pack.id) { terms += Packs.terms(in: pack.url) }
+                var terms: [String] = [], known: [String] = []
+                for pack in Packs.all() {
+                    if enabled.contains(pack.id) { terms += Packs.terms(in: pack.url) } else { known += Packs.terms(in: pack.url) }
+                }
+                if let url = Bundle.module.url(forResource: "known", withExtension: "txt", subdirectory: "Packs") { known += Packs.terms(in: url) }
                 let t0 = ContinuousClock.now
-                let index = Index(terms: terms)
+                let index = Index(terms: terms, known: known)
                 Log.timing("packs.index(\(terms.count))", since: t0)
                 lock.withLock { cached = index; building = false }
             }
@@ -135,8 +146,9 @@ enum Packs {
     // MARK: Correction
 
     /// Replaces spans the model was unsure about with pack terms that sound the same.
-    static func correct(_ words: [Structure.Word]) -> [Structure.Word] {
+    static func correct(_ words: [Structure.Word], dictionary: [String] = []) -> [Structure.Word] {
         guard let index = Index.current, index.count > 0, !words.isEmpty else { return words }
+        let yours = Set(dictionary.map(key))
         var out = words
         var i = 0
         while i < out.count {
@@ -149,6 +161,10 @@ enum Packs {
                 let parts = slice.map { strip($0.text) }
                 let candidate = parts.map(\.core).joined()
                 guard candidate.count >= 3 else { continue }
+                // Spelled like a name we know (a pack term, a household name, your Dictionary):
+                // the model heard it right, however unsure it was.
+                let spelled = key(parts.map(\.core).joined(separator: " "))
+                if index.known.contains(spelled) || yours.contains(spelled) { continue }
                 let cPhon = Vocabulary.phonetic(candidate)
                 guard cPhon.count >= 2 else { continue }
                 // Real words that merely sound like a term ("sell it" / sqlite) need a much closer
@@ -161,7 +177,7 @@ enum Packs {
                     if allReal, score < 0.85 { continue }
                     if best == nil || score > best!.score { best = (e, score) }
                 }
-                if let hit = best {
+                if let hit = best, key(hit.entry.term) != spelled {
                     let text = (parts.first?.lead ?? "") + hit.entry.term + (parts.last?.trail ?? "")
                     Log.d("pack: \"\(slice.map(\.text).joined(separator: " "))\" → \(hit.entry.term) (\(String(format: "%.2f", hit.score)), confidence \(String(format: "%.2f", minConf)))")
                     out.replaceSubrange(i..<(i + span), with: [Structure.Word(text: text, gapBefore: slice.first!.gapBefore, confidence: 1)])
@@ -171,6 +187,14 @@ enum Packs {
             i += 1
         }
         return out
+    }
+
+    /// How spellings are compared: no case, no possessive. Spaces stay, so "rip grep" is
+    /// not yet "ripgrep" and still gets fixed.
+    static func key(_ s: String) -> String {
+        var k = s.lowercased()
+        if k.hasSuffix("'s") || k.hasSuffix("’s") { k.removeLast(2) }
+        return k
     }
 
     private static func strip(_ w: String) -> (lead: String, core: String, trail: String) {

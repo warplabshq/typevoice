@@ -26,12 +26,37 @@ def get(url, tries=3):
 
 # ---- the words the model already knows: the system dictionary plus a few we add by hand
 KNOWN = set(w.strip().lower() for w in open("/usr/share/dict/words", errors="ignore"))
+# Household names the model spells right on its own: not worth a pack entry.
 KNOWN |= {"app", "apps", "api", "apis", "cli", "gui", "ai", "ui", "ux", "url", "http", "https", "json", "html", "css", "sql",
           "wifi", "email", "emails", "online", "offline", "website", "websites", "internet", "google", "apple", "amazon",
           "microsoft", "facebook", "twitter", "youtube", "instagram", "netflix", "iphone", "ipad", "mac", "macbook", "linux",
           "windows", "android", "chrome", "safari", "firefox", "python", "java", "javascript", "swift", "github", "gitlab",
           "docker", "kubernetes", "react", "node", "npm", "pip", "git", "vim", "emacs", "slack", "zoom", "discord", "reddit",
           "tiktok", "whatsapp", "telegram", "spotify", "uber", "airbnb", "tesla", "openai", "chatgpt", "gpt", "llm", "llms"}
+# Names the model spells right on its own, shipped as known.txt so that a pack never "corrects"
+# one of them into a lookalike (Reddit → Rediff). Some are also pack terms; that's fine.
+NAMES = {"app", "apps", "api", "apis", "cli", "gui", "ai", "ui", "ux", "url", "http", "https", "json", "html", "css", "sql",
+         "wifi", "email", "emails", "online", "offline", "website", "websites", "internet", "google", "apple", "amazon",
+         "microsoft", "facebook", "twitter", "youtube", "instagram", "netflix", "iphone", "ipad", "mac", "macbook", "linux",
+         "windows", "android", "chrome", "safari", "firefox", "python", "java", "javascript", "swift", "github", "gitlab",
+         "docker", "kubernetes", "react", "node", "npm", "pip", "git", "vim", "emacs", "slack", "zoom", "discord", "reddit",
+         "tiktok", "whatsapp", "telegram", "spotify", "uber", "airbnb", "tesla", "openai", "chatgpt", "gpt", "llm", "llms",
+         "meta", "threads", "linkedin", "twitch", "pinterest", "snapchat", "tumblr", "substack", "medium", "quora", "wikipedia",
+         "gmail", "outlook", "icloud", "dropbox", "notion", "figma", "canva", "shopify", "stripe", "paypal", "venmo", "zelle",
+         "coinbase", "binance", "bitcoin", "ethereum", "solana", "nvidia", "intel", "amd", "samsung", "sony", "xbox",
+         "playstation", "nintendo", "steam", "roblox", "minecraft", "fortnite", "imessage", "facetime", "airpods", "airtag",
+         "siri", "alexa", "cortana", "gemini", "claude", "anthropic", "copilot", "deepseek", "mistral", "llama", "perplexity",
+         "grok", "midjourney", "hugging face", "ollama", "vercel", "netlify", "cloudflare", "heroku", "supabase", "firebase",
+         "postgres", "postgresql", "mysql", "sqlite", "mongodb", "redis", "graphql", "typescript", "rust", "golang", "kotlin",
+         "flutter", "django", "flask", "rails", "laravel", "nextjs", "nuxt", "svelte", "vue", "angular", "tailwind", "vite",
+         "webpack", "ubuntu", "debian", "fedora", "homebrew", "xcode", "vscode", "jetbrains", "intellij", "pycharm", "jira",
+         "asana", "trello", "linear", "loom", "calendly", "zapier", "hubspot", "salesforce", "mailchimp", "webflow",
+         "wordpress", "squarespace", "wix", "godaddy", "namecheap", "aws", "azure", "gcp", "lambda", "ec2", "s3",
+         "chatgpt", "openai", "cursor", "windsurf", "replit", "lovable", "bolt", "raycast", "arc", "brave", "opera", "edge",
+         "duckduckgo", "bing", "yahoo", "ebay", "etsy", "walmart", "costco", "ikea", "nike", "adidas", "starbucks", "mcdonalds",
+         "doordash", "grubhub", "lyft", "ola", "zomato", "swiggy", "flipkart", "paytm", "phonepe", "upi", "jio", "airtel",
+         "spacex", "starlink", "neuralink", "boston dynamics", "deepmind", "waymo", "rivian", "byd", "toyota", "honda", "bmw",
+         "mercedes", "audi", "porsche", "ferrari", "lamborghini"}
 
 OK_CHARS = re.compile(r"^[A-Za-z0-9][A-Za-z0-9 .'+#&-]{1,39}$")
 
@@ -157,6 +182,10 @@ def main():
         slang = dedupe(t for t in (clean(x) for x in core) if t and not BLOCK.search(t))
         (OUT / "internet-slang.txt").write_text("\n".join(slang) + "\n")
         print(f"  {len(slang)} terms", file=sys.stderr)
+    if which in ("known", "all", "dev", "slang"):
+        known = sorted({n for n in NAMES if n not in set(w.strip().lower() for w in open("/usr/share/dict/words", errors="ignore"))})
+        (OUT / "known.txt").write_text("# Names the model spells on its own; packs never replace these.\n" + "\n".join(known) + "\n")
+        print(f"  known: {len(known)} names", file=sys.stderr)
     dev, slang = count("developer-tools.txt"), count("internet-slang.txt")
 
     (OUT / "SOURCES.md").write_text(f"""# Word packs

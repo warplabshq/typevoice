@@ -209,6 +209,10 @@ Wikidata (software classes, 5+ sitelinks) and the hand-picked `Tools/packs/core-
 Wiktionary's slang categories were evaluated and rejected: even minus its offensive categories
 they skew to slurs and dog whistles. Imported lists live in `~/Library/Application Support/
 TypeVoice/Packs/`. `--test packs` runs the heard → expected cases and prints the cost.
+A span spelled exactly like a known name is never replaced (`Index.known`: every term of every
+pack, enabled or not, plus `Packs/known.txt`, the household names `build.py` keeps out of the
+packs; the person's Dictionary is passed in by the caller). This is what stopped "Reddit" →
+"Rediff" (0.80 similarity, confidence 0.46): the model had spelled it right.
 The `doubtful:` debug log line lists each dictation's low-confidence words, for tuning the gate.
 Next step (Dictionary v2): decode-time boosting — re-export the v2 joint CoreML model with
 top-K logits and port sherpa-onnx's Aho-Corasick hotword boost into FluidAudio's decoder.

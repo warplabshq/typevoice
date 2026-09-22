@@ -348,7 +348,7 @@ final class DictationController {
                     var words = Structure.words(text: raw, tokens: transcript.tokens)
                     let doubtful = words.filter { $0.confidence < Packs.confidenceGate }
                     if !doubtful.isEmpty { Log.d("doubtful: " + doubtful.map { "\($0.text)(\(String(format: "%.2f", $0.confidence)))" }.joined(separator: " ")) }
-                    if !Prefs.packs.isEmpty { let t = ContinuousClock.now; words = Packs.correct(words); Log.timing("packs.correct", since: t) }
+                    if !Prefs.packs.isEmpty { let t = ContinuousClock.now; words = Packs.correct(words, dictionary: dictionary.terms); Log.timing("packs.correct", since: t) }
                     raw = Prefs.pauseParagraphs ? Structure.paragraphs(words, pause: 1.0) : words.map(\.text).joined(separator: " ")
                 }
                 let style = Style.current
