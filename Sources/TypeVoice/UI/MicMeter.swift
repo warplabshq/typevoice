@@ -7,9 +7,10 @@ struct MicMeter: View {
     @State private var level: Float = 0
     @State private var peak: Float = 0
     @State private var engine: AVAudioEngine?
+    @State private var queue: QueueInput?
     @State private var error: String?
     @State private var stopTask: Task<Void, Never>?
-    private var testing: Bool { engine != nil }
+    private var testing: Bool { engine != nil || queue != nil }
 
     var body: some View {
         HStack(spacing: 10) {
@@ -78,11 +79,26 @@ struct MicMeter: View {
                 Log.d("mic test: \(device?.name ?? "system input") failed: \(error.localizedDescription)")
             }
         }
+        // AVAudioEngine won't start on this Mac right now: the input-only queue, like dictation.
+        let q = QueueInput { p, n in
+            var sum: Float = 0
+            for i in 0..<n { sum += p[i] * p[i] }
+            let db = 20 * log10(max((sum / Float(max(n, 1))).squareRoot(), 1e-6))
+            let l = min(1, max(0, (db + 56) / 50))
+            Task { @MainActor in level = l; peak = max(l, peak * 0.97) }
+        }
+        do {
+            try q.start(deviceUID: InputDevices.resolve(preference: deviceUID)?.uid)
+            queue = q; error = nil; return
+        } catch {
+            Log.d("mic test: queue input failed too: \(error.localizedDescription)")
+        }
         self.error = lastError.map { _ in "Couldn't open the microphone. Try again, or pick another input." } ?? "No input"
     }
 
     private func stop() {
         stopTask?.cancel(); stopTask = nil
+        queue?.stop(); queue = nil
         engine?.inputNode.removeTap(onBus: 0)
         engine?.stop()
         engine = nil

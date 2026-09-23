@@ -4,6 +4,12 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.15 — 23 September 2026
+
+- Microphone fixes. On Macs where macOS refuses the usual way of opening the mic (error
+  -10868, most often with a Bluetooth headset connected), TypeVoice now records another way
+  instead of failing, for dictation and for the Test button.
+
 ## 1.0.14 — 23 September 2026
 
 - Microphone fixes. If the chosen mic can't open (it happens on some Macs while a headset is

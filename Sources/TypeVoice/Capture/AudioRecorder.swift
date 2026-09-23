@@ -45,10 +45,14 @@ final class AudioRecorder: @unchecked Sendable {
     }
     private var needsReset = false
     private var startedAt = Date.distantPast
+    /// The input-only fallback, used when AVAudioEngine won't start on this Mac (see QueueInput).
+    private var queueInput: QueueInput?
+    private var queueSpectrum: Spectrum?
 
     func start() throws {
         guard !isRunning else { return }
         lock.withLock { samples.removeAll(keepingCapacity: true); peak = 0 }
+        if ProcessInfo.processInfo.environment["TYPEVOICE_FORCE_QUEUE"] == "1" { try startQueue(); return }
 
         let input = engine.inputNode
         // The Mac's own mic unless the person chose otherwise (see InputDevices.resolve).
@@ -90,21 +94,13 @@ final class AudioRecorder: @unchecked Sendable {
             do {
                 try engine.start()
             } catch {
-                // Still no: whatever input macOS itself is using right now (error -10868 on a Mac
-                // whose audio devices disagree on format). Better a sentence than an error.
-                Log.d("built-in mic failed too (\(error.localizedDescription)); using the system input")
+                // Still no: this Mac's audio won't let AVAudioEngine start (error -10868 while a
+                // headset holds the output). Record with the input-only queue instead.
+                Log.d("engine won't start on the built-in mic either (\(error.localizedDescription)); using the queue input")
                 input.removeTap(onBus: 0); tapInstalled = false
-                engine.stop(); engine.reset()
-                var sys = AudioDeviceID(0), size = UInt32(MemoryLayout<AudioDeviceID>.size)
-                var addr = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultInputDevice,
-                                                      mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
-                if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size, &sys) == noErr, let unit = input.audioUnit {
-                    AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &sys, UInt32(MemoryLayout<AudioDeviceID>.size))
-                }
-                input.installTap(onBus: 0, bufferSize: 512, format: nil) { [weak self] buffer, _ in self?.consume(buffer) }
-                tapInstalled = true
-                engine.prepare()
-                try engine.start()
+                engine.stop(); engine.reset(); needsReset = true
+                try startQueue()
+                return
             }
         }
         startedAt = Date()
@@ -128,6 +124,11 @@ final class AudioRecorder: @unchecked Sendable {
     /// Stops capture and returns everything recorded since `start()`.
     func stop() -> Recording {
         guard isRunning else { return Recording(samples: [], peak: 0) }
+        if let q = queueInput {
+            q.stop(); queueInput = nil
+            isRunning = false
+            return lock.withLock { Recording(samples: samples, peak: peak) }
+        }
         engine.inputNode.removeTap(onBus: 0)
         tapInstalled = false
         engine.stop()
@@ -185,6 +186,37 @@ final class AudioRecorder: @unchecked Sendable {
         guard m > 0, let o = out.floatChannelData else { return }
         lock.withLock {
             samples.append(contentsOf: UnsafeBufferPointer(start: o[0], count: m))
+            peak = max(peak, localPeak)
+        }
+    }
+
+    /// Starts the input-only queue on the chosen mic (or macOS's input), already at 16 kHz.
+    private func startQueue() throws {
+        let q = QueueInput { [weak self] p, n in self?.consumeQueue(p, n) }
+        let uid = InputDevices.resolve(preference: Prefs.inputDeviceUID)?.uid
+        do { try q.start(deviceUID: uid) } catch where uid != nil {
+            Log.d("queue input on \(uid!) failed; trying the system input")
+            try q.start(deviceUID: nil)
+        }
+        queueInput = q
+        if queueSpectrum == nil { queueSpectrum = Spectrum(bands: 10, sampleRate: QueueInput.sampleRate) }
+        Log.d("mic: queue input at 16000 Hz")
+        startedAt = Date()
+        isRunning = true
+    }
+
+    private func consumeQueue(_ p: UnsafePointer<Float>, _ n: Int) {
+        var sum: Float = 0, localPeak: Float = 0
+        for i in 0..<n { let v = p[i]; sum += v * v; localPeak = max(localPeak, abs(v)) }
+        let db = 20 * log10(max((sum / Float(n)).squareRoot(), 1e-6))
+        onLevel?(pow(min(1, max(0, (db + 56) / 50)), 0.65))
+        if let spectrum = queueSpectrum {
+            let bands = spectrum.analyze(p, count: n, gate: min(1, max(0, (db + 52) / 14)))
+            bandTick += 1
+            if bandTick % 2 == 0 { onBands?(bands) }
+        }
+        lock.withLock {
+            samples.append(contentsOf: UnsafeBufferPointer(start: p, count: n))
             peak = max(peak, localPeak)
         }
     }

@@ -47,6 +47,16 @@ enum PipelineTest {
             }
             exit(0)
         }
+        if files.first == "mic" {
+            // Two seconds from the microphone through AudioRecorder (TYPEVOICE_FORCE_QUEUE=1 for
+            // the input-only fallback). Prints what came back.
+            let r = AudioRecorder()
+            do { try r.start() } catch { print("start failed: \(error.localizedDescription)"); exit(1) }
+            Thread.sleep(forTimeInterval: 2.0)
+            let rec = r.stop()
+            print(String(format: "recorded %.2f s, %d samples, peak %.4f", rec.seconds, rec.samples.count, rec.peak))
+            exit(rec.samples.count > 16_000 ? 0 : 1)
+        }
         if files.first == "replay" {
             // Every dictation in this Mac's log (raw text + which words the model doubted), run
             // through today's text pipeline, printed where the result differs from the raw.
