@@ -168,6 +168,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
             w.title = mainTab.label
             main = w
         }
+        // In the Dock (and ⌘Tab) while the window is open, like any app you're using;
+        // back to the menu bar alone when it closes.
+        NSApp.setActivationPolicy(.regular)
         NSApp.activate(ignoringOtherApps: true)
         main?.makeKeyAndOrderFront(nil)
         tabBinding.wrappedValue = mainTab
@@ -241,6 +244,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         guard (notification.object as? NSWindow) == main else { return }
+        NSApp.setActivationPolicy(.accessory)
         // Hand focus back to whatever the user was doing.
         NSApp.hide(nil)
     }

@@ -87,14 +87,17 @@ enum Packs {
         /// the household names in known.txt. The model saying "Reddit" must stay "Reddit", not
         /// become the pack's "Rediff" because the two sound alike.
         let known: Set<String>
+        /// Enabled terms by spelling, for putting the capitals back ("dodo payments" → "Dodo Payments").
+        let exact: [String: String]
 
         init(terms: [String], known: [String] = []) {
             var b: [String: [Entry]] = [:]
             var maxW = 1
             var k = Set<String>(minimumCapacity: known.count + terms.count)
             for t in known { k.insert(Packs.key(t)) }
-            for t in terms { k.insert(Packs.key(t)) }
-            self.known = k
+            var ex: [String: String] = [:]
+            for t in terms { k.insert(Packs.key(t)); if ex[Packs.key(t)] == nil { ex[Packs.key(t)] = t } }
+            self.known = k; self.exact = ex
             for t in terms {
                 let key = Vocabulary.normalize(t)
                 let phon = Vocabulary.phonetic(key)
@@ -163,23 +166,44 @@ enum Packs {
                 guard candidate.count >= 3 else { continue }
                 // Spelled like a name we know (a pack term, a household name, your Dictionary):
                 // the model heard it right, however unsure it was.
-                let spelled = key(parts.map(\.core).joined(separator: " "))
-                if index.known.contains(spelled) || yours.contains(spelled) { continue }
+                let spelledKey = key(parts.map(\.core).joined(separator: " "))
+                let allReal = parts.allSatisfy { English.isWord($0.core) }
+                // Spelled right already: at most put the capitals back, and never on one everyday
+                // word ("linear" stays "linear" in a sentence).
+                if let proper = index.exact[spelledKey], !(allReal && span == 1),
+                   !parts.dropLast().contains(where: { !$0.trail.isEmpty }) {
+                    if proper != parts.map(\.core).joined(separator: " ") {
+                        let text = (parts.first?.lead ?? "") + proper + (parts.last?.trail ?? "")
+                        out.replaceSubrange(i..<(i + span), with: [Structure.Word(text: text, gapBefore: slice.first!.gapBefore, confidence: 1)])
+                        break
+                    }
+                    continue
+                }
+                if index.known.contains(spelledKey) || yours.contains(spelledKey) { continue }
                 let cPhon = Vocabulary.phonetic(candidate)
                 guard cPhon.count >= 2 else { continue }
                 // Real words that merely sound like a term ("sell it" / sqlite) need a much closer
                 // match than a non-word does: the model may well have heard them right.
-                let allReal = parts.allSatisfy { English.isWord($0.core) }
+                // One real word is what the person said, however unsure the model was: "games"
+                // must not become a chemistry package that sounds the same.
+                if allReal && span == 1 { continue }
+                // A name doesn't run across a sentence or a comma ("way. And" is not "wayland").
+                if parts.dropLast().contains(where: { !$0.trail.isEmpty }) { continue }
+                let letters = Self.letters(parts.map(\.core).joined())
                 var best: (entry: Index.Entry, score: Double)?
                 for e in index.candidates(for: cPhon)
                 where Vocabulary.matches(candidatePhon: cPhon, keyPhon: e.phon, keySkel: e.skel) {
                     let score = Vocabulary.similarity(cPhon, e.phon)
-                    if allReal, score < 0.85 { continue }
-                    if best == nil || score > best!.score { best = (e, score) }
+                    let spelled = Vocabulary.similarity(letters, Self.letters(e.term))
+                    // Real words joining into a name must also be spelled like it ("tail scale" →
+                    // Tailscale), not just sound like it ("sell it" / sqlite).
+                    if allReal, score < 0.85 || spelled < 0.75 { continue }
+                    let rank = score + 0.5 * spelled
+                    if best == nil || rank > best!.score { best = (e, rank) }
                 }
-                if let hit = best, key(hit.entry.term) != spelled {
+                if let hit = best, key(hit.entry.term) != spelledKey {
                     let text = (parts.first?.lead ?? "") + hit.entry.term + (parts.last?.trail ?? "")
-                    Log.d("pack: \"\(slice.map(\.text).joined(separator: " "))\" → \(hit.entry.term) (\(String(format: "%.2f", hit.score)), confidence \(String(format: "%.2f", minConf)))")
+                    Log.d("pack: \"\(slice.map(\.text).joined(separator: " "))\" → \(hit.entry.term) (rank \(String(format: "%.2f", hit.score)), confidence \(String(format: "%.2f", minConf)))")
                     out.replaceSubrange(i..<(i + span), with: [Structure.Word(text: text, gapBefore: slice.first!.gapBefore, confidence: 1)])
                     break
                 }
@@ -188,6 +212,9 @@ enum Packs {
         }
         return out
     }
+
+    /// Lowercase letters and digits only, for comparing spellings.
+    static func letters(_ s: String) -> String { String(s.lowercased().filter { $0.isLetter || $0.isNumber }) }
 
     /// How spellings are compared: no case, no possessive. Spaces stay, so "rip grep" is
     /// not yet "ripgrep" and still gets fixed.

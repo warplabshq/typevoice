@@ -11,12 +11,21 @@ enum Vocabulary {
             let keyPhon = phonetic(key)
             let keySkel = skeleton(keyPhon)
             let termWordCount = max(1, term.split(separator: " ").count)
+            let termHasDot = term.contains(".")
             var i = 0
             while i < words.count {
-                for span in stride(from: min(termWordCount + 1, words.count - i), through: 1, by: -1) {
+                // Shortest span first: "Hicksfield or" must not swallow the "or".
+                for span in stride(from: 1, through: min(termWordCount + 1, words.count - i), by: 1) {
                     let slice = words[i..<(i + span)]
                     let candidate = slice.map(\.core).joined()
                     guard !candidate.isEmpty else { continue }
+                    // A web address only meets a web address: "logo" is not "Logs.so", and
+                    // "typevoice.ai" keeps its ".ai" rather than becoming "TypeVoice".
+                    let heardDot = candidate.contains(".") || slice.dropLast().contains { $0.trail.hasPrefix(".") }
+                    if termHasDot != heardDot { continue }
+                    // Both halves of an address must line up: "logs. So" is Logs.so,
+                    // "Logstart. So that…" is not.
+                    if termHasDot, !addressAligns(slice, term: term) { continue }
                     if candidate.caseInsensitiveCompare(key) == .orderedSame {
                         if candidate != term || span > 1 { words.replaceSubrange(i..<(i + span), with: [merge(slice, with: term)]) }
                         break
@@ -30,6 +39,22 @@ enum Vocabulary {
             }
         }
         return words.map { $0.lead + $0.core + $0.trail }.joined(separator: " ")
+    }
+
+    /// For a term like "Logs.so": the heard ending equals "so" exactly and the heard name
+    /// sounds like "Logs" on its own.
+    private static func addressAligns(_ slice: ArraySlice<Word>, term: String) -> Bool {
+        guard let dot = term.lastIndex(of: ".") else { return true }
+        let tHead = String(term[..<dot]), tTail = String(term[term.index(after: dot)...]).lowercased()
+        let heard: String
+        if slice.count == 1 { heard = slice.first!.core }
+        else { heard = slice.map { $0.core + ($0.trail.hasPrefix(".") ? "." : "") }.joined() }
+        guard let hDot = heard.lastIndex(of: ".") else { return false }
+        let hHead = String(heard[..<hDot]), hTail = String(heard[heard.index(after: hDot)...]).lowercased()
+        guard hTail == tTail else { return false }
+        if hHead.caseInsensitiveCompare(tHead) == .orderedSame { return true }
+        let kp = phonetic(normalize(tHead))
+        return matches(candidate: normalize(hHead), key: normalize(tHead), keyPhon: kp, keySkel: skeleton(kp))
     }
 
     // MARK: Tokens

@@ -36,7 +36,10 @@ enum Cleaner {
         s = s.replacingOccurrences(of: #"[ \t]+"#, with: " ", options: .regularExpression)
         s = s.replacingOccurrences(of: #" *\n *"#, with: "\n", options: .regularExpression)
         s = s.replacingOccurrences(of: #"\s+([,.!?;:])"#, with: "$1", options: .regularExpression)
-        s = s.replacingOccurrences(of: #"([,.!?;:])(?=[A-Za-z])"#, with: "$1 ", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"([,!?;:])(?=[A-Za-z])"#, with: "$1 ", options: .regularExpression)
+        // After a full stop only when a sentence starts ("done.Then" → "done. Then"); web
+        // addresses and abbreviations ("typevoice.com", "a.m.", "logs.so") stay whole.
+        s = s.replacingOccurrences(of: #"(?<=[a-z]{2})\.(?=[A-Z][a-z])"#, with: ". ", options: .regularExpression)
         s = s.replacingOccurrences(of: #"^[,.;:\s]+"#, with: "", options: .regularExpression)
         s = s.trimmingCharacters(in: .whitespaces)
         guard !s.isEmpty else { return "" }

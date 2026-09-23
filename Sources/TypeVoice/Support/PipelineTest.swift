@@ -47,6 +47,38 @@ enum PipelineTest {
             }
             exit(0)
         }
+        if files.first == "replay" {
+            // Every dictation in this Mac's log (raw text + which words the model doubted), run
+            // through today's text pipeline, printed where the result differs from the raw.
+            // Reads the log at runtime; nothing personal lives in the repo.
+            Packs.Index.warm()
+            while Packs.Index.current == nil { Thread.sleep(forTimeInterval: 0.05) }
+            let terms = JSONFile.load([String].self, from: Paths.dictionary) ?? []
+            let logURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0].appendingPathComponent("Logs/TypeVoice/typevoice.log")
+            let log = (try? String(contentsOf: logURL, encoding: .utf8)) ?? ""
+            var raw: String?, changed = 0, total = 0
+            for line in log.split(separator: "\n") {
+                if let r = line.range(of: #"\] raw\([\d.]+s\): "#, options: .regularExpression) { raw = String(line[r.upperBound...]); continue }
+                guard let text = raw, let r = line.range(of: "] doubtful: ") ?? line.range(of: "] focused ") else { continue }
+                var doubt: [String: Float] = [:]
+                if line.contains("] doubtful: ") {
+                    for d in line[r.upperBound...].split(separator: " ") {
+                        if let o = d.lastIndex(of: "("), let v = Float(d[d.index(after: o)...].dropLast()) { doubt[String(d[..<o])] = v }
+                    }
+                }
+                raw = nil; total += 1
+                var words = text.split(separator: " ").map { Structure.Word(text: String($0), gapBefore: 0, confidence: doubt[String($0)] ?? 0.99) }
+                if !Prefs.packs.isEmpty { words = Packs.correct(words, dictionary: terms) }
+                var out = Cleaner.clean(words.map(\.text).joined(separator: " "))
+                if Prefs.voiceCommands { out = Structure.commands(out) }
+                if Prefs.numbersAsDigits { out = Numbers.apply(out) }
+                out = Spoken.apply(out)
+                out = Vocabulary.apply(terms, to: out)
+                if out.replacingOccurrences(of: "\n", with: " ") != text { changed += 1; print("RAW: \(text)\nNOW: \(out.replacingOccurrences(of: "\n", with: " ⏎ "))\n") }
+            }
+            print("\(total) dictations, \(changed) changed")
+            exit(0)
+        }
         if files.first == "packs" {
             // Heard → expected, with every word marked uncertain (0.5) unless suffixed with a bang (confident).
             // Pack terms come from the built-in packs; a term missing there fails loudly.
@@ -57,6 +89,10 @@ enum PipelineTest {
                 // Heard right already: a household name, a pack term, a possessive, your own Dictionary.
                 ("through Reddit,", "through Reddit,"), ("Reddit.", "Reddit."), ("Neovide", "Neovide"), ("Reddit's", "Reddit's"),
                 ("Priyam", "Priyam"),
+                // Real words that merely sound like a pack term stay as they were said.
+                ("Games.", "Games."), ("g games", "g games"), ("cat", "cat"), ("cat.", "cat."), ("just", "just"),
+                ("time,", "time,"), ("think.", "think."), ("native", "native"), ("way. And", "way. And"),
+                ("dodo payments.", "Dodo Payments."), ("Cloudfair", "Cloudflare"),
             ]
             Packs.Index.warm(ids: Packs.all().map(\.id))   // every pack, without touching the preference
             while Packs.Index.current == nil { Thread.sleep(forTimeInterval: 0.05) }
@@ -93,6 +129,12 @@ enum PipelineTest {
                 ("It is hosted on Cloudflare. It works.", "It is hosted on Cloudflare. It works."),
                 ("Try Composio. Dev tools are great.", "Try Composio. Dev tools are great."), ("it lives on logs. So.", "it lives on logs.so."), ("Get it at typevoice. Ai today", "Get it at typevoice.ai today"),
                 ("I was at home. So was she.", "I was at home. So was she."),
+                // From real dictations that came out joined.
+                ("I don't know. So, what now?", "I don't know. So, what now?"),
+                ("whatever you want. It's fine.", "whatever you want. It's fine."),
+                ("just be chill about it. One time, very simple", "just be chill about it. One time, very simple"),
+                ("we love games. So, pick one.", "we love games. So, pick one."),
+                ("Check typevoice.com today", "Check typevoice.com today"),
             ]
             var failures = 0
             for (input, expected) in cases {
@@ -108,7 +150,7 @@ enum PipelineTest {
             for c in ["the launch is in twenty twenty four", "I was born in nineteen ninety nine", "we need twenty four hours",
                       "call me at two thirty pm", "it costs five dollars and fifty cents", "chapter twenty two, page one hundred and five",
                       "send it to jane at example dot com", "one two three four five", "I have two cats and one dog",
-                      "the year two thousand and twenty", "twenty percent off", "about a thousand words", "it's the third time", "I need it by the fifth of March", "we have three options", "It took two and a half hours", "Version two point five is out", "My number is nine eight seven six five four three two one zero", "Meet at half past two", "There were a hundred people"] {
+                      "the year two thousand and twenty", "twenty percent off", "about a thousand words", "it's the third time", "I need it by the fifth of March", "we have three options", "It took two and a half hours", "Version two point five is out", "My number is nine eight seven six five four three two one zero", "Meet at half past two", "There were a hundred people", "one video of Matt. And I think two is plenty"] {
                 print("\(c)\n  → \(Numbers.apply(c))")
             }
             exit(0)

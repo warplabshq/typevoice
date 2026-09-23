@@ -12,8 +12,8 @@ enum Numbers {
         // the "and" in "two cats and one dog". Hide every "and" that is not part
         // of a big number before normalising.
         s = s.replacingOccurrences(
-            of: #"(?i)(?<!\bhundred|\bthousand|\bmillion|\bbillion|\bdollars|\bdollar|\bpounds|\beuros|\bcents|\bbucks)\s+and\s+"#,
-            with: " \u{2038} ", options: .regularExpression)
+            of: #"(?i)(?<!\bhundred|\bthousand|\bmillion|\bbillion|\bdollars|\bdollar|\bpounds|\beuros|\bcents|\bbucks)\s+(and)\s+"#,
+            with: " \u{2038}$1 ", options: .regularExpression)
 
         // Digit-by-digit strings (phone numbers, codes): join them before the grammar
         // can mistake "one zero" for a time.
@@ -21,7 +21,8 @@ enum Numbers {
 
         s = TextNormalizer.shared.normalizeSentence(s)
 
-        s = s.replacingOccurrences(of: "\u{2038}", with: "and")
+        // The hidden word comes back exactly as it was said ("… of Matt. And I think").
+        s = s.replacingOccurrences(of: "\u{2038}", with: "")
         // "24 h" → "24 hours", "30 min" → "30 minutes" (NeMo abbreviates measures).
         s = s.replacingOccurrences(of: #"(\d)\s?h\b(?![:.])"#, with: "$1 hours", options: .regularExpression)
         s = s.replacingOccurrences(of: #"(\d)\s?min\b"#, with: "$1 minutes", options: .regularExpression)
@@ -62,7 +63,7 @@ enum Numbers {
     private static func restoreSmallNumbers(_ s: String) -> String {
         let months = "january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec"
         let re = try! NSRegularExpression(
-            pattern: #"(?i)(?<![\d$€£.:/\-#])(?<!(?:"# + months + #")\s)\b(\d)\b(?![\d%:.,/\-]|\s?(?:am|pm|percent|hours|minutes|seconds|x|"# + months + #")\b)"#)
+            pattern: #"(?i)(?<![\d$€£.:/\-#])(?<!(?:"# + months + #")\s)\b(\d)\b(?![\d%:.,/\-]|\s?(?:[ap]\.\s?m\.|am|pm|percent|hours|minutes|seconds|x|"# + months + #")(?:\b|(?<=\.)))"#)
         let ns = s as NSString
         var out = s
         for m in re.matches(in: s, range: NSRange(location: 0, length: ns.length)).reversed() {

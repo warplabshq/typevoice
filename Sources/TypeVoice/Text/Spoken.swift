@@ -69,7 +69,9 @@ enum Spoken {
             guard all.contains(tld) else { continue }
             let after = m.range.location + m.range.length
             let rest = (after < ns.length ? ns.substring(from: after) : "").drop(while: { $0 == " " })
-            let endsHere = rest.first.map { !$0.isLetter && !$0.isNumber } ?? true   // ".", ",", end of text
+            // "it's", "so," and friends carry on a sentence; a domain ends at a stop or the end.
+            if let f = rest.first, "'’,;:".contains(f) { continue }
+            let endsHere = rest.first.map { ".!?)".contains($0) } ?? true
             if wordTLDs.contains(tld) {
                 // "Check the logs. So we should…" is a sentence; "it's on logs. So." is a domain,
                 // and so is "logs. so" (the model would have capitalised a new sentence).

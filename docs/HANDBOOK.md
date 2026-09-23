@@ -213,6 +213,12 @@ A span spelled exactly like a known name is never replaced (`Index.known`: every
 pack, enabled or not, plus `Packs/known.txt`, the household names `build.py` keeps out of the
 packs; the person's Dictionary is passed in by the caller). This is what stopped "Reddit" →
 "Rediff" (0.80 similarity, confidence 0.46): the model had spelled it right.
+A single real English word is never replaced by a pack ("games" stays games, whatever sounds
+like it); a span never crosses punctuation; real words only join into a term when the spelling
+also matches (≥ 0.75), and an exact spelling only gets its capitals back. Dictionary: shortest
+span first, and a term with a dot only meets a heard address whose two halves line up.
+`--test replay` runs every dictation in this Mac's log through today's pipeline and prints what
+changed (reads the log at runtime; nothing personal in the repo). Run it after any rule change.
 The `doubtful:` debug log line lists each dictation's low-confidence words, for tuning the gate.
 Next step (Dictionary v2): decode-time boosting — re-export the v2 joint CoreML model with
 top-K logits and port sherpa-onnx's Aho-Corasick hotword boost into FluidAudio's decoder.
