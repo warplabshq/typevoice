@@ -43,28 +43,42 @@ struct MicMeter: View {
     private func start() {
         stopTask?.cancel()
         stopTask = Task { try? await Task.sleep(for: .seconds(8)); if !Task.isCancelled { stop() } }
-        let e = AVAudioEngine()
-        let input = e.inputNode
-        if let dev = InputDevices.resolve(preference: deviceUID), let unit = input.audioUnit {
-            var id = dev.id
-            AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
-        }
-        let fmt = input.outputFormat(forBus: 0)
-        guard fmt.sampleRate > 0 else { error = "No input"; return }
-        input.installTap(onBus: 0, bufferSize: 1024, format: nil) { buf, _ in
-            guard let ch = buf.floatChannelData else { return }
-            let n = Int(buf.frameLength)
-            var sum: Float = 0
-            for i in 0..<n { sum += ch[0][i] * ch[0][i] }
-            let rms = (sum / Float(max(n, 1))).squareRoot()
-            let db = 20 * log10(max(rms, 1e-6))
-            let l = min(1, max(0, (db + 56) / 50))
-            Task { @MainActor in
-                level = l
-                peak = max(l, peak * 0.97)
+        // The chosen mic first; if the Mac's audio is in a state that input can't open in (a
+        // headset mid-switch, mismatched rates: error -10868), whatever input macOS is using.
+        var lastError: Error?
+        for device in [InputDevices.resolve(preference: deviceUID), nil] as [InputDevices.Device?] {
+            let e = AVAudioEngine()
+            let input = e.inputNode
+            if let dev = device, let unit = input.audioUnit {
+                var id = dev.id
+                AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
+            }
+            guard input.outputFormat(forBus: 0).sampleRate > 0 else { continue }
+            input.installTap(onBus: 0, bufferSize: 1024, format: nil) { buf, _ in
+                guard let ch = buf.floatChannelData else { return }
+                let n = Int(buf.frameLength)
+                var sum: Float = 0
+                for i in 0..<n { sum += ch[0][i] * ch[0][i] }
+                let rms = (sum / Float(max(n, 1))).squareRoot()
+                let db = 20 * log10(max(rms, 1e-6))
+                let l = min(1, max(0, (db + 56) / 50))
+                Task { @MainActor in
+                    level = l
+                    peak = max(l, peak * 0.97)
+                }
+            }
+            e.prepare()
+            do {
+                try e.start(); engine = e
+                error = device == nil && !deviceUID.isEmpty && deviceUID != InputDevices.followSystem ? "Showing the Mac's current input" : nil
+                return
+            } catch {
+                lastError = error
+                input.removeTap(onBus: 0); e.stop()
+                Log.d("mic test: \(device?.name ?? "system input") failed: \(error.localizedDescription)")
             }
         }
-        do { try e.start(); engine = e; error = nil } catch { self.error = error.localizedDescription }
+        self.error = lastError.map { _ in "Couldn't open the microphone. Try again, or pick another input." } ?? "No input"
     }
 
     private func stop() {

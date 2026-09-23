@@ -87,7 +87,25 @@ final class AudioRecorder: @unchecked Sendable {
             input.installTap(onBus: 0, bufferSize: 512, format: nil) { [weak self] buffer, _ in self?.consume(buffer) }
             tapInstalled = true
             engine.prepare()
-            try engine.start()
+            do {
+                try engine.start()
+            } catch {
+                // Still no: whatever input macOS itself is using right now (error -10868 on a Mac
+                // whose audio devices disagree on format). Better a sentence than an error.
+                Log.d("built-in mic failed too (\(error.localizedDescription)); using the system input")
+                input.removeTap(onBus: 0); tapInstalled = false
+                engine.stop(); engine.reset()
+                var sys = AudioDeviceID(0), size = UInt32(MemoryLayout<AudioDeviceID>.size)
+                var addr = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultInputDevice,
+                                                      mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+                if AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size, &sys) == noErr, let unit = input.audioUnit {
+                    AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &sys, UInt32(MemoryLayout<AudioDeviceID>.size))
+                }
+                input.installTap(onBus: 0, bufferSize: 512, format: nil) { [weak self] buffer, _ in self?.consume(buffer) }
+                tapInstalled = true
+                engine.prepare()
+                try engine.start()
+            }
         }
         startedAt = Date()
         isRunning = true
