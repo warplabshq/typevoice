@@ -55,7 +55,7 @@ struct MicMeter: View {
                 AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
             }
             guard input.outputFormat(forBus: 0).sampleRate > 0 else { continue }
-            input.installTap(onBus: 0, bufferSize: 1024, format: nil) { buf, _ in
+            input.installTap(onBus: 0, bufferSize: 1024, format: AudioRecorder.tapFormat(input)) { buf, _ in
                 guard let ch = buf.floatChannelData else { return }
                 let n = Int(buf.frameLength)
                 var sum: Float = 0

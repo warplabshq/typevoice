@@ -4,6 +4,11 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.16 — 25 September 2026
+
+- Fixed dictation not starting on Macs whose microphone and speakers run at different rates
+  (every MacBook Air out of the box): TypeVoice now listens at the microphone's own rate.
+
 ## 1.0.15 — 23 September 2026
 
 - Microphone fixes. On Macs where macOS refuses the usual way of opening the mic (error

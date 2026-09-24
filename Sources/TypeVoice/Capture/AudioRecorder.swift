@@ -69,9 +69,10 @@ final class AudioRecorder: @unchecked Sendable {
 
         if tapInstalled { input.removeTap(onBus: 0); tapInstalled = false }
         if needsReset { engine.stop(); engine.reset(); needsReset = false }
-        // `format: nil` taps whatever the node produces right now; a format of our own that
-        // disagrees with the hardware raises an uncatchable exception.
-        input.installTap(onBus: 0, bufferSize: 512, format: nil) { [weak self] buffer, _ in
+        // Usually `format: nil` (whatever the node produces). On Macs whose mic and speakers run
+        // at different rates (MacBook Air: 48 kHz in, 44.1 kHz out) the node reports the output's
+        // rate and the engine then refuses to start (-10868): tap at the mic's own rate instead.
+        input.installTap(onBus: 0, bufferSize: 512, format: Self.tapFormat(input)) { [weak self] buffer, _ in
             self?.consume(buffer)
         }
         tapInstalled = true
@@ -88,7 +89,7 @@ final class AudioRecorder: @unchecked Sendable {
                 var id = dev.id
                 AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
             }
-            input.installTap(onBus: 0, bufferSize: 512, format: nil) { [weak self] buffer, _ in self?.consume(buffer) }
+            input.installTap(onBus: 0, bufferSize: 512, format: Self.tapFormat(input)) { [weak self] buffer, _ in self?.consume(buffer) }
             tapInstalled = true
             engine.prepare()
             do {
@@ -188,6 +189,15 @@ final class AudioRecorder: @unchecked Sendable {
             samples.append(contentsOf: UnsafeBufferPointer(start: o[0], count: m))
             peak = max(peak, localPeak)
         }
+    }
+
+    /// The format to tap the input node with: nil (the node's own) unless the node reports a rate
+    /// the microphone isn't running at, in which case the microphone's hardware format.
+    static func tapFormat(_ input: AVAudioInputNode) -> AVAudioFormat? {
+        let hw = input.inputFormat(forBus: 0), node = input.outputFormat(forBus: 0)
+        guard hw.sampleRate > 0, hw.channelCount > 0, hw.sampleRate != node.sampleRate else { return nil }
+        Log.d("mic runs at \(Int(hw.sampleRate)) Hz but the node reports \(Int(node.sampleRate)) Hz; tapping at the mic's rate")
+        return hw
     }
 
     /// Starts the input-only queue on the chosen mic (or macOS's input), already at 16 kHz.
