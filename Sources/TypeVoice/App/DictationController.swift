@@ -38,6 +38,8 @@ final class DictationController {
         self.history = history
         self.dictionary = dictionary
         Packs.Index.warm()
+        // The English word list (Dictionary and pack safety checks) loads once, off the first dictation's clock.
+        Task.detached(priority: .utility) { _ = English.isWord("warm") }
         recorder.onInterrupted = { [weak self] in
             guard let self, self.state.phase.isListening else { return }
             Log.d("mic changed mid-session; finishing with what was heard")
@@ -364,6 +366,7 @@ final class DictationController {
                         text = Vocabulary.apply(dictionary.terms, to: better)
                     }
                 }
+                text = Grammar.apply(text, style: style)
                 text = style.finish(text)
                 // The sign-off goes after the styling so punctuation rules never touch it.
                 if Prefs.signOff { text = Style.signed(text) }

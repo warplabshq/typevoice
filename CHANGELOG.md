@@ -4,6 +4,13 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.17 — 28 September 2026
+
+- Questions get their question mark even when you don't raise your voice at the end: "can you
+  send me the file" ends in "?", while "do it" and "what you say stays offline" keep their full stop.
+- A lowercase "i" and a sentence that starts in lowercase get their capitals.
+- Transcription bug fixes.
+
 ## 1.0.16 — 25 September 2026
 
 - Fixed dictation not starting on Macs whose microphone and speakers run at different rates

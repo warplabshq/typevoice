@@ -189,6 +189,8 @@ enum Packs {
                 if allReal && span == 1 { continue }
                 // A name doesn't run across a sentence or a comma ("way. And" is not "wayland").
                 if parts.dropLast().contains(where: { !$0.trail.isEmpty }) { continue }
+                // A web address is what was said: "model.com" never becomes ModelSim.
+                if parts.contains(where: { $0.core.contains(".") }) { continue }
                 let letters = Self.letters(parts.map(\.core).joined())
                 var best: (entry: Index.Entry, score: Double)?
                 for e in index.candidates(for: cPhon)

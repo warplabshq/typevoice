@@ -12,6 +12,22 @@ enum PipelineTest {
         if files.first == "vocab" {
             vocabSelfTest(); exit(0)
         }
+        if files.first == "dict" {
+            // This Mac's own Dictionary against phrases the way the model tends to hear them.
+            // `--test dict "some sentence" …` checks your own; without arguments, the built-in set.
+            let terms = JSONFile.load([String].self, from: Paths.dictionary) ?? []
+            let given = Array(files.dropFirst())
+            let cases = given.isEmpty ? ["We should use Warp Labs for this.", "Everyone knows about Whisperflow.", "We copied Whisper Plow and made Type Voice.",
+                                         "and type voice does that", "Mass send to VDI customers.", "Their name is saved as vid AI in loops.",
+                                         "Check uploads on Bidai.", "No response from Hicksfield.", "Should I use Higgs field?",
+                                         "Gobind told me about R2.", "Harsh Gobind said hi.", "Tube magic is active.", "Use Alfred for this.",
+                                         "It's already done.", "The idea is good.", "I have a video. I like it."] : given
+            _ = English.isWord("warm")   // the word list loads once at launch in the app
+            let t0 = ContinuousClock.now
+            for c in cases { print("\(c)\n  → \(Vocabulary.apply(terms, to: c))") }
+            print(String(format: "%d terms, %.2f ms per sentence", terms.count, Double((ContinuousClock.now - t0) / .microseconds(1)) / 1000 / Double(cases.count)))
+            exit(0)
+        }
         if files.first == "structure" {
             for c in ["Here's the plan. Number one, ship the build. Number two, write the changelog. Number three, post it.",
                       "Things to buy, bullet milk, bullet eggs, bullet point bread.",
@@ -46,6 +62,64 @@ enum PipelineTest {
                 print("\(c)\n  →\n\(Structure.commands(c).split(separator: "\n", omittingEmptySubsequences: false).map { "    |" + $0 }.joined(separator: "\n"))")
             }
             exit(0)
+        }
+        if files.first == "grammar" {
+            let cases: [(String, String)] = [
+                // Questions said flat.
+                ("Can you send me the file.", "Can you send me the file?"),
+                ("Is the button still gonna be there after I buy it.", "Is the button still gonna be there after I buy it?"),
+                ("Are you saying they can be stacked.", "Are you saying they can be stacked?"),
+                ("Should I make it sound cool.", "Should I make it sound cool?"),
+                ("Do you have access to loops.", "Do you have access to loops?"),
+                ("What is left for us to ship this.", "What is left for us to ship this?"),
+                ("How about we make it free.", "How about we make it free?"),
+                ("Why did the build fail.", "Why did the build fail?"),
+                ("What time is it.", "What time is it?"),
+                ("How long does it take.", "How long does it take?"),
+                ("Who wants coffee.", "Who wants coffee?"),
+                ("Did that work.", "Did that work?"),
+                ("Has anyone tried it.", "Has anyone tried it?"),
+                ("We ship Friday, right.", "We ship Friday, right?"),
+                ("So, can you check the logs.", "So, can you check the logs?"),
+                ("Hey Alfred, what do you know about me.", "Hey Alfred, what do you know about me?"),
+                ("Okay and what about the other one.", "Okay and what about the other one?"),
+                ("Any update on the invoice.", "Any update on the invoice?"),
+                ("What if we do a mass send.", "What if we do a mass send?"),
+                ("I fixed it. Can you test it now", "I fixed it. Can you test it now?"),
+                ("Is it ready.\nShip it.", "Is it ready?\nShip it."),
+                ("Can we meet at 9 a.m. tomorrow.", "Can we meet at 9 a.m. tomorrow?"),
+                // Orders and statements keep their full stop.
+                ("Do a UI audit, especially UX.", "Do a UI audit, especially UX."),
+                ("Do it.", "Do it."), ("Do this in parallel as well.", "Do this in parallel as well."),
+                ("Don't show this in the changelog please.", "Don't show this in the changelog please."),
+                ("Don't have to touch the code base.", "Don't have to touch the code base."),
+                ("Do keep in mind that it broke.", "Do keep in mind that it broke."),
+                ("What you say should be offline.", "What you say should be offline."),
+                ("What's new can just be called changelog.", "What's new can just be called changelog."),
+                ("When OpenClaw had come out, everyone built a wrapper.", "When OpenClaw had come out, everyone built a wrapper."),
+                ("Why did we create a new bucket is what I don't understand.", "Why did we create a new bucket is what I don't understand."),
+                ("What is up, so I was thinking about something.", "What is up, so I was thinking about something."),
+                ("Have a good day.", "Have a good day."), ("Can't wait to see it.", "Can't wait to see it."),
+                ("Will Smith said hi.", "Will Smith said hi."), ("May the best one win.", "May the best one win."),
+                ("I wonder if it works.", "I wonder if it works."), ("Let me know if you can come.", "Let me know if you can come."),
+                ("What a day.", "What a day."), ("What matters is speed.", "What matters is speed."),
+                ("Did that already.", "Did that already."), ("Was thinking we could ship.", "Was thinking we could ship."),
+                ("How it works is simple.", "How it works is simple."), ("Wow, that's great!", "Wow, that's great!"),
+                ("Check typevoice.ai and tell me.", "Check typevoice.ai and tell me."),
+                // Capitals.
+                ("i think i'm done.", "I think I'm done."), ("it works. then we ship.", "It works. Then we ship."),
+                ("see you at 9 a.m. tomorrow.", "See you at 9 a.m. tomorrow."), ("that is, i.e. the second one.", "That is, i.e. the second one."),
+            ]
+            var failures = 0
+            let t0 = ContinuousClock.now
+            for (input, expected) in cases {
+                let got = Cleaner.capitalizeFirst(Grammar.apply(input, style: Style()))
+                let ok = got == expected; if !ok { failures += 1 }
+                print("\(ok ? "ok " : "FAIL") \(input.replacingOccurrences(of: "\n", with: "⏎")) → \(got.replacingOccurrences(of: "\n", with: "⏎"))\(ok ? "" : "   (wanted \(expected))")")
+            }
+            print(String(format: "%.3f ms per sentence", Double((ContinuousClock.now - t0) / .microseconds(1)) / 1000 / Double(cases.count)))
+            print(failures == 0 ? "all good" : "\(failures) failed")
+            exit(failures == 0 ? 0 : 1)
         }
         if files.first == "mic" {
             // Two seconds from the microphone through AudioRecorder (TYPEVOICE_FORCE_QUEUE=1 for
@@ -84,6 +158,7 @@ enum PipelineTest {
                 if Prefs.numbersAsDigits { out = Numbers.apply(out) }
                 out = Spoken.apply(out)
                 out = Vocabulary.apply(terms, to: out)
+                out = Grammar.apply(out, style: .current)
                 if out.replacingOccurrences(of: "\n", with: " ") != text { changed += 1; print("RAW: \(text)\nNOW: \(out.replacingOccurrences(of: "\n", with: " ⏎ "))\n") }
             }
             print("\(total) dictations, \(changed) changed")
@@ -103,6 +178,7 @@ enum PipelineTest {
                 ("Games.", "Games."), ("g games", "g games"), ("cat", "cat"), ("cat.", "cat."), ("just", "just"),
                 ("time,", "time,"), ("think.", "think."), ("native", "native"), ("way. And", "way. And"),
                 ("dodo payments.", "Dodo Payments."), ("Cloudfair", "Cloudflare"),
+                ("model.com", "model.com"), ("modal.com.", "modal.com."),
             ]
             Packs.Index.warm(ids: Packs.all().map(\.id))   // every pack, without touching the preference
             while Packs.Index.current == nil { Thread.sleep(forTimeInterval: 0.05) }
@@ -205,6 +281,7 @@ enum PipelineTest {
                 if Prefs.voiceCommands { cleaned = Structure.commands(cleaned) }
                 if Prefs.numbersAsDigits { cleaned = Numbers.apply(cleaned) }
                 cleaned = Spoken.apply(cleaned)
+                cleaned = Grammar.apply(cleaned, style: .current)
                 let t2 = ContinuousClock.now
                 let smartOut = await smart.clean(cleaned)
                 let smartMs = Int((ContinuousClock.now - t2).ms)

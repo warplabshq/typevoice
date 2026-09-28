@@ -30,7 +30,8 @@ enum Vocabulary {
                         if candidate != term || span > 1 { words.replaceSubrange(i..<(i + span), with: [merge(slice, with: term)]) }
                         break
                     }
-                    if matches(candidate: candidate, key: key, keyPhon: keyPhon, keySkel: keySkel) {
+                    if matches(candidate: candidate, key: key, keyPhon: keyPhon, keySkel: keySkel)
+                        || (span == 1 && !termHasDot && looseMatch(candidate, keyPhon: keyPhon, keySkel: keySkel)) {
                         words.replaceSubrange(i..<(i + span), with: [merge(slice, with: term)])
                         break
                     }
@@ -38,7 +39,35 @@ enum Vocabulary {
                 i += 1
             }
         }
+        // Half of a two-word name said on its own ("Gobind" for "Harsh Govind"): the part must be a
+        // name, not an English word, and so must what was heard — "harsh" or "whisper" never move.
+        for term in terms where term.contains(" ") && !term.contains(".") {
+            for part in term.split(separator: " ").map(String.init) where part.count >= 5 && !English.isWord(part) {
+                let pPhon = phonetic(part), pSkel = skeleton(pPhon)
+                for k in words.indices where !words[k].core.contains(" ") && words[k].core.count >= 4 {
+                    let c = words[k].core
+                    guard c.caseInsensitiveCompare(part) != .orderedSame, c.first?.isUppercase == true, !English.isWord(c) else { continue }
+                    if matches(candidate: c, key: part, keyPhon: pPhon, keySkel: pSkel) || looseMatch(c, keyPhon: pPhon, keySkel: pSkel) { words[k].core = part }
+                }
+            }
+        }
         return words.map { $0.lead + $0.core + $0.trail }.joined(separator: " ")
+    }
+
+    /// Two mishearings the phonetic match can't see, tried only on words that are not English:
+    /// B for V at any point ("Bidai" → VidAI, "Gobind" → Govind), and a name the model spelled as
+    /// letters ("VDI" → VidAI: the same consonants, and a vowel the name has).
+    private static func looseMatch(_ candidate: String, keyPhon: String, keySkel: String) -> Bool {
+        guard candidate.count >= 2, !English.isWord(candidate) else { return false }
+        let letters = candidate.filter(\.isLetter)
+        if letters.count == candidate.count, (2...5).contains(letters.count), letters.allSatisfy(\.isUppercase) {
+            let low = letters.lowercased()
+            if keySkel.count >= 2, skeleton(low) == keySkel, low.contains(where: { "aeiou".contains($0) && keyPhon.contains($0) }) { return true }
+        }
+        func bv(_ s: String) -> String { s.replacingOccurrences(of: "v", with: "b") }
+        let cPhon = bv(phonetic(candidate)), kPhon = bv(keyPhon)
+        guard cPhon != phonetic(candidate) || kPhon != keyPhon else { return false }   // no B/V in either: nothing new to try
+        return matches(candidatePhon: cPhon, keyPhon: kPhon, keySkel: skeleton(kPhon))
     }
 
     /// For a term like "Logs.so": the heard ending equals "so" exactly and the heard name
