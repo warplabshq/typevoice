@@ -106,6 +106,17 @@ enum PipelineTest {
                 ("Did that already.", "Did that already."), ("Was thinking we could ship.", "Was thinking we could ship."),
                 ("How it works is simple.", "How it works is simple."), ("Wow, that's great!", "Wow, that's great!"),
                 ("Check typevoice.ai and tell me.", "Check typevoice.ai and tell me."),
+                // Hyphens: before what they describe, and a few always.
+                ("It's a one time purchase.", "It's a one-time purchase."), ("We met one time, very simple.", "We met one time, very simple."),
+                ("We need real time updates.", "We need real-time updates."), ("It syncs in real time.", "It syncs in real time."),
+                ("It's an open source app.", "It's an open-source app."), ("The app is open source.", "The app is open source."),
+                ("Think long term.", "Think long term."), ("Our long term plan is simple.", "Our long-term plan is simple."),
+                ("Start a 7 day trial.", "Start a 7-day trial."), ("It took 7 days.", "It took 7 days."), ("Book a 30 minute call.", "Book a 30-minute call."),
+                ("I'll follow up tomorrow.", "I'll follow up tomorrow."), ("Send a follow up email.", "Send a follow-up email."),
+                ("Do a product mock up of this.", "Do a product mock-up of this."), ("It's self hosted.", "It's self-hosted."),
+                ("He's my co founder.", "He's my co-founder."), ("The wifi is down.", "The Wi-Fi is down."), ("Is the doc up to date?", "Is the doc up to date?"),
+                ("We keep up to date docs.", "We keep up-to-date docs."), ("It's end to end encrypted.", "It's end-to-end encrypted."),
+                ("A 3 step setup.", "A 3-step setup."), ("You must have access.", "You must have access."), ("It is a must have feature.", "It is a must-have feature."), ("Start with one page actually.", "Start with one page actually."), ("Do something high quality here.", "Do something high quality here."), ("I work on the front end.", "I work on the front end."), ("We need a front end developer.", "We need a front-end developer."),
                 // Capitals.
                 ("i think i'm done.", "I think I'm done."), ("it works. then we ship.", "It works. Then we ship."),
                 ("see you at 9 a.m. tomorrow.", "See you at 9 a.m. tomorrow."), ("that is, i.e. the second one.", "That is, i.e. the second one."),
@@ -178,7 +189,7 @@ enum PipelineTest {
                 ("Games.", "Games."), ("g games", "g games"), ("cat", "cat"), ("cat.", "cat."), ("just", "just"),
                 ("time,", "time,"), ("think.", "think."), ("native", "native"), ("way. And", "way. And"),
                 ("dodo payments.", "Dodo Payments."), ("Cloudfair", "Cloudflare"),
-                ("model.com", "model.com"), ("modal.com.", "modal.com."),
+                ("model.com", "model.com"), ("modal.com.", "modal.com."), ("Mac mini", "Mac mini"), ("hyperframes,", "hyperframes,"), ("vinsic", "vinsic"), ("kinda", "kinda"), ("anytime", "anytime"), ("codecs", "codecs"), ("Cloudflare pages.", "Cloudflare pages."), ("late-night", "late-night"),
             ]
             Packs.Index.warm(ids: Packs.all().map(\.id))   // every pack, without touching the preference
             while Packs.Index.current == nil { Thread.sleep(forTimeInterval: 0.05) }

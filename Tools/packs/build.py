@@ -35,7 +35,7 @@ KNOWN |= {"app", "apps", "api", "apis", "cli", "gui", "ai", "ui", "ux", "url", "
           "tiktok", "whatsapp", "telegram", "spotify", "uber", "airbnb", "tesla", "openai", "chatgpt", "gpt", "llm", "llms"}
 # Names the model spells right on its own, shipped as known.txt so that a pack never "corrects"
 # one of them into a lookalike (Reddit → Rediff). Some are also pack terms; that's fine.
-NAMES = {"app", "apps", "api", "apis", "cli", "gui", "ai", "ui", "ux", "url", "http", "https", "json", "html", "css", "sql",
+NAMES = {"mac mini", "mac studio", "mac pro", "macbook air", "macbook pro", "imac", "apple watch", "vision pro", "app", "apps", "api", "apis", "cli", "gui", "ai", "ui", "ux", "url", "http", "https", "json", "html", "css", "sql",
          "wifi", "email", "emails", "online", "offline", "website", "websites", "internet", "google", "apple", "amazon",
          "microsoft", "facebook", "twitter", "youtube", "instagram", "netflix", "iphone", "ipad", "mac", "macbook", "linux",
          "windows", "android", "chrome", "safari", "firefox", "python", "java", "javascript", "swift", "github", "gitlab",

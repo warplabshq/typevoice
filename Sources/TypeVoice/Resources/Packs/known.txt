@@ -8,6 +8,7 @@ alexa
 amd
 api
 app
+apple watch
 apps
 audi
 aws
@@ -68,6 +69,7 @@ hubspot
 hugging face
 icloud
 ikea
+imac
 imessage
 instagram
 intel
@@ -89,7 +91,12 @@ linux
 llm
 llms
 lyft
+mac mini
+mac pro
+mac studio
 macbook
+macbook air
+macbook pro
 mailchimp
 mcdonalds
 microsoft
@@ -162,6 +169,7 @@ url
 ux
 venmo
 vercel
+vision pro
 vite
 vscode
 vue

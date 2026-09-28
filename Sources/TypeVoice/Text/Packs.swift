@@ -167,7 +167,7 @@ enum Packs {
                 // Spelled like a name we know (a pack term, a household name, your Dictionary):
                 // the model heard it right, however unsure it was.
                 let spelledKey = key(parts.map(\.core).joined(separator: " "))
-                let allReal = parts.allSatisfy { English.isWord($0.core) }
+                let allReal = parts.allSatisfy { $0.core.split(separator: "-").allSatisfy { English.isWord(String($0)) } }   // "late-night" is two real words, not LaTeXiT
                 // Spelled right already: at most put the capitals back, and never on one everyday
                 // word ("linear" stays "linear" in a sentence).
                 if let proper = index.exact[spelledKey], !(allReal && span == 1),
@@ -180,6 +180,8 @@ enum Packs {
                     continue
                 }
                 if index.known.contains(spelledKey) || yours.contains(spelledKey) { continue }
+                // The plural of a term spelled right ("hyperframes") is what was said.
+                if spelledKey.hasSuffix("s"), index.exact[String(spelledKey.dropLast())] != nil { continue }
                 let cPhon = Vocabulary.phonetic(candidate)
                 guard cPhon.count >= 2 else { continue }
                 // Real words that merely sound like a term ("sell it" / sqlite) need a much closer
@@ -203,7 +205,9 @@ enum Packs {
                     let rank = score + 0.5 * spelled
                     if best == nil || rank > best!.score { best = (e, rank) }
                 }
-                if let hit = best, key(hit.entry.term) != spelledKey {
+                // Below 1.12 the match is a guess ("Mac mini" → macmon, "kinda" → Conda); every real fix
+                // in the tests and the logs scores higher.
+                if let hit = best, hit.score >= 1.12, key(hit.entry.term) != spelledKey {
                     let text = (parts.first?.lead ?? "") + hit.entry.term + (parts.last?.trail ?? "")
                     Log.d("pack: \"\(slice.map(\.text).joined(separator: " "))\" → \(hit.entry.term) (rank \(String(format: "%.2f", hit.score)), confidence \(String(format: "%.2f", minConf)))")
                     out.replaceSubrange(i..<(i + span), with: [Structure.Word(text: text, gapBefore: slice.first!.gapBefore, confidence: 1)])
@@ -243,10 +247,14 @@ enum English {
         for line in s.split(separator: "\n") { set.insert(line.lowercased()) }
         return set
     }()
+    /// Everyday words the system list lacks; packs must never turn them into names.
+    private static let spoken: Set<String> = ["anytime", "kinda", "gonna", "wanna", "gotta", "lemme", "dunno", "codec", "codecs", "okay", "email",
+        "emails", "online", "website", "websites", "app", "apps", "login", "signup", "inbox", "homepage", "username", "password", "laptop", "smartphone"]
     static func isWord(_ w: String) -> Bool {
         let core = w.lowercased().trimmingCharacters(in: .punctuationCharacters)
         guard !core.isEmpty else { return true }
         if words.contains(core) { return true }
+        if spoken.contains(core) { return true }
         for (suffix, stem) in [("ies", "y"), ("es", ""), ("s", ""), ("ed", ""), ("ed", "e"), ("ing", ""), ("ing", "e"), ("'s", "")]
         where core.hasSuffix(suffix) && core.count > suffix.count + 2 {
             if words.contains(String(core.dropLast(suffix.count)) + stem) { return true }

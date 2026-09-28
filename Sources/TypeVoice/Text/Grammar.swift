@@ -8,6 +8,7 @@ enum Grammar {
     static func apply(_ text: String, style: Style) -> String {
         var s = text
         if style.punctuation != .none { s = questions(s) }
+        s = hyphens(s)
         if style.casing == .sentence { s = capitals(s) }
         return s
     }
@@ -153,6 +154,71 @@ enum Grammar {
             return verbish && t.count <= 8 && !t.dropFirst(2).contains { ["is", "was", "are", "were"].contains($0.word) }
         }
         return false
+    }
+
+    // MARK: Hyphens
+
+    /// Always one word with a hyphen, wherever they stand.
+    private static let alwaysHyphen: [(NSRegularExpression, String)] = [
+        (#"\b(self) (hosted|driving|serve|service|employed|aware|explanatory|contained|made|taught|funded|sufficient|care|paced|published)\b"#, "$1-$2"),
+        (#"\b(co) (founders?|founded|pilot|author|working)\b"#, "$1-$2"),
+        (#"\b([Ww]i) ?([Ff]i)\b"#, "Wi-Fi"), (#"\b([Tt]) (shirts?)\b"#, "$1-$2"), (#"\b([Ee]) (commerce|book|books|sign|signature)\b"#, "$1-$2"),
+        (#"\b([Xx]) (rays?)\b"#, "$1-$2"), (#"\b(one) (on) (one)\b"#, "$1-$2-$3"),
+    ].map { (try! NSRegularExpression(pattern: "(?i)" + $0.0), $0.1) }
+
+    /// Hyphenated only in front of what they describe: "a one-time purchase", "real-time updates";
+    /// "we met one time", "in real time", "it's open source." stay as they are.
+    private static let compounds: [String] = [
+        "state of the art", "end to end", "up to date", "out of the box", "day to day", "peer to peer", "face to face", "step by step",
+        "side by side", "back to back", "easy to use", "nice to have", "off the shelf", "word of mouth",
+        "one time", "real time", "long term", "short term", "open source", "built in", "full time", "part time", "last minute",
+        "high quality", "low quality", "high level", "low level", "first class", "world class", "well known", "well designed", "fine tuned",
+        "hands free", "one click", "long running", "open ended", "third party", "first party", "on device", "top notch",
+        "cutting edge", "next gen", "full stack", "front end", "back end", "real world", "long form", "short form", "user facing",
+        "customer facing", "data driven", "AI powered", "privacy first", "offline first", "mobile first", "high end", "low end",
+        "follow up", "check in", "add on", "pop up", "drop down", "opt in", "opt out", "sign in", "run through", "mock up", "write up", "must have",
+    ]
+    private static let compoundRE: NSRegularExpression = {
+        let alt = compounds.sorted { $0.count > $1.count }.map { $0.replacingOccurrences(of: " ", with: #"\s"#) }.joined(separator: "|")
+        return try! NSRegularExpression(pattern: #"(?i)(?<![\w-])("# + alt + #")(?=( [\w'’]+)?)"#)
+    }()
+    /// Verb-like pairs ("follow up", "check in"…) take the hyphen only as a noun: after a/the/this….
+    private static let verbPairs: Set<String> = ["must have", "follow up", "check in", "add on", "pop up", "drop down", "opt in", "opt out", "sign in", "run through", "mock up", "write up"]
+    private static let determiners: Set<String> = ["a", "an", "the", "this", "that", "our", "your", "my", "their", "his", "her", "its", "quick", "another", "one", "product"]
+    /// What can't be the noun being described: the compound stands on its own.
+    private static let notNouns: Set<String> = ["is", "are", "was", "were", "be", "been", "and", "or", "but", "to", "of", "in", "on", "at", "for", "with", "by",
+        "the", "a", "an", "it", "that", "this", "only", "again", "now", "today", "too", "so", "if", "then", "as", "than", "from", "i", "we", "you",
+        "they", "he", "she", "basis", "please", "right", "yet", "anyway", "though", "about", "because", "when", "while", "since", "until",
+        "can", "will", "would", "should", "could", "do", "does", "did", "has", "have", "had", "not", "just", "very", "really", "all",
+        "here", "there", "actually", "basically", "instead", "first", "maybe", "max", "total", "ago", "later", "enough", "overall", "anyway"]
+    private static let unitRE = try! NSRegularExpression(pattern:
+        #"(?i)\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve|fifteen|twenty|thirty|forty|fifty|sixty|ninety|hundred) (second|minute|hour|day|week|month|year|step|page|point|person|mile|foot|inch|star|player|seat|dollar)(?= ([a-z][\w'’]*))"#)
+
+    static func hyphens(_ text: String) -> String {
+        var s = text
+        for (re, template) in alwaysHyphen { s = re.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: template) }
+        var ns = s as NSString
+        for m in compoundRE.matches(in: s, range: NSRange(location: 0, length: ns.length)).reversed() {
+            let phrase = ns.substring(with: m.range(at: 1)), lower = phrase.lowercased()
+            let before = ns.substring(to: m.range.location).split(separator: " ").last.map { $0.lowercased() } ?? ""
+            if verbPairs.contains(lower) {
+                guard determiners.contains(before) else { continue }                  // "a follow-up"; "I'll follow up" stays a verb
+            } else {
+                let nextRange = m.range(at: 2)
+                guard nextRange.location != NSNotFound else { continue }             // ends the sentence: stands alone
+                if notNouns.contains(String(ns.substring(with: nextRange).dropFirst().lowercased())) { continue }
+                if lower == "one time", !["a", "the", "this", "that", "your", "our"].contains(before) { continue }   // "one time, very simple"
+            }
+            s = ns.replacingCharacters(in: m.range(at: 1), with: phrase.replacingOccurrences(of: " ", with: "-")); ns = s as NSString
+        }
+        for m in unitRE.matches(in: s, range: NSRange(location: 0, length: ns.length)).reversed() {
+            let next = ns.substring(with: m.range(at: 3)).lowercased()
+            if notNouns.contains(next) { continue }
+            if ["ago", "later", "long", "old", "away", "early", "late", "left", "each", "per", "ahead", "behind"].contains(next) { continue }
+            let r = NSRange(location: m.range(at: 1).location, length: m.range(at: 2).location + m.range(at: 2).length - m.range(at: 1).location)
+            s = ns.replacingCharacters(in: r, with: ns.substring(with: m.range(at: 1)) + "-" + ns.substring(with: m.range(at: 2))); ns = s as NSString
+        }
+        return s
     }
 
     // MARK: Capitals
