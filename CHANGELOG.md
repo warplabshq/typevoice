@@ -4,6 +4,12 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.18 — 28 September 2026
+
+- Hyphens where a pair of words describes the next one: "a one-time purchase", "a 7-day trial",
+  "a follow-up email". "It syncs in real time" and "I'll follow up" stay as they are.
+- Transcription bug fixes.
+
 ## 1.0.17 — 28 September 2026
 
 - Questions get their question mark even when you don't raise your voice at the end: "can you
