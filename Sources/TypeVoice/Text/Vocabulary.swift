@@ -5,6 +5,8 @@ import Foundation
 enum Vocabulary {
     static func apply(_ terms: [String], to text: String) -> String {
         guard !terms.isEmpty, !text.isEmpty else { return text }
+        // Line by line, so a name next to a paragraph break ("cuber netties\n\nThen") is still seen.
+        if text.contains("\n") { return text.components(separatedBy: "\n").map { apply(terms, to: $0) }.joined(separator: "\n") }
         var words = tokenize(text)
         for term in terms where !term.isEmpty {
             let key = normalize(term)

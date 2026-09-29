@@ -1,4 +1,5 @@
 import AppKit
+import os
 import Foundation
 
 /// Hold → record → transcribe → clean → insert. Owns every stage's lifecycle
@@ -76,7 +77,9 @@ final class DictationController {
     /// Keep the tap thread's "session active" flag in sync with the phase.
     private func watchActive() {
         withObservationTracking {
-            hotkey.setActive(state.phase.isActive)
+            // Escape is ours only while there is something to cancel; once the result shows, it
+            // belongs to the app again (it used to be swallowed for up to 8 s after each dictation).
+            hotkey.setActive(state.phase.isListening || state.phase == .processing)
         } onChange: { [weak self] in
             Task { @MainActor in self?.watchActive() }
         }
@@ -241,13 +244,14 @@ final class DictationController {
         lockWindow?.cancel(); lockWindow = nil
         lengthCap?.cancel(); lengthCap = nil
         finishTask?.cancel(); finishTask = nil
-        // If the mic is still opening, close it once it has: never leave it running.
+        // If the mic is still opening, close it once it has: never leave it running. The session
+        // is over: a finish still waiting on the mic must not type it (see finish()).
+        micGen &+= 1
         let rec = recorder, opening = micStart, gen = micGen
         Task { @MainActor [weak self] in
             _ = try? await opening?.value
             guard let self, self.micGen == gen else { return }
-            rec.cancel()
-            Task.detached(priority: .utility) { rec.prewarm() }
+            Task.detached(priority: .userInitiated) { rec.cancel(); rec.prewarm() }
         }
         locked = false
         state.processingNote = nil
@@ -336,12 +340,14 @@ final class DictationController {
     private func finish() {
         guard state.phase.isListening else { return }
         // A quick release while the mic is still opening waits for it, instead of ending on nothing.
-        let opening = micStart
+        // Only this session: after Esc and a new press, a stale finish must not stop the new one.
+        let opening = micStart, gen = micGen, rec = recorder
         Task { @MainActor [weak self] in
             _ = try? await opening?.value
-            guard let self, self.state.phase.isListening else { return }
-            self.finish(with: self.recorder.stop())
-            let rec = self.recorder
+            guard let self, self.micGen == gen, self.state.phase.isListening else { return }
+            let recording = await Task.detached(priority: .userInitiated) { rec.stop() }.value
+            guard self.micGen == gen else { return }
+            self.finish(with: recording)
             Task.detached(priority: .utility) { rec.prewarm() }
         }
     }
@@ -428,8 +434,13 @@ final class DictationController {
                     let entry = Dictation(text: text.trimmingCharacters(in: .whitespaces), date: .now, appName: target.appName,
                                           bundleID: target.bundleID, seconds: rec.seconds, latencyMs: Int((ContinuousClock.now - t0).ms))
                     history.add(entry)
-                    if Prefs.keepRecordings, let url = try? RecordingStore.save(samples: RecordingStore.tightened(rec.samples), id: entry.id) { history.attachAudio(id: entry.id, url: url) }
-                        show(.copyOffer(text.trimmingCharacters(in: .whitespaces), copied: false), for: .seconds(8))
+                    if Prefs.keepRecordings {
+                        let samples = rec.samples, id = entry.id
+                        Task { [weak self] in
+                            if let url = try? await Task.detached(priority: .utility, operation: { try RecordingStore.save(samples: RecordingStore.tightened(samples), id: id) }).value { self?.history.attachAudio(id: id, url: url) }
+                        }
+                    }
+                    show(.copyOffer(text.trimmingCharacters(in: .whitespaces), copied: false), for: .seconds(8))
                     return
                 }
                 let method = try await inserter.insert(text, into: target)
@@ -497,13 +508,20 @@ final class DictationController {
 
     /// Runs `work` but gives up after `limit`. A CoreML call cannot be interrupted, so the
     /// work may finish later on its own; the session just stops waiting for it.
+    /// Whichever finishes first. A task group would wait for the slow one before throwing, so a
+    /// model that ignores cancellation kept the pill on "processing" forever; this doesn't wait.
     static func within<T: Sendable>(_ limit: Duration, _ work: @escaping @Sendable () async throws -> T) async throws -> T {
-        try await withThrowingTaskGroup(of: T.self) { group in
-            group.addTask { try await work() }
-            group.addTask { try await Task.sleep(for: limit); throw StuckError.tooLong }
-            let first = try await group.next()!
-            group.cancelAll()
-            return first
+        let done = OSAllocatedUnfairLock(initialState: false)
+        let claim = { done.withLock { first in defer { first = true }; return !first } }
+        return try await withCheckedThrowingContinuation { (cont: CheckedContinuation<T, Error>) in
+            let worker = Task {
+                do { let v = try await work(); if claim() { cont.resume(returning: v) } }
+                catch { if claim() { cont.resume(throwing: error) } }
+            }
+            Task {
+                try? await Task.sleep(for: limit)
+                if claim() { worker.cancel(); cont.resume(throwing: StuckError.tooLong) }
+            }
         }
     }
 

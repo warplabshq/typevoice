@@ -41,7 +41,9 @@ final class AudioRecorder: @unchecked Sendable {
             // macOS posts this for any change to the audio setup, output included (a browser
             // starting sound, a display's speakers waking), and the engine stops itself. Ending the
             // dictation there cut people off mid-sentence; restart capture and keep going instead.
-            if self.isRunning, Date().timeIntervalSince(self.startedAt) > 1.0 {
+            // Whether the engine actually stopped decides (resume() checks), not how long ago it
+            // started: a Bluetooth mic switching profile half a second in used to go unnoticed.
+            if self.isRunning {
                 DispatchQueue.global(qos: .userInitiated).async { self.resume() }
             }
         }
@@ -91,7 +93,8 @@ final class AudioRecorder: @unchecked Sendable {
         // Already running (a cancel that was still waiting for the mic to open, then a new press):
         // keep the mic, drop what the cancelled session heard.
         guard !isRunning else { lock.withLock { samples.removeAll(keepingCapacity: true); peak = 0 }; return }
-        lock.withLock { samples.removeAll(keepingCapacity: true); peak = 0 }
+        lock.withLock { samples.removeAll(keepingCapacity: true); samples.reserveCapacity(16_000 * 30); peak = 0 }
+        converter?.reset()          // no tail of the last session's audio at the start of this one
         if ProcessInfo.processInfo.environment["TYPEVOICE_FORCE_QUEUE"] == "1" { try startQueue(); return }
 
         var steps: [(String, ContinuousClock.Instant)] = [("begin", .now)]
@@ -179,7 +182,7 @@ final class AudioRecorder: @unchecked Sendable {
     /// Only if the mic can't be opened again (unplugged, gone) does the session end.
     private func resume() {
         let ok: Bool = setup.withLock {
-            guard isRunning, queueInput == nil else { return true }
+            guard isRunning, queueInput == nil, !engine.isRunning else { return true }
             let input = engine.inputNode
             if tapInstalled { input.removeTap(onBus: 0); tapInstalled = false }
             engine.stop()
@@ -220,18 +223,27 @@ final class AudioRecorder: @unchecked Sendable {
     }
 
     /// Stops capture and returns everything recorded since `start()`.
-    func stop() -> Recording {
+    /// Stops capture and returns everything recorded since `start()`. Serialised with start and
+    /// the mid-session restart, so a stop can never be undone by a restart finishing after it.
+    func stop() -> Recording { setup.withLock { stopLocked() } }
+
+    private func stopLocked() -> Recording {
         guard isRunning else { return Recording(samples: [], peak: 0) }
         if let q = queueInput {
             q.stop(); queueInput = nil
             isRunning = false
-            return lock.withLock { Recording(samples: samples, peak: peak) }
+            return takeRecording()
         }
         engine.inputNode.removeTap(onBus: 0)
         tapInstalled = false
         engine.stop()
         isRunning = false
-        return lock.withLock { Recording(samples: samples, peak: peak) }
+        return takeRecording()
+    }
+
+    /// The recording, handed out whole; the recorder keeps no copy (a 10-minute one is 40 MB).
+    private func takeRecording() -> Recording {
+        lock.withLock { defer { samples = []; peak = 0 }; return Recording(samples: samples, peak: peak) }
     }
 
     /// Discards the current recording without returning it.

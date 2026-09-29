@@ -251,6 +251,20 @@ enum PipelineTest {
             print(failures == 0 ? "all good" : "\(failures) failed")
             exit(failures == 0 ? 0 : 1)
         }
+        if files.first == "timeout" {
+            // A job that ignores cancellation (like a hung model) must still time out on schedule.
+            Task.detached {
+                let t0 = ContinuousClock.now
+                do {
+                    _ = try await DictationController.within(.milliseconds(500)) { Thread.sleep(forTimeInterval: 3); return 1 }
+                    print("no timeout"); exit(1)
+                } catch {
+                    let ms = Double((ContinuousClock.now - t0) / .microseconds(1)) / 1000
+                    print(String(format: "timed out after %.0f ms (wanted ≈500)", ms)); exit(ms < 1000 ? 0 : 1)
+                }
+            }
+            return true
+        }
         if files.first == "micchange" {
             // Record 3 s; at 1.5 s the audio setup "changes" (engine stops). Capture must continue.
             let r = AudioRecorder()
