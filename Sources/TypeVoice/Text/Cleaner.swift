@@ -27,6 +27,8 @@ enum Cleaner {
 
         if style.removeFillers {
             s = fillers.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: "")
+            s = s.replacingOccurrences(of: #"[ \t]+"#, with: " ", options: .regularExpression)
+            s = Disfluency.apply(s)
         }
         if style.fixStutters {
             s = stutter.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: "$1")

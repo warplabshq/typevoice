@@ -132,6 +132,58 @@ enum PipelineTest {
             print(failures == 0 ? "all good" : "\(failures) failed")
             exit(failures == 0 ? 0 : 1)
         }
+        if files.first == "fillers", files.dropFirst().first == "log" {
+            // Every raw dictation in this Mac's log, before/after the filler pass only.
+            let logURL = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0].appendingPathComponent("Logs/TypeVoice/typevoice.log")
+            let log = (try? String(contentsOf: logURL, encoding: .utf8)) ?? ""
+            var n = 0, changed = 0
+            for line in log.split(separator: "\n") {
+                guard let r = line.range(of: #"\] raw\([\d.]+s\): "#, options: .regularExpression) else { continue }
+                let raw = String(line[r.upperBound...]); n += 1
+                let before = Cleaner.clean(raw, style: Style(removeFillers: false)), after = Cleaner.clean(raw, style: Style())
+                let baseline = Cleaner.clean(raw, style: Style(removeFillers: false)).replacingOccurrences(of: #"(?i)(?<![\w'])(?:u+m+|u+h+|uhm+|h+m+|er+m*|ah+|eh+)(?![\w'])[,.]?\s*"#, with: "", options: .regularExpression)
+                if after != baseline && after != before.replacingOccurrences(of: "  ", with: " ") { changed += 1; print("WAS: \(baseline)\nNOW: \(after)\n") }
+            }
+            print("\(n) dictations, \(changed) changed by the filler pass")
+            exit(0)
+        }
+        if files.first == "fillers" {
+            let cases: [(String, String)] = [
+                ("Alright, so accordingly I'm waiting for you know I'm waiting for a relevant schedule today.", "Alright, so accordingly I'm waiting for a relevant schedule today."),
+                ("Some people feel the stock footage is simply not simply not that accurate.", "Some people feel the stock footage is simply not that accurate."),
+                ("And obviously we can use re we can use recent.", "And obviously we can use recent."),
+                ("I had this chat which I mis mistakenly archived.", "I had this chat which I mistakenly archived."),
+                ("It kind of you know it kind of makes me feel more stuck.", "It kind of makes me feel more stuck."),
+                ("Maybe we should just be a white background thing, I don't know.", "Maybe we should just be a white background thing."),
+                ("A lot of visual stuff, animations, I don't know, a lot of tasteful stuff.", "A lot of visual stuff, animations, a lot of tasteful stuff."),
+                ("We should tell the user that they can, you know, put out the cross button.", "We should tell the user that they can put out the cross button."),
+                ("Anyway, let's ship it. I mean, it's fine.", "let's ship it. it's fine."),
+                ("Also like maybe short form can be more consistent.", "Also maybe short form can be more consistent."),
+                ("That's done, anyways.", "That's done."),
+                // Meaning stays.
+                ("Do you know the answer?", "Do you know the answer?"), ("If you know the way, lead.", "If you know the way, lead."),
+                ("What I mean is simple.", "What I mean is simple."), ("I like it a lot.", "I like it a lot."),
+                ("You know what, let's go.", "You know what, let's go."), ("I don't know the answer.", "I don't know the answer."),
+                ("It looks like a bird.", "It looks like a bird."), ("very very good", "very very good"), ("no no no", "no no no"),
+                ("Things you know are true.", "Things you know are true."), ("People that you know the most.", "People that you know the most."),
+                ("I'll re read it.", "I'll re read it."), ("I want it as soon as possible, and I know I don't.", "I want it as soon as possible, and I know I don't."),
+                ("Inside the app the license page should show.", "Inside the app the license page should show."), ("I know you know my plans.", "I know you know my plans."),
+                ("Be fully safe, as safe as possible.", "Be fully safe, as safe as possible."), ("What you sh what you say matters.", "What you say matters."),
+                ("Ship one point zero point one live.", "Ship one point zero point one live."), ("Use emails plus SEO plus Reddit.", "Use emails plus SEO plus Reddit."),
+                ("Our revenue t revenue grew.", "Our revenue grew."), ("maybe FAQ, maybe docs", "maybe FAQ, maybe docs"), ("I have to host a server, mini server somewhere.", "I have to host a server, mini server somewhere."), ("old numbers and bad sch schedule", "old numbers and bad schedule"), ("Go to today's list.", "Go to today's list."), ("We ship. We ship fast.", "We ship. We ship fast."),
+            ]
+            _ = English.isWord("warm")
+            var failures = 0
+            let t0 = ContinuousClock.now
+            for (input, expected) in cases {
+                let got = Disfluency.apply(input)
+                let ok = got == expected; if !ok { failures += 1 }
+                print("\(ok ? "ok " : "FAIL") \(input) → \(got)\(ok ? "" : "   (wanted \(expected))")")
+            }
+            print(String(format: "%.3f ms per sentence", Double((ContinuousClock.now - t0) / .microseconds(1)) / 1000 / Double(cases.count)))
+            print(failures == 0 ? "all good" : "\(failures) failed")
+            exit(failures == 0 ? 0 : 1)
+        }
         if files.first == "mic" {
             // Two seconds from the microphone through AudioRecorder (TYPEVOICE_FORCE_QUEUE=1 for
             // the input-only fallback). Prints what came back.
