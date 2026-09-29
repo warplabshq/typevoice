@@ -32,6 +32,8 @@ enum Numbers {
         s = s.replacingOccurrences(of: #"(\d)\s?h\b(?![:.])"#, with: "$1 hours", options: .regularExpression)
         s = s.replacingOccurrences(of: #"(\d)\s?min\b"#, with: "$1 minutes", options: .regularExpression)
         s = s.replacingOccurrences(of: #"(\d)\s?sec\b"#, with: "$1 seconds", options: .regularExpression)
+        // "2 X speed", "10 x faster" → "2x speed", "10x faster".
+        s = s.replacingOccurrences(of: #"\b(\d+(?:\.\d+)?) ?[xX]\b(?![-.]\w)"#, with: "$1x", options: .regularExpression)
         // "02:30 p.m." → "2:30 pm"
         s = s.replacingOccurrences(of: #"\b0(\d:\d\d)"#, with: "$1", options: .regularExpression)
         s = s.replacingOccurrences(of: #"(?i)\b([ap])\.m\."#, with: "$1m", options: .regularExpression)

@@ -35,7 +35,7 @@ final class AudioRecorder: @unchecked Sendable {
         // exception inside installTap, which no Swift `catch` can see, and left dictation dead).
         configObserver = NotificationCenter.default.addObserver(forName: .AVAudioEngineConfigurationChange, object: engine, queue: nil) { [weak self] _ in
             guard let self else { return }
-            self.needsReset = true
+            self.needsReset = true          // also means: read the format again (see startLocked)
             // Choosing the device at start posts one of these too, a moment later; only a change
             // well into a session counts as an interruption.
             // macOS posts this for any change to the audio setup, output included (a browser
@@ -66,13 +66,22 @@ final class AudioRecorder: @unchecked Sendable {
                 var id = dev.id
                 AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
             }
-            _ = input.outputFormat(forBus: 0)
-            _ = Self.tapFormat(input)
+            warmFormat = (deviceKey(), input.outputFormat(forBus: 0), Self.tapFormat(input))
             Log.timing("mic.prewarm", since: t0)
         }
     }
     /// start() and prewarm() touch the same engine from different threads; one at a time.
     private let setup = NSLock()
+    /// The mic's format as read by prewarm(), and for which device.
+    private var warmFormat: (key: AudioDeviceID, node: AVAudioFormat, tap: AVAudioFormat?)?
+    /// The device a session will record from: the chosen mic, or macOS's current input.
+    private func deviceKey() -> AudioDeviceID {
+        if let dev = InputDevices.resolve(preference: Prefs.inputDeviceUID) { return dev.id }
+        var id = AudioDeviceID(0), size = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var addr = AudioObjectPropertyAddress(mSelector: kAudioHardwarePropertyDefaultInputDevice, mScope: kAudioObjectPropertyScopeGlobal, mElement: kAudioObjectPropertyElementMain)
+        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &addr, 0, nil, &size, &id)
+        return id
+    }
 
     func start() throws {
         try setup.withLock { try startLocked() }
@@ -94,7 +103,17 @@ final class AudioRecorder: @unchecked Sendable {
             if status != noErr { Log.audio.warning("could not select input \(dev.name): \(status)") }
         }
         steps.append(("device", .now))
-        let inFormat = input.outputFormat(forBus: 0)
+        // Asking a mic that has gone idle for its format waits ~3 s for the hardware (measured:
+        // "format 3001" of a 3.1 s open, every other step ~30 ms). The format was read ahead of time
+        // by prewarm(); reuse it for the same device unless the audio setup has changed since.
+        let key = deviceKey()
+        let inFormat: AVAudioFormat, tapFmt: AVAudioFormat?
+        if !needsReset, let w = warmFormat, w.key == key {
+            inFormat = w.node; tapFmt = w.tap
+        } else {
+            inFormat = input.outputFormat(forBus: 0); tapFmt = Self.tapFormat(input)
+            warmFormat = (key, inFormat, tapFmt)
+        }
         steps.append(("format", .now))
         guard inFormat.sampleRate > 0, inFormat.channelCount > 0 else {
             throw RecorderError.noInput
@@ -106,7 +125,7 @@ final class AudioRecorder: @unchecked Sendable {
         // Usually `format: nil` (whatever the node produces). On Macs whose mic and speakers run
         // at different rates (MacBook Air: 48 kHz in, 44.1 kHz out) the node reports the output's
         // rate and the engine then refuses to start (-10868): tap at the mic's own rate instead.
-        input.installTap(onBus: 0, bufferSize: 512, format: Self.tapFormat(input)) { [weak self] buffer, _ in
+        input.installTap(onBus: 0, bufferSize: 512, format: tapFmt) { [weak self] buffer, _ in
             self?.consume(buffer)
         }
         tapInstalled = true
@@ -120,6 +139,7 @@ final class AudioRecorder: @unchecked Sendable {
             // A mic that just vanished, or a headset mid-switch: one retry on the Mac's own mic,
             // so the person keeps their sentence instead of an error.
             Log.d("mic start failed (\(error.localizedDescription)); retrying on the built-in mic")
+            warmFormat = nil
             input.removeTap(onBus: 0); tapInstalled = false
             engine.stop(); engine.reset()
             if let dev = InputDevices.builtIn(), let unit = input.audioUnit {
@@ -175,6 +195,7 @@ final class AudioRecorder: @unchecked Sendable {
             do { try engine.start() } catch { return false }
             startedAt = Date()          // our own restart posts the notification again; don't chase it
             needsReset = false
+            warmFormat = (deviceKey(), format, Self.tapFormat(input))
             return true
         }
         if ok { Log.d("audio setup changed mid-session; recording continues") }

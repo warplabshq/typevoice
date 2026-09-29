@@ -26,6 +26,8 @@ enum Cleaner {
         guard !s.isEmpty else { return "" }
 
         if style.removeFillers {
+            // A stray sound between two fillers ("um s uh") goes with them.
+            s = s.replacingOccurrences(of: #"(?i)(?<![\w'])(?:um+|uh+|uhm+|er+m?)[,.]?\s+[b-hj-z][,.]?\s+(?=(?:um+|uh+|uhm+|er+m?)(?![\w']))"#, with: "", options: .regularExpression)
             s = fillers.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: "")
             s = s.replacingOccurrences(of: #"[ \t]+"#, with: " ", options: .regularExpression)
             s = Disfluency.apply(s)

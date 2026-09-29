@@ -30,6 +30,10 @@ enum Vocabulary {
                     // Both halves of an address must line up: "logs. So" is Logs.so,
                     // "Logstart. So that…" is not.
                     if termHasDot, !addressAligns(slice, term: term) { continue }
+                    // "the voice" is not TypeVoice: a phrase with a small everyday word in it becomes a
+                    // name only when it's spelled exactly like it ("type voice", "warp labs").
+                    if span > 1, slice.contains(where: { smallWords.contains($0.core.lowercased()) }),
+                       Self.letters(candidate) != Self.letters(key) { continue }
                     if candidate.caseInsensitiveCompare(key) == .orderedSame {
                         if candidate != term || span > 1 { words.replaceSubrange(i..<(i + span), with: [merge(slice, with: term)]) }
                         break
@@ -76,6 +80,10 @@ enum Vocabulary {
         if !digits.isEmpty { flush() }
         return out
     }
+
+    private static let smallWords: Set<String> = ["the", "a", "an", "to", "of", "in", "on", "at", "for", "with", "and", "or", "but", "is", "it",
+        "my", "your", "our", "his", "her", "this", "that", "so", "as", "be", "by", "we", "i", "you", "he", "she", "they", "me", "us", "no", "not"]
+    private static func letters(_ s: String) -> String { String(s.lowercased().filter { $0.isLetter || $0.isNumber }) }
 
     /// Two mishearings the phonetic match can't see, tried only on words that are not English:
     /// B for V at any point ("Bidai" → VidAI, "Gobind" → Govind), and a name the model spelled as

@@ -107,6 +107,18 @@ enum Disfluency {
                 }
                 k += 1
             }
+            if changed { continue }
+            // The same with a small word in between: "trans the transcriptions", "rec the recording".
+            var j = 0
+            while j + 2 < t.count {
+                let f = norm(t[j]), mid = norm(t[j + 1]), next = norm(t[j + 2])
+                if (2...5).contains(f.count), f.allSatisfy(\.isLetter), t[j] == f, !shortWords.contains(f), !endsSentence(t[j]),
+                   ["the", "a", "an", "my", "our", "your", "this", "that"].contains(mid),
+                   next.count >= f.count + 3, next.hasPrefix(f) {
+                    t.remove(at: j); changed = true; continue
+                }
+                j += 1
+            }
         }
         return t.joined(separator: " ")
     }
