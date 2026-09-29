@@ -170,7 +170,7 @@ enum PipelineTest {
                 ("Inside the app the license page should show.", "Inside the app the license page should show."), ("I know you know my plans.", "I know you know my plans."),
                 ("Be fully safe, as safe as possible.", "Be fully safe, as safe as possible."), ("What you sh what you say matters.", "What you say matters."),
                 ("Ship one point zero point one live.", "Ship one point zero point one live."), ("Use emails plus SEO plus Reddit.", "Use emails plus SEO plus Reddit."),
-                ("Our revenue t revenue grew.", "Our revenue grew."), ("maybe FAQ, maybe docs", "maybe FAQ, maybe docs"), ("I have to host a server, mini server somewhere.", "I have to host a server, mini server somewhere."), ("old numbers and bad sch schedule", "old numbers and bad schedule"), ("Go to today's list.", "Go to today's list."), ("We ship. We ship fast.", "We ship. We ship fast."),
+                ("Our revenue t revenue grew.", "Our revenue grew."), ("maybe FAQ, maybe docs", "maybe FAQ, maybe docs"), ("I have to host a server, mini server somewhere.", "I have to host a server, mini server somewhere."), ("old numbers and bad sch schedule", "old numbers and bad schedule"), ("From your o older audits.", "From your older audits."), ("Go with plan B backup.", "Go with plan B backup."), ("I have a apple.", "I have a apple."), ("Go to today's list.", "Go to today's list."), ("We ship. We ship fast.", "We ship. We ship fast."),
             ]
             _ = English.isWord("warm")
             var failures = 0

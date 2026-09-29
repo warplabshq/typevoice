@@ -99,8 +99,10 @@ enum Disfluency {
             var k = 0
             while k + 1 < t.count {
                 let f = norm(t[k]), next = norm(t[k + 1])
-                if (2...4).contains(f.count), f.allSatisfy(\.isLetter), !shortWords.contains(f), !endsSentence(t[k]),
-                   next.count >= f.count + 3, next.hasPrefix(f), !English.isWord(f) {
+                // One letter only in lowercase ("o older"); "plan B backup" keeps its B.
+                if (1...4).contains(f.count), f.allSatisfy(\.isLetter), !shortWords.contains(f), !endsSentence(t[k]),
+                   f.count > 1 || t[k] == f,
+                   next.count >= f.count + 3, next.hasPrefix(f), f.count == 1 || !English.isWord(f) {
                     t.remove(at: k); changed = true; continue
                 }
                 k += 1
