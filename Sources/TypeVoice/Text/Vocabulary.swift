@@ -12,12 +12,16 @@ enum Vocabulary {
             let keySkel = skeleton(keyPhon)
             let termWordCount = max(1, term.split(separator: " ").count)
             let termHasDot = term.contains(".")
+            let termHasDigit = term.contains(where: \.isNumber)
             var i = 0
             while i < words.count {
                 // Shortest span first: "Hicksfield or" must not swallow the "or".
                 for span in stride(from: 1, through: min(termWordCount + 1, words.count - i), by: 1) {
                     let slice = words[i..<(i + span)]
-                    let candidate = slice.map(\.core).joined()
+                    // Digits the number step made ("11 labs") are read as the words that were said,
+                    // for a name spelled without digits (ElevenLabs).
+                    let heardCore = slice.map(\.core).joined()
+                    let candidate = !termHasDigit && heardCore.contains(where: \.isNumber) ? spellDigits(heardCore) : heardCore
                     guard !candidate.isEmpty else { continue }
                     // A web address only meets a web address: "logo" is not "Logs.so", and
                     // "typevoice.ai" keeps its ".ai" rather than becoming "TypeVoice".
@@ -30,6 +34,8 @@ enum Vocabulary {
                         if candidate != term || span > 1 { words.replaceSubrange(i..<(i + span), with: [merge(slice, with: term)]) }
                         break
                     }
+                    // Read from digits: only a near-exact match ("11 labs" is ElevenLabs, "11 days" is not).
+                    if candidate != heardCore, phonetic(candidate) != keyPhon { continue }
                     if matches(candidate: candidate, key: key, keyPhon: keyPhon, keySkel: keySkel)
                         || (span == 1 && !termHasDot && looseMatch(candidate, keyPhon: keyPhon, keySkel: keySkel)) {
                         words.replaceSubrange(i..<(i + span), with: [merge(slice, with: term)])
@@ -52,6 +58,23 @@ enum Vocabulary {
             }
         }
         return words.map { $0.lead + $0.core + $0.trail }.joined(separator: " ")
+    }
+
+    /// "11labs" → "elevenlabs", "3d" → "threed": digit runs (up to 999) as the words they came from.
+    static func spellDigits(_ s: String) -> String {
+        let ones = ["zero", "one", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "eleven", "twelve",
+                    "thirteen", "fourteen", "fifteen", "sixteen", "seventeen", "eighteen", "nineteen"]
+        let tens = ["", "", "twenty", "thirty", "forty", "fifty", "sixty", "seventy", "eighty", "ninety"]
+        func words(_ n: Int) -> String {
+            if n < 20 { return ones[n] }
+            if n < 100 { return tens[n / 10] + (n % 10 == 0 ? "" : ones[n % 10]) }
+            return ones[n / 100] + "hundred" + (n % 100 == 0 ? "" : words(n % 100))
+        }
+        var out = "", digits = ""
+        func flush() { if let n = Int(digits), n < 1000 { out += words(n) } else { out += digits }; digits = "" }
+        for c in s { if c.isNumber { digits.append(c) } else { if !digits.isEmpty { flush() }; out.append(c) } }
+        if !digits.isEmpty { flush() }
+        return out
     }
 
     /// Two mishearings the phonetic match can't see, tried only on words that are not English:
