@@ -313,7 +313,7 @@ enum PipelineTest {
             for c in ["the launch is in twenty twenty four", "I was born in nineteen ninety nine", "we need twenty four hours",
                       "call me at two thirty pm", "it costs five dollars and fifty cents", "chapter twenty two, page one hundred and five",
                       "send it to jane at example dot com", "one two three four five", "I have two cats and one dog",
-                      "the year two thousand and twenty", "twenty percent off", "about a thousand words", "it's the third time", "I need it by the fifth of March", "we have three options", "It took two and a half hours", "Version two point five is out", "My number is nine eight seven six five four three two one zero", "Meet at half past two", "There were a hundred people", "one video of Matt. And I think two is plenty"] {
+                      "the year two thousand and twenty", "twenty percent off", "about a thousand words", "it's the third time", "I need it by the fifth of March", "we have three options", "It took two and a half hours", "Version two point five is out", "My number is nine eight seven six five four three two one zero", "Meet at half past two", "There were a hundred people", "one video of Matt. And I think two is plenty", "Testing one three.", "Testing one two three.", "First, we ship. Second, we post.", "It is the first time and the second try.", "Can you 1st off tell me", "March first is the launch", "the second of May", "call me at two thirty pm", "one oh five", "we have twenty first century problems"] {
                 print("\(c)\n  → \(Numbers.apply(c))")
             }
             exit(0)
