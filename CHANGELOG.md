@@ -4,6 +4,23 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.21 — 29 September 2026
+
+- The pill no longer sits silent after the Mac has been idle: the mic is ready in about a tenth
+  of a second, not three.
+- Dictations no longer end mid-sentence when something else on the Mac plays sound or the audio
+  setup changes.
+- Text goes into the app you dictated into, or is copied if that app isn't there any more; it
+  never lands in another app, is never typed twice, and your clipboard comes back as it was.
+- Terminal's Secure Keyboard Entry no longer blocks dictation everywhere else.
+- Lists and paragraphs keep their lines when you mention a number; "one second", "a two year
+  old", "the blue one" read as said; "2x", "20%".
+- "dodged that bullet" and "a new line of shoes" stay sentences; "the voice" stays "the voice".
+- License: using your key again on the same Mac no longer takes a second seat, a Mac that was
+  offline a long time re-checks instead of showing "trial ended", and Delete Everything keeps
+  your license.
+- Transcription bug fixes.
+
 ## 1.0.20 — 29 September 2026
 
 - The pill shows the moment you press your key, even after the Mac has been idle, and the mic
