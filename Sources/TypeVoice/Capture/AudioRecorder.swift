@@ -38,8 +38,11 @@ final class AudioRecorder: @unchecked Sendable {
             self.needsReset = true
             // Choosing the device at start posts one of these too, a moment later; only a change
             // well into a session counts as an interruption.
-            if self.isRunning, Date().timeIntervalSince(self.startedAt) > 1.0, let onInterrupted = self.onInterrupted {
-                Task { @MainActor in onInterrupted() }
+            // macOS posts this for any change to the audio setup, output included (a browser
+            // starting sound, a display's speakers waking), and the engine stops itself. Ending the
+            // dictation there cut people off mid-sentence; restart capture and keep going instead.
+            if self.isRunning, Date().timeIntervalSince(self.startedAt) > 1.0 {
+                DispatchQueue.global(qos: .userInitiated).async { self.resume() }
             }
         }
     }
@@ -82,6 +85,7 @@ final class AudioRecorder: @unchecked Sendable {
         lock.withLock { samples.removeAll(keepingCapacity: true); peak = 0 }
         if ProcessInfo.processInfo.environment["TYPEVOICE_FORCE_QUEUE"] == "1" { try startQueue(); return }
 
+        var steps: [(String, ContinuousClock.Instant)] = [("begin", .now)]
         let input = engine.inputNode
         // The Mac's own mic unless the person chose otherwise (see InputDevices.resolve).
         if let dev = InputDevices.resolve(preference: Prefs.inputDeviceUID), let unit = input.audioUnit {
@@ -89,7 +93,9 @@ final class AudioRecorder: @unchecked Sendable {
             let status = AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
             if status != noErr { Log.audio.warning("could not select input \(dev.name): \(status)") }
         }
+        steps.append(("device", .now))
         let inFormat = input.outputFormat(forBus: 0)
+        steps.append(("format", .now))
         guard inFormat.sampleRate > 0, inFormat.channelCount > 0 else {
             throw RecorderError.noInput
         }
@@ -104,9 +110,12 @@ final class AudioRecorder: @unchecked Sendable {
             self?.consume(buffer)
         }
         tapInstalled = true
+        steps.append(("tap", .now))
         engine.prepare()
+        steps.append(("prepare", .now))
         do {
             try engine.start()
+            steps.append(("start", .now))
         } catch {
             // A mic that just vanished, or a headset mid-switch: one retry on the Mac's own mic,
             // so the person keeps their sentence instead of an error.
@@ -134,6 +143,45 @@ final class AudioRecorder: @unchecked Sendable {
         }
         startedAt = Date()
         isRunning = true
+        // A slow open says where the time went: "device 2900" is the hardware waking, "start" the IO.
+        if let first = steps.first?.1, (ContinuousClock.now - first).ms > 300 {
+            Log.d("mic open steps: " + zip(steps.dropFirst(), steps).map { "\($0.0.0) \(Int(($0.0.1 - $0.1.1).ms))" }.joined(separator: ", "))
+        }
+    }
+
+    /// Test hook: what macOS does when the audio setup changes (the engine stops, then says so).
+    func simulateConfigurationChange() {
+        engine.stop()
+        NotificationCenter.default.post(name: .AVAudioEngineConfigurationChange, object: engine)
+    }
+
+    /// Restarts capture after the engine stopped itself mid-session, keeping what was recorded.
+    /// Only if the mic can't be opened again (unplugged, gone) does the session end.
+    private func resume() {
+        let ok: Bool = setup.withLock {
+            guard isRunning, queueInput == nil else { return true }
+            let input = engine.inputNode
+            if tapInstalled { input.removeTap(onBus: 0); tapInstalled = false }
+            engine.stop()
+            if let dev = InputDevices.resolve(preference: Prefs.inputDeviceUID), let unit = input.audioUnit {
+                var id = dev.id
+                AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
+            }
+            let format = input.outputFormat(forBus: 0)
+            guard format.sampleRate > 0, format.channelCount > 0 else { return false }
+            input.installTap(onBus: 0, bufferSize: 512, format: Self.tapFormat(input)) { [weak self] buffer, _ in self?.consume(buffer) }
+            tapInstalled = true
+            engine.prepare()
+            do { try engine.start() } catch { return false }
+            startedAt = Date()          // our own restart posts the notification again; don't chase it
+            needsReset = false
+            return true
+        }
+        if ok { Log.d("audio setup changed mid-session; recording continues") }
+        else {
+            Log.d("mic gone mid-session; finishing with what was heard")
+            if let onInterrupted { Task { @MainActor in onInterrupted() } }
+        }
     }
 
     /// Called on the main actor if the input device changes or disappears mid-session

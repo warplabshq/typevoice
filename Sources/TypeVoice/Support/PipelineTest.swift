@@ -184,6 +184,29 @@ enum PipelineTest {
             print(failures == 0 ? "all good" : "\(failures) failed")
             exit(failures == 0 ? 0 : 1)
         }
+        if files.first == "micchange" {
+            // Record 3 s; at 1.5 s the audio setup "changes" (engine stops). Capture must continue.
+            let r = AudioRecorder()
+            var interrupted = false
+            r.onInterrupted = { interrupted = true }
+            do { try r.start() } catch { print("start failed"); exit(1) }
+            Thread.sleep(forTimeInterval: 1.5)
+            r.simulateConfigurationChange()
+            Thread.sleep(forTimeInterval: 1.5)
+            let rec = r.stop()
+            print(String(format: "recorded %.2f s (wanted ≈3), interrupted: %@", rec.seconds, interrupted ? "yes" : "no"))
+            exit(rec.seconds > 2.5 && !interrupted ? 0 : 1)
+        }
+        if files.first == "micidle", let secs = files.dropFirst().first.flatMap(Double.init) {
+            // Prewarm, wait like an idle Mac, then open the mic and say how long each step took.
+            let r = AudioRecorder()
+            r.prewarm(); print("prewarmed; waiting \(Int(secs)) s"); fflush(stdout)
+            Thread.sleep(forTimeInterval: secs)
+            let t0 = ContinuousClock.now
+            do { try r.start() } catch { print("start failed: \(error.localizedDescription)"); exit(1) }
+            print(String(format: "after %.0f s idle: mic opened in %.0f ms", secs, Double((ContinuousClock.now - t0) / .microseconds(1)) / 1000)); fflush(stdout)
+            _ = r.stop(); exit(0)
+        }
         if files.first == "mic" {
             // Two seconds from the microphone through AudioRecorder (TYPEVOICE_FORCE_QUEUE=1 for
             // the input-only fallback). Prints what came back.

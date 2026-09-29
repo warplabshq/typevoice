@@ -49,7 +49,7 @@ final class DictationController {
         }
         recorder.onInterrupted = { [weak self] in
             guard let self, self.state.phase.isListening else { return }
-            Log.d("mic changed mid-session; finishing with what was heard")
+            Log.d("finishing with what was heard")
             self.lockWindow?.cancel(); self.lockWindow = nil
             self.finish()
         }
