@@ -124,7 +124,7 @@ enum RecordingStore {
     /// The folder is emptied on launch.
     static let dragFolder: URL = {
         let base = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask)[0]
-        return base.appendingPathComponent("Drag", isDirectory: true)
+        return base.appendingPathComponent("TypeVoice/Drag", isDirectory: true)   // ours alone: it is emptied on launch
     }()
 
     static func dragLink(for url: URL, named name: String) -> URL? {

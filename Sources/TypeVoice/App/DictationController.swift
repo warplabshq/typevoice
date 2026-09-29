@@ -143,6 +143,8 @@ final class DictationController {
     private func press() {
         guard !state.paused else { return }
         if let licensing, licensing.isExpired, state.phase == .idle {
+            // A paying customer who was offline too long: re-check right away, it may just work.
+            if licensing.hasStaleKey { Task { await licensing.revalidateIfDue(force: true) } }
             hud?.present(for: inserter.captureTarget())
             show(.error("Trial ended · open \(Brand.name) to continue"), for: .milliseconds(2200))
             openMainWindow(.license)
@@ -178,6 +180,9 @@ final class DictationController {
         }
 
         pressStart = now
+        // The model failed to load earlier (offline first launch, a damaged download): try again
+        // now rather than failing every dictation until a relaunch.
+        if state.warmError != nil { Log.d("model not loaded; retrying"); warm() }
         finishTask?.cancel(); finishTask = nil
         state.lastAudio = nil
         target = inserter.captureTarget()

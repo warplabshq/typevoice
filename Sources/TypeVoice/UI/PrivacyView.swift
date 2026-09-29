@@ -58,7 +58,7 @@ struct PrivacyView: View {
                     LabeledContent("Recordings") {
                         HStack(spacing: 10) {
                             Text(ByteCountFormatter.string(fromByteCount: RecordingStore.totalBytes(), countStyle: .file)).foregroundStyle(.secondary)
-                            Button("Delete Recordings…", role: .destructive) { RecordingStore.deleteAll() }
+                            Button("Delete Recordings…", role: .destructive) { RecordingStore.deleteAll(); RecordingStore.cleanDragLinks() }
                         }
                     }
                 }
@@ -68,10 +68,13 @@ struct PrivacyView: View {
         .formStyle(.grouped)
         .confirmationDialog("Delete all \(Brand.name) data on this Mac?", isPresented: $confirmWipe, titleVisibility: .visible) {
             Button("Delete Everything", role: .destructive) {
-                history.clear(); dictionary.clear(); Prefs.reset()
+                history.clear(); dictionary.clear(); Prefs.reset(); RecordingStore.cleanDragLinks()
+                // The debug log (only written if it was turned on) holds dictated text too.
+                let logs = FileManager.default.urls(for: .libraryDirectory, in: .userDomainMask)[0].appendingPathComponent("Logs/TypeVoice")
+                try? FileManager.default.removeItem(at: logs)
             }
         } message: {
-            Text("History, dictionary and settings are removed. The downloaded speech model stays so you don't have to fetch it again.")
+            Text("History, dictionary, recordings, settings and logs are removed. Your license and the downloaded speech model stay.")
         }
     }
 

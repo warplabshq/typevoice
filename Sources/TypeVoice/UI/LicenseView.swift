@@ -33,6 +33,18 @@ struct LicenseView: View {
                         .font(.callout)
                 }
             }
+            if licensing.hasStaleKey {
+                // Paid, but offline past the grace period: the fix is a re-check, not a new seat.
+                Section("License") {
+                    Text("Your key \(licensing.licenseKeyMasked ?? "") couldn't be checked for a while. Connect to the internet and re-check; no need to enter it again.")
+                        .font(.callout).foregroundStyle(.secondary)
+                    Button(licensing.busy ? "…" : "Re-check") { Task { await licensing.revalidateIfDue(force: true) } }
+                        .disabled(licensing.busy)
+                    if let e = licensing.lastError {
+                        Label(e, systemImage: "exclamationmark.triangle").foregroundStyle(.red).font(.callout)
+                    }
+                }
+            }
             if licensing.isLicensed {
                 Section("License") {
                     LabeledContent("Key") {

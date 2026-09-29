@@ -263,6 +263,15 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
         w.center()
         w.isReleasedWhenClosed = false
         onboarding = w
+        // Closed with the red button instead of finished: arm the hotkey anyway, or dictation does
+        // nothing until the next launch while the menu still says "Hold … to dictate".
+        observers.append(NotificationCenter.default.addObserver(forName: NSWindow.willCloseNotification, object: w, queue: .main) { [weak self] _ in
+            Task { @MainActor in
+                guard let self, self.onboarding === w else { return }
+                self.onboarding = nil
+                self.controller.start()
+            }
+        })
         NSApp.activate(ignoringOtherApps: true)
         w.makeKeyAndOrderFront(nil)
         Log.d("onboarding window visible=\(w.isVisible) frame=\(w.frame) policy=\(NSApp.activationPolicy().rawValue)")
@@ -271,8 +280,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate, NSWindowDelegate {
     private func finishOnboarding() {
         let first = !Prefs.hasOnboarded
         UserDefaults.standard.set(true, forKey: Prefs.Key.hasOnboarded)
-        onboarding?.close()
-        onboarding = nil
+        let w = onboarding
+        onboarding = nil          // before close(), so the close observer doesn't start twice
+        w?.close()
         controller.start()
         if first { showMain(tab: .history) }
     }

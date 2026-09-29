@@ -172,7 +172,12 @@ enum Prefs {
 
     /// Wipes every preference. Used by "Delete everything".
     static func reset() {
+        // "Delete Everything" is about your dictations and settings, not your purchase: keep the
+        // license (and the trial date), or the key's seat stays taken and the app says "trial ended".
+        let keep = ["licenseKey", "licenseInstance", "licenseValidated", "licensePlan", "trialStart"]
+        let saved = keep.reduce(into: [String: Any]()) { r, k in if let v = d.object(forKey: k) { r[k] = v } }
         if let id = Bundle.main.bundleIdentifier { d.removePersistentDomain(forName: id) }
+        for (k, v) in saved { d.set(v, forKey: k) }
         registerDefaults()
     }
 }

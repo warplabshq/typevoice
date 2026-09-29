@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import SystemConfiguration
 
 /// Seven-day free trial, then a license key from Dodo Payments (the merchant of record).
 /// Network: only Dodo's three public license endpoints, and only when you activate,
@@ -20,7 +21,15 @@ final class Licensing {
     static let offlineGrace: TimeInterval = 30 * 86400
     /// True once the checkout link in `Brand` points at a real product.
     /// The Buy button works once the website is real (its thank-you page is the return URL), or in test mode.
-    static var isConfigured: Bool { UserDefaults.standard.bool(forKey: "dodoTest") || !Brand.checkoutURL.absoluteString.contains("REPLACE-ME") }
+    static var isConfigured: Bool { testMode || !Brand.checkoutURL.absoluteString.contains("REPLACE-ME") }
+    /// Test-mode keys (bought with a test card) only count in development builds.
+    static var testMode: Bool {
+        #if DEBUG
+        return UserDefaults.standard.bool(forKey: "dodoTest")
+        #else
+        return false
+        #endif
+    }
 
     private(set) var state: State = .trial(daysLeft: Licensing.trialDays)
     private(set) var licenseKeyMasked: String?
@@ -52,6 +61,8 @@ final class Licensing {
     }
 
     var isExpired: Bool { state == .expired }
+    /// A key is stored but couldn't be re-checked in time: a paying customer, not a lapsed trial.
+    var hasStaleKey: Bool { d.string(forKey: K.key) != nil && state != .licensed }
     var isLicensed: Bool { state == .licensed }
 
     // MARK: Trial
@@ -75,12 +86,15 @@ final class Licensing {
             let validated = d.object(forKey: K.lastValidated) as? Date ?? .distantPast
             licenseKeyMasked = Self.mask(key)
             plan = Plan(rawValue: d.string(forKey: K.plan) ?? "") ?? .personal
-            if Date().timeIntervalSince(validated) < Self.offlineGrace { state = .licensed; return }
+            // The full grace period after the last check was *due* (checks are weekly), and a
+            // check date in the future (a clock moved forward and back) doesn't count.
+            let age = Date().timeIntervalSince(validated)
+            if age > -86400, age < Self.offlineGrace + Self.revalidateEvery { state = .licensed; return }
             // Past the grace period: the trial rules apply until a re-check succeeds.
         } else {
             licenseKeyMasked = nil
         }
-        let left = Self.trialDays - Int(Date().timeIntervalSince(trialStart) / 86400)
+        let left = min(Self.trialDays, Self.trialDays - Int(max(0, Date().timeIntervalSince(trialStart)) / 86400))
         state = left > 0 ? .trial(daysLeft: left) : .expired
     }
 
@@ -89,7 +103,7 @@ final class Licensing {
     /// Dodo's public license endpoints. `defaults write com.priyamventures.typevoice dodoTest -bool YES`
     /// points the app at test mode while you try a test-mode purchase.
     private var base: URL {
-        URL(string: d.bool(forKey: "dodoTest") ? "https://test.dodopayments.com" : "https://live.dodopayments.com")!
+        URL(string: Self.testMode ? "https://test.dodopayments.com" : "https://live.dodopayments.com")!
     }
 
     private struct ActivateResponse: Decodable {
@@ -99,7 +113,7 @@ final class Licensing {
     }
     private struct ValidateResponse: Decodable { let valid: Bool }
     private struct EmptyResponse: Decodable {}
-    struct LicenseError: Error { let message: String }
+    struct LicenseError: Error { let message: String; var code = 0 }
 
     /// Activates a key for this Mac. Dodo records the activation under the Mac's name so the
     /// user can tell their Macs apart when deactivating one; nothing else is sent.
@@ -108,8 +122,16 @@ final class Licensing {
         guard !key.isEmpty, !busy else { return }
         busy = true; lastError = nil
         defer { busy = false }
+        // The key this Mac already holds (the "Open in TypeVoice" link clicked twice, or the key
+        // pasted after it): re-check it instead of activating again, which took a second seat.
+        if key == d.string(forKey: K.key), let inst = d.string(forKey: K.instance) {
+            if let r: ValidateResponse = try? await post("licenses/validate", ["license_key": key, "license_key_instance_id": inst]), r.valid {
+                d.set(Date(), forKey: K.lastValidated); refresh(); return
+            }
+        }
         do {
-            let name = Host.current().localizedName ?? "Mac"
+            // Host.current() can stall on a network name lookup; the local computer name can't.
+            let name = (SCDynamicStoreCopyComputerName(nil, nil) as String?) ?? "Mac"
             let r: ActivateResponse = try await post("licenses/activate", ["license_key": key, "name": name])
             // Switching keys (say, from a personal to a team key): free the old seat, best effort.
             if let old = d.string(forKey: K.key), old != key, let inst = d.string(forKey: K.instance) {
@@ -136,9 +158,13 @@ final class Licensing {
         if let key = d.string(forKey: K.key), let inst = d.string(forKey: K.instance) {
             do {
                 let _: EmptyResponse = try await post("licenses/deactivate", ["license_key": key, "license_key_instance_id": inst])
-            } catch let e as LicenseError {
-                // Dodo said no (e.g. the activation is already gone): forget the key locally anyway.
+            } catch let e as LicenseError where e.code == 404 || e.code == 403 {
+                // The activation or key is already gone on Dodo's side: forget it here too.
                 Log.app.warning("deactivate: \(e.message)")
+            } catch let e as LicenseError {
+                // A server error or rate limit: the seat is still taken, so keep the key and say so.
+                lastError = e.message
+                return
             } catch {
                 lastError = "Couldn't reach Dodo Payments. Check your connection and try again."
                 return
@@ -164,8 +190,14 @@ final class Licensing {
                 lastError = "This key is no longer valid on this Mac. It may have been deactivated or refunded."
             }
             refresh()
+        } catch let e as LicenseError where e.code == 404 || e.code == 403 {
+            // Revoked or refunded: say so now, instead of quietly becoming "trial ended" later.
+            Log.app.warning("license rejected on re-check: \(e.code)")
+            d.removeObject(forKey: K.key); d.removeObject(forKey: K.instance); d.removeObject(forKey: K.lastValidated); d.removeObject(forKey: K.plan)
+            lastError = "This key is no longer valid on this Mac. It may have been deactivated or refunded."
+            refresh()
         } catch {
-            // Offline: keep going within the grace period.
+            // Offline or a server hiccup: keep going within the grace period.
         }
     }
 
@@ -182,12 +214,12 @@ final class Licensing {
         case 200..<300:
             if T.self == EmptyResponse.self { return EmptyResponse() as! T }
             return try JSONDecoder().decode(T.self, from: data)
-        case 404: throw LicenseError(message: "That key doesn't exist. Check it for typos.")
-        case 403: throw LicenseError(message: "This key is inactive or has expired.")
+        case 404: throw LicenseError(message: "That key doesn't exist. Check it for typos.", code: code)
+        case 403: throw LicenseError(message: "This key is inactive or has expired.", code: code)
         case 422: throw LicenseError(message: path.hasSuffix("activate")
                                      ? "This key is already in use on its maximum number of Macs. Deactivate one of them first."
-                                     : "That doesn't look like a \(Brand.name) key.")
-        default: throw LicenseError(message: "Dodo Payments returned an error (\(code)). Try again in a moment.")
+                                     : "That doesn't look like a \(Brand.name) key.", code: code)
+        default: throw LicenseError(message: "Dodo Payments returned an error (\(code)). Try again in a moment.", code: code)
         }
     }
 
