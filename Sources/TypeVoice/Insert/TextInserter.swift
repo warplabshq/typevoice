@@ -25,8 +25,10 @@ final class TextInserter {
         case secureField
         case noFocusedApp
         case noTextTarget
+        case appNotInFront
         var errorDescription: String? {
             switch self {
+            case .appNotInFront: return "Couldn't get back to the app you were in"
             case .secureField: return "Can't type into a password field"
             case .noFocusedApp: return "No app to type into"
             case .noTextTarget: return "Nothing to type into here"
@@ -81,7 +83,9 @@ final class TextInserter {
     @discardableResult
     func insert(_ text: String, into target: Target) async throws -> Method {
         let t0 = ContinuousClock.now
-        if IsSecureEventInputEnabled() == true || target.element.map(Self.isSecure) == true {
+        // Secure input is system-wide: Terminal's Secure Keyboard Entry (or an app that left it on)
+        // turns it on for everyone. Only refuse when it belongs to the app we'd type into.
+        if (IsSecureEventInputEnabled() && Self.secureInputPID() == target.pid) || target.element.map(Self.isSecure) == true {
             throw InsertError.secureField
         }
         if Prefs.insertion == .auto, let el = target.element, Self.insertViaAX(text, into: el) {
@@ -117,6 +121,12 @@ final class TextInserter {
         return v as? String
     }
 
+    /// The process that turned on secure keyboard input, if any.
+    private static func secureInputPID() -> pid_t? {
+        guard let d = CGSessionCopyCurrentDictionary() as? [String: Any] else { return nil }
+        return (d["kCGSSessionSecureInputPID"] as? NSNumber).map { pid_t($0.int32Value) }
+    }
+
     private static func isSecure(_ el: AXUIElement) -> Bool {
         string(el, kAXSubroleAttribute) == kAXSecureTextFieldSubrole
     }
@@ -143,11 +153,10 @@ final class TextInserter {
         guard AXUIElementSetAttributeValue(el, kAXSelectedTextAttribute as CFString, text as CFTypeRef) == .success else {
             return false
         }
-        // Some web views report success without changing anything. Verify when we can.
-        if let after = string(el, kAXValueAttribute) {
-            if after == before && !text.isEmpty { return false }
-            if !after.contains(text.trimmingCharacters(in: .whitespaces)) { return false }
-        }
+        // Some web views report success without changing anything: then paste. But any change
+        // counts, even if the field reshaped the text (smart quotes, a single-line field dropping a
+        // line break) — insisting on an exact match pasted the text a second time.
+        if let after = string(el, kAXValueAttribute), after == before, !text.isEmpty { return false }
         return true
     }
 
@@ -195,19 +204,19 @@ final class TextInserter {
 
     private func paste(_ text: String, into target: Target) async throws {
         let pb = NSPasteboard.general
-        let snapshot = ClipboardSnapshot(
-            items: (pb.pasteboardItems ?? []).map { item in
-                var d: [NSPasteboard.PasteboardType: Data] = [:]
-                for t in item.types { if let data = item.data(forType: t) { d[t] = data } }
-                return d
-            },
-            changeCount: pb.changeCount
-        )
-
-        if NSWorkspace.shared.frontmostApplication?.processIdentifier != target.pid,
-           let app = NSRunningApplication(processIdentifier: target.pid) {
+        // ⌘V goes to whatever is in front, so the app you dictated into must be in front again.
+        // Activation can be slow (Electron, another display) or refused: wait for it, and if it
+        // never comes, don't paste into some other app — the caller copies the text instead.
+        if NSWorkspace.shared.frontmostApplication?.processIdentifier != target.pid {
+            guard let app = NSRunningApplication(processIdentifier: target.pid), !app.isTerminated else { throw InsertError.appNotInFront }
             app.activate()
-            try await Task.sleep(for: .milliseconds(80))
+            var inFront = false
+            for _ in 0..<30 {
+                try await Task.sleep(for: .milliseconds(20))
+                if NSWorkspace.shared.frontmostApplication?.processIdentifier == target.pid { inFront = true; break }
+            }
+            guard inFront else { throw InsertError.appNotInFront }
+            try await Task.sleep(for: .milliseconds(40))   // let its window take the keyboard
         }
 
         // With a chord trigger (⌥⌘) the session ends on the first key you let go, so the
@@ -220,8 +229,20 @@ final class TextInserter {
             try await Task.sleep(for: .milliseconds(10))
         }
 
+        // The clipboard as it is right now (something copied during the waits above counts).
+        let snapshot = ClipboardSnapshot(
+            items: (pb.pasteboardItems ?? []).map { item in
+                var d: [NSPasteboard.PasteboardType: Data] = [:]
+                for t in item.types { if let data = item.data(forType: t) { d[t] = data } }
+                return d
+            },
+            changeCount: pb.changeCount
+        )
+
         pb.clearContents()
         pb.setString(text, forType: .string)
+        // Clipboard managers skip "transient" contents, so dictations don't pile up in their history.
+        pb.setData(Data(), forType: Self.transient)
         let ours = pb.changeCount
 
         let src = CGEventSource(stateID: .combinedSessionState)
@@ -234,9 +255,10 @@ final class TextInserter {
         down.post(tap: .cghidEventTap)
         up.post(tap: .cghidEventTap)
 
-        // Give the app time to read the pasteboard, then put the user's clipboard back.
+        // Give the app time to read the pasteboard, then put the user's clipboard back. 350 ms was
+        // too short for Electron/Chromium apps just brought forward: they pasted the old clipboard.
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(350))
+            try? await Task.sleep(for: .milliseconds(1000))
             guard pb.changeCount == ours else { return }   // user copied something meanwhile
             pb.clearContents()
             let restored: [NSPasteboardItem] = snapshot.items.map { dict in
@@ -244,9 +266,12 @@ final class TextInserter {
                 for (t, d) in dict { item.setData(d, forType: t) }
                 return item
             }
+            restored.first?.setData(Data(), forType: Self.transient)   // not a new entry in clipboard history
             if !restored.isEmpty { pb.writeObjects(restored) }
         }
     }
+
+    private static let transient = NSPasteboard.PasteboardType("org.nspasteboard.TransientType")
 
     /// Fallback when insertion fails: leave the text on the clipboard.
     func copyToClipboard(_ text: String) {
