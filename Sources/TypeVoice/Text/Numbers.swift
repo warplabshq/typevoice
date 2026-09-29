@@ -4,7 +4,12 @@ import Foundation
 /// Spoken numbers → digits, using NVIDIA NeMo's inverse text normalization
 /// (bundled with FluidAudio), with guards so it never eats real words.
 enum Numbers {
+    /// Line by line: the grammar joins lines, so paragraphs and lists would otherwise flatten.
     static func apply(_ text: String) -> String {
+        text.components(separatedBy: "\n").map(applyLine).joined(separator: "\n")
+    }
+
+    private static func applyLine(_ text: String) -> String {
         guard containsNumberWord(text) else { return restoreOrdinals(text) }
         var s = text
 
@@ -15,6 +20,10 @@ enum Numbers {
             of: #"(?i)(?<!\bhundred|\bthousand|\bmillion|\bbillion|\bdollars|\bdollar|\bpounds|\beuros|\bcents|\bbucks)\s+(and)\s+"#,
             with: " \u{2038}$1 ", options: .regularExpression)
 
+        // "a two year old", "a five minute call": the grammar drops the "a"; hide it the same way.
+        s = s.replacingOccurrences(of: #"(?i)\b(a|an)\s+(?=(?:one|two|three|four|five|six|seven|eight|nine|ten|eleven|twelve|fifteen|twenty|thirty|forty|fifty|sixty|ninety)\b(?!\s+(?:hundred|thousand|million|billion|dozen)))"#, with: "$1\u{2038} ", options: .regularExpression)
+        // "one second", "a second" is a moment, not an ordinal; glue it so the grammar leaves it.
+        s = s.replacingOccurrences(of: #"(?i)\b(one|a)\s+(second)\b"#, with: "$1\u{2039}$2", options: .regularExpression)
         // Digit-by-digit strings (phone numbers, codes): join them before the grammar
         // can mistake "one zero" for a time.
         s = joinDigitRuns(s)
@@ -27,9 +36,12 @@ enum Numbers {
         s = restoreOrdinals(s)
 
         // The hidden word comes back exactly as it was said ("… of Matt. And I think").
-        s = s.replacingOccurrences(of: "\u{2038}", with: "")
+        s = s.replacingOccurrences(of: "\u{2038} ", with: " ").replacingOccurrences(of: "\u{2038}", with: "")
         // "24 h" → "24 hours", "30 min" → "30 minutes" (NeMo abbreviates measures).
-        s = s.replacingOccurrences(of: #"(\d)\s?h\b(?![:.])"#, with: "$1 hours", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"(\d)\s?h\b(?!:|\.\d)"#, with: "$1 hours", options: .regularExpression)
+        s = s.replacingOccurrences(of: #"\b1 (hour|minute|second)s\b"#, with: "1 $1", options: .regularExpression)
+        // The grammar writes "2.5 percent" in one place and "3.5 %" in the next; always "2.5%".
+        s = s.replacingOccurrences(of: #"([0-9]) ?(?:%|percent\b)"#, with: "$1%", options: .regularExpression)
         s = s.replacingOccurrences(of: #"(\d)\s?min\b"#, with: "$1 minutes", options: .regularExpression)
         s = s.replacingOccurrences(of: #"(\d)\s?sec\b"#, with: "$1 seconds", options: .regularExpression)
         // "2 X speed", "10 x faster" → "2x speed", "10x faster".
@@ -78,7 +90,7 @@ enum Numbers {
 
     private static let ordinalWords = ["", "first", "second", "third", "fourth", "fifth", "sixth", "seventh", "eighth", "ninth"]
     private static let monthAlt = "january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec"
-    private static let ordinalRE = try! NSRegularExpression(pattern: #"(?i)\b([1-9])(st|nd|rd|th)\b"#)
+    private static let ordinalRE = try! NSRegularExpression(pattern: #"(?i)\b([1-9])(st|nd|rd|th)\b"#)   // [1-9] is ASCII here: Int() below can't fail
     private static let dateAfter = try! NSRegularExpression(pattern: #"(?i)^\s+(of\s+)?("# + monthAlt + #")\b"#)
     private static let dateBefore = try! NSRegularExpression(pattern: #"(?i)\b("# + monthAlt + #")\s+$"#)
 
@@ -100,11 +112,11 @@ enum Numbers {
     private static func restoreSmallNumbers(_ s: String) -> String {
         let months = "january|february|march|april|may|june|july|august|september|october|november|december|jan|feb|mar|apr|jun|jul|aug|sep|sept|oct|nov|dec"
         let re = try! NSRegularExpression(
-            pattern: #"(?i)(?<![\d$€£.:/\-#])(?<!(?:"# + months + #")\s)\b(\d)\b(?![\d%:.,/\-]|\s?(?:[ap]\.\s?m\.|am|pm|percent|hours|minutes|seconds|x|"# + months + #")(?:\b|(?<=\.)))"#)
+            pattern: #"(?i)(?<![0-9$€£.:/\-#])(?<!(?:"# + months + #")\s)\b([0-9])\b(?![0-9%:/\-]|[.,][0-9]|\s?(?:[ap]\.\s?m\.|am|pm|percent|hours|minutes|seconds|x|"# + months + #")(?:\b|(?<=\.)))"#)
         let ns = s as NSString
         var out = s
         for m in re.matches(in: s, range: NSRange(location: 0, length: ns.length)).reversed() {
-            let d = Int(ns.substring(with: m.range(at: 1)))!
+            guard let d = Int(ns.substring(with: m.range(at: 1))) else { continue }
             out = (out as NSString).replacingCharacters(in: m.range, with: smallWords[d])
         }
         return out

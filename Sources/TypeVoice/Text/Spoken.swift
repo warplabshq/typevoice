@@ -24,6 +24,8 @@ enum Spoken {
         return s
     }
 
+    /// Words that end a short sentence right before another one ("I'll do it. Now!", "Let's go. Today.").
+    private static let sentenceEnders: Set<String> = ["it", "that", "this", "there", "here", "go", "do", "done", "now", "then", "again", "too", "today", "so", "one", "yes", "no", "ok", "okay", "fine", "me", "you", "us", "them"]
     private static let all = clearTLDs.union(wordTLDs)
     private static let tldAlt = all.sorted { $0.count > $1.count }.joined(separator: "|")
 
@@ -32,7 +34,19 @@ enum Spoken {
         var s = text
         // word dot tld (optionally dot tld again: "dot co dot uk")
         let domain = try! NSRegularExpression(pattern: #"(?i)\b([a-z0-9][a-z0-9-]*)\s+dot\s+(?:(\#(tldAlt))\s+dot\s+)?(\#(tldAlt))\b"#)
-        s = domain.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: "$1.$2.$3")
+        // "the blue dot at the top" is not an address: an ending that is also a word needs a name
+        // before it (not an everyday word) or the end of the sentence after it.
+        let dns = s as NSString
+        for m in domain.matches(in: s, range: NSRange(location: 0, length: dns.length)).reversed() {
+            let head = dns.substring(with: m.range(at: 1)), tld = dns.substring(with: m.range(at: 3)).lowercased()
+            if wordTLDs.contains(tld), m.range(at: 2).location == NSNotFound, English.isWord(head) {
+                let after = m.range.location + m.range.length
+                let next = after < dns.length ? dns.substring(with: NSRange(location: after, length: 1)) : ""
+                if !(next.isEmpty || ".,!?;:)".contains(next)) { continue }
+            }
+            let mid = m.range(at: 2).location == NSNotFound ? "" : dns.substring(with: m.range(at: 2)) + "."
+            s = (s as NSString).replacingCharacters(in: m.range, with: "\(head).\(mid)\(dns.substring(with: m.range(at: 3)))")
+        }
         s = s.replacingOccurrences(of: "..", with: ".")
         // an email: "name at domain.tld" (the domain just got its dot). "the docs are at typevoice.ai"
         // is not one: the name must look like a handle, or follow "to", "email", "cc"…
@@ -67,16 +81,22 @@ enum Spoken {
             let head = ns.substring(with: m.range(at: 1)), tail = ns.substring(with: m.range(at: 2))
             let tld = tail.lowercased()
             guard all.contains(tld) else { continue }
+            // "We shipped it. AI does the rest", "home. TV was on": an all-caps word starts a sentence.
+            if tail.count > 1, tail == tail.uppercased() { continue }
             let after = m.range.location + m.range.length
             let rest = (after < ns.length ? ns.substring(from: after) : "").drop(while: { $0 == " " })
             // "it's", "so," and friends carry on a sentence; a domain ends at a stop or the end.
-            if let f = rest.first, "'’,;:".contains(f) { continue }
+            if let f = rest.first, "'’,;:-".contains(f) { continue }
+            if head.contains("."), head.count <= 4 { continue }   // "e.g. today", "i.e. that"
             let endsHere = rest.first.map { ".!?)".contains($0) } ?? true
             if wordTLDs.contains(tld) {
                 // "Check the logs. So we should…" is a sentence; "it's on logs. So." is a domain,
                 // and so is "logs. so" (the model would have capitalised a new sentence).
                 let modelCapitalised = tail.first!.isUppercase
                 guard endsHere || !modelCapitalised else { continue }
+                // "I'll do it. Now!", "Let's go. Today." — an everyday word before the stop is a sentence end.
+                if English.isWord(head), modelCapitalised, !endsHere { continue }
+                if endsHere, modelCapitalised, sentenceEnders.contains(head.lowercased()) { continue }
             } else if let f = rest.first, f.isUppercase {
                 continue   // "…com. The next thing" – a real sentence boundary after the domain
             }

@@ -78,7 +78,8 @@ struct Style: Sendable, Equatable {
             s = s.components(separatedBy: "\n").map { line -> String in
                 let marker = line.range(of: #"^(\d+\. |- )"#, options: .regularExpression).map { String(line[$0]) } ?? ""
                 let body = String(line.dropFirst(marker.count))
-                    .replacingOccurrences(of: #"[,.!?;:…]"#, with: "", options: .regularExpression)
+                    // Only punctuation that ends a word: "typevoice.ai", "2:30", "$2.50" keep theirs.
+                    .replacingOccurrences(of: #"[,.!?;:…]+(?=\s|$)"#, with: "", options: .regularExpression)
                     .replacingOccurrences(of: #"[ \t]{2,}"#, with: " ", options: .regularExpression)
                 return marker + body
             }.joined(separator: "\n")

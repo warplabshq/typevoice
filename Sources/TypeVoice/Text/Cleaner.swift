@@ -10,15 +10,18 @@ enum Cleaner {
 
     private static let fillers: NSRegularExpression = {
         // Standalone hesitation sounds. Deliberately NOT "like" or "so" — too risky.
-        let pattern = #"(?i)(?<![\w'])(?:u+m+|u+h+|uhm+|h+m+|m+hm+|er+m*|ah+|eh+)(?![\w'])[,.]?\s*"#
+        // Not in capitals ("the ER", "UM campus") and not inside a hyphenated word ("Uh-huh").
+        let pattern = #"(?<![\w'-])(?:[Uu]m+|[Uu]+h+|[Uu]hm+|[Hh]m+|[Mm]+hm+|[Ee]r+m*|[Aa]h+|[Ee]h+)(?![\w'-]),?\s*"#
         return try! NSRegularExpression(pattern: pattern)
     }()
 
     private static let stutter: NSRegularExpression = {
         // Function words doubled are almost always stutters: "the the", "I I", "to to".
         // Content words ("very very", "no no", "really really") are left alone.
-        let words = "the|a|an|i|to|of|in|it|is|and|that|this|we|you|they|he|she|was|were|on|at|for|with|my|our|your|so|but|if|as|be|are|have|has|had|do|did|can|will|would|just|not"
-        return try! NSRegularExpression(pattern: #"(?i)\b("# + words + #")(?:[,\s]+\1\b)+"#)
+        // Not "had had" (grammatical), and never across a comma ("Thank you, you're"). "that that"
+        // stays in: in real dictations it was a stutter every time.
+        let words = "the|a|an|i|to|of|in|it|is|and|that|this|we|you|they|he|she|was|were|on|at|for|with|my|our|your|so|but|if|as|be|are|have|has|do|did|can|will|would|just|not"
+        return try! NSRegularExpression(pattern: #"(?i)\b("# + words + #")(?:\s+\1\b)+"#)
     }()
 
     static func clean(_ raw: String, style: Style = .current) -> String {
@@ -29,6 +32,12 @@ enum Cleaner {
             // A stray sound between two fillers ("um s uh") goes with them.
             s = s.replacingOccurrences(of: #"(?i)(?<![\w'])(?:um+|uh+|uhm+|er+m?)[,.]?\s+[b-hj-z][,.]?\s+(?=(?:um+|uh+|uhm+|er+m?)(?![\w']))"#, with: "", options: .regularExpression)
             s = fillers.stringByReplacingMatches(in: s, range: NSRange(s.startIndex..., in: s), withTemplate: "")
+            // "I'll do it, uh." left "I'll do it," — the comma goes, the full stop stays.
+            s = s.replacingOccurrences(of: #",\s*([.?!])"#, with: "$1", options: .regularExpression)
+            s = s.replacingOccurrences(of: #",\s*$"#, with: "", options: .regularExpression)
+            // "done. Um. Then" → "done. Then": a filler's own full stop doesn't survive it.
+            s = s.replacingOccurrences(of: #"([.?!])\s*\.(?!\.)"#, with: "$1", options: .regularExpression)
+            s = s.replacingOccurrences(of: #"^\s*\.\s*"#, with: "", options: .regularExpression)
             s = s.replacingOccurrences(of: #"[ \t]+"#, with: " ", options: .regularExpression)
             s = Disfluency.apply(s)
         }
@@ -63,7 +72,8 @@ enum Cleaner {
             return cap ? capitalizeFirst(s) : s
         }
         let last = trimmedBefore.last!
-        let endsSentence = ".!?\n".contains(last) || before.hasSuffix("\n")
+        // An emoji or "…" before the caret ends a thought too ("Great job 🎉").
+        let endsSentence = ".!?\n…".contains(last) || before.hasSuffix("\n") || last.unicodeScalars.contains { $0.properties.isEmojiPresentation }
         if endsSentence {
             if cap { s = capitalizeFirst(s) }
         } else if cap, !",;:(-—\"'“‘".contains(last) {
@@ -90,6 +100,8 @@ enum Cleaner {
         if stripped == "I" || stripped.hasPrefix("I'") { return s }
         // Two capitals in a row (acronym) or an internal capital → leave it.
         if stripped.count > 1, stripped.dropFirst().contains(where: { $0.isUppercase }) { return s }
+        // A name isn't an everyday word: "Priyam said…" keeps its capital after "I talked to".
+        if !English.isWord(stripped.lowercased()) { return s }
         return f.lowercased() + s.dropFirst()
     }
 }

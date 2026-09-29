@@ -18,7 +18,7 @@ enum Disfluency {
         // Opening a sentence: "Anyway, …", "I mean, …", "Like, …", "You know, …".
         (re(#"(^|[.?!]\s+|\n)(?:you know|i mean|like|anyway|anyways|so yeah|yeah so|so anyway|and yeah),\s*"#), "$1"),
         // "Also like maybe", "so like the": the like carries nothing.
-        (re(#"\b(so|and|but|also|or|just)\s+like,?\s+(?=(?:maybe|you|i|we|it|the|a|if|when|now|that's|it's|this|there)\b)"#), "$1 "),
+        (re(#"\b(so|and|but|also|or)\s+like,?\s+(?=(?:maybe|you|i|we|it|the|a|if|when|now|that's|it's|this|there)\b)"#), "$1 "),
         (re(#",\s*,"#), ","),
         (re(#",\s*([.?!])"#), "$1"),
     ]
@@ -32,6 +32,7 @@ enum Disfluency {
     /// "you know" with no commas, repeated phrases, and a cut-off start of a word.
     private static let keepBeforeYouKnow: Set<String> = ["do", "don't", "did", "didn't", "if", "as", "what", "would", "will", "can", "could", "let",
         "whether", "should", "may", "might", "where", "how", "who", "when", "why", "that", "because", "since", "unless", "than", "whom", "cause",
+        "now", "everyone", "everybody", "anyone", "anybody", "someone", "somebody", "people", "guys", "all", "things", "stuff",
         "know", "knew", "think", "thought", "hope", "guess", "bet", "believe", "sure", "feel", "felt", "say", "said", "mean", "suppose", "assume", "wish", "trust", "see"]
     private static let startsClause: Set<String> = ["i", "i'm", "i've", "i'll", "i'd", "it", "it's", "we", "we're", "they", "they're", "the", "this", "that",
         "my", "a", "like", "he", "she", "you're", "there", "so", "and", "but", "just", "maybe", "some", "to", "in", "on", "for", "at"]
@@ -101,7 +102,7 @@ enum Disfluency {
                 let f = norm(t[k]), next = norm(t[k + 1])
                 // One letter only in lowercase ("o older"); "plan B backup" keeps its B.
                 if (1...4).contains(f.count), f.allSatisfy(\.isLetter), !shortWords.contains(f), !endsSentence(t[k]),
-                   f.count > 1 || t[k] == f,
+                   f.count > 1 || (t[k] == f && !["vitamin", "plan", "type", "grade", "class", "option", "version", "letter", "section", "part", "in", "language"].contains(k > 0 ? norm(t[k - 1]) : "")),
                    next.count >= f.count + 3, next.hasPrefix(f), f.count == 1 || !English.isWord(f) {
                     t.remove(at: k); changed = true; continue
                 }

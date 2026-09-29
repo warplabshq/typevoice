@@ -63,6 +63,73 @@ enum PipelineTest {
             }
             exit(0)
         }
+        if files.first == "pipeline" {
+            // The whole text pipeline, as a dictation goes through it (no Dictionary, no smart cleanup).
+            func run(_ s: String, _ style: Style = Style(), before: String? = nil) -> String {
+                var t = Cleaner.clean(s, style: style)
+                t = Structure.commands(t); t = Numbers.apply(t); t = Spoken.apply(t)
+                t = Grammar.apply(t, style: style); t = style.finish(t)
+                return Cleaner.fit(t, to: Cleaner.Context(textBeforeCaret: before), style: style)
+            }
+            _ = English.isWord("warm")
+            var none = Style(); none.punctuation = .none
+            let cases: [(String, String, Style, String?)] = [
+                ("Grocery list: milk, eggs, bread and three apples.", "Grocery list:\n- Milk\n- Eggs\n- Bread\n- Three apples", Style(), nil),
+                ("Thanks for the update.\n\nI have two cats. New line. Regards, Priyam", "Thanks for the update.\n\nI have two cats.\nRegards, Priyam", Style(), nil),
+                ("We shipped it. AI does the rest.", "We shipped it. AI does the rest.", Style(), nil),
+                ("I was at home. TV was on.", "I was at home. TV was on.", Style(), nil),
+                ("I'll do it. Now!", "I'll do it. Now!", Style(), nil),
+                ("Let's go. Today.", "Let's go. Today.", Style(), nil),
+                ("Go to typevoice dot ai today.", "Go to typevoice.ai today.", Style(), nil),
+                ("It lives on logs dot so.", "It lives on logs.so.", Style(), nil),
+                ("I have a two year old son.", "I have a two year old son.", Style(), nil),
+                ("Give me one second.", "Give me one second.", Style(), nil),
+                ("He dodged that bullet.", "He dodged that bullet.", Style(), nil),
+                ("There is no silver bullet here.", "There is no silver bullet here.", Style(), nil),
+                ("We launched a new line of shoes.", "We launched a new line of shoes.", Style(), nil),
+                ("Read the next line carefully.", "Read the next line carefully.", Style(), nil),
+                ("The build takes one hour.", "The build takes one hour.", Style(), nil),
+                ("I'll take the blue one.", "I'll take the blue one.", Style(), nil),
+                ("Growth went from two point five percent to three point five percent.", "Growth went from 2.5% to 3.5%.", Style(), nil),
+                ("Tap the blue dot at the top.", "Tap the blue dot at the top.", Style(), nil),
+                ("We went to the ER last night.", "We went to the ER last night.", Style(), nil),
+                ("Uh-huh, that works.", "Uh-huh, that works.", Style(), nil),
+                ("I'll do it, uh.", "I'll do it.", Style(), nil),
+                ("Thank you, you're amazing.", "Thank you, you're amazing.", Style(), nil),
+                ("I had had enough.", "I had had enough.", Style(), nil), ("I I'm a fan of it.", "I'm a fan of it.", Style(), nil), ("That that sounds confusing.", "That sounds confusing.", Style(), nil),
+                ("It works just like the old one.", "It works just like the old one.", Style(), nil),
+                ("Now you know the drill.", "Now you know the drill.", Style(), nil),
+                ("I have vitamin d deficiency.", "I have vitamin d deficiency.", Style(), nil),
+                ("Priyam said the build is green.", " Priyam said the build is green.", Style(), "I talked to"),
+                ("Visit typevoice dot ai at two thirty pm, it costs $2.50.", "Visit typevoice.ai at 2:30 pm it costs $2.50", none, nil),
+                ("Any feedback is appreciated.", "Any feedback is appreciated.", Style(), nil),
+                ("Should you need anything, let me know.", "Should you need anything, let me know.", Style(), nil),
+                ("What was great was the team.", "What was great was the team.", Style(), nil),
+                ("One day my friend called.", "One day my friend called.", Style(), nil),
+                ("I have ३ apples and one pear.", "I have ३ apples and one pear.", Style(), nil),
+                // Still working.
+                ("Can you send me the file.", "Can you send me the file?", Style(), nil),
+                ("Things to buy, bullet milk, bullet eggs, bullet point bread.", "Things to buy:\n- Milk\n- Eggs\n- Bread", Style(), nil),
+                ("It's a one time purchase. Start a 7 day trial.", "It's a one-time purchase. Start a seven-day trial.", Style(), nil),
+                ("Call me at two thirty pm and it costs five dollars and fifty cents.", "Call me at 2:30 pm and it costs $5.50.", Style(), nil),
+                ("First, we ship. Second, we post.", "First, we ship. Second, we post.", Style(), nil),
+                ("Testing one three.", "Testing one three.", Style(), nil), ("Done. Um. Then we ship.", "Done. Then we ship.", Style(), nil), ("We cut costs by twenty percent.", "We cut costs by 20%.", Style(), nil),
+            ]
+            var failures = 0
+            let t0 = ContinuousClock.now
+            for (input, expected, style, before) in cases {
+                let got = run(input, style, before: before)
+                let ok = got == expected; if !ok { failures += 1 }
+                let show = { (s: String) in s.replacingOccurrences(of: "\n", with: "⏎") }
+                print("\(ok ? "ok " : "FAIL") \(show(input)) → \(show(got))\(ok ? "" : "   (wanted \(show(expected)))")")
+            }
+            let long = Array(repeating: "So I was thinking, you know, we should ship the export flow on Friday and then write the changelog, and I mean the team is ready.", count: 60).joined(separator: " ")
+            let t1 = ContinuousClock.now; _ = run(long)
+            print(String(format: "%d cases; a %d-word dictation takes %.0f ms", cases.count, long.split(separator: " ").count, Double((ContinuousClock.now - t1) / .microseconds(1)) / 1000))
+            _ = t0
+            print(failures == 0 ? "all good" : "\(failures) failed")
+            exit(failures == 0 ? 0 : 1)
+        }
         if files.first == "grammar" {
             let cases: [(String, String)] = [
                 // Questions said flat.

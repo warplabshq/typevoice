@@ -59,11 +59,13 @@ enum Structure {
     // every marker tolerates punctuation on both sides. Commas/colons before a command are
     // dropped; a period stays (it ends the sentence).
     private static let newParagraph = try! NSRegularExpression(pattern: #"(?i)[,:;]?\s*\b(?:(?:new|next)\s+paragraph|paragraph\s+break)\b[,.:;]?\s*"#)
-    private static let newLine = try! NSRegularExpression(pattern: #"(?i)[,:;]?\s*\b(?:(?:new|next)\s+line|line\s+break)\b[,.:;]?\s*"#)
+    // "We launched a new line of shoes", "Read the next line" are not commands.
+    private static let newLine = try! NSRegularExpression(pattern: #"(?i)[,:;]?\s*(?<!\ba )(?<!\bthe )(?<!\bour )(?<!\bthis )(?<!\bthat )(?<!\bits )(?<!\byour )(?<!\btheir )\b(?:(?:new|next)\s+line|line\s+break)\b(?!\s+(?:of|up|is|was|for)\b)[,.:;]?\s*"#)
     // "and third glasses", "so first lights", "and then number two": the connector goes with the marker.
     private static let lead = #"(?:\b(?:and\s+then|and|so|then|also|next|okay|ok)\b,?\s+)?"#
     private static let bullet = try! NSRegularExpression(pattern: #"(?i)[,:;]?\s*"# + lead + #"(?<!\ba )(?<!\ban )(?<!\bthe )(?<!\bone )(?<!\beach )(?<!\bevery )\b(?:bullet\s+point|bullet|dash\s+point|(?:new|next)\s+item)\b(?!s\b)(?!\s+(?:points?|form|list)s?\b)[,.:;]?\s*"#)
-    private static let numbered = try! NSRegularExpression(pattern: #"(?i)[,:;]?\s*"# + lead + #"\b(?:number|point|step|item)\s+(one|two|three|four|five|six|seven|eight|nine|ten|\d{1,2})\b[,.:;]?\s*"#)
+    // "two point five percent" is a decimal, not "point five" as a list marker.
+    private static let numbered = try! NSRegularExpression(pattern: #"(?i)[,:;]?\s*"# + lead + #"(?<!(?:zero|one|two|three|four|five|six|seven|eight|nine|ten|[0-9])\s)\b(?:number|point|step|item)\s+(one|two|three|four|five|six|seven|eight|nine|ten|\d{1,2})\b[,.:;]?\s*"#)
     /// "First, … Second, … Third, …" at the start of sentences.
     private static let ordinal = try! NSRegularExpression(pattern: #"(?i)(^|[.!?]\s+|\n)(first|second|third|fourth|fifth|sixth|seventh|eighth|ninth|tenth)(?:ly)?\b[,.:;]?\s*"#)
     /// The same ordinals anywhere in a sentence: "so first lights, second camera and third glasses".
@@ -86,7 +88,8 @@ enum Structure {
             let head = String(s[..<r.lowerBound]), rest = String(s[r.upperBound...])
             if let items = series(rest, minimum: 2) {
                 s = head + items.map { "\n- " + $0 }.joined()
-            } else {
+            } else if head.trimmingCharacters(in: .whitespaces).isEmpty || ".!?:\n".contains(head.trimmingCharacters(in: .whitespaces).last!) {
+                // A lone "bullet" is a command only where a sentence starts: "dodged that bullet" isn't one.
                 s = head + "\n- " + rest
             }
         }

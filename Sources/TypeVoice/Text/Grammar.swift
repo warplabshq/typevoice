@@ -89,7 +89,9 @@ enum Grammar {
         if lower.range(of: #"^\s*(i wonder|i was wondering|i'm wondering|let me know|tell me|not sure|no idea|i don't know|i dunno|guess)\b"#, options: .regularExpression) != nil { return false }
         // "Why we did it is what I don't get", "What's new can be the changelog": a clause as the subject.
         if lower.range(of: #"\b(is|was) (what|why|how|where|when|the reason|beyond me|unclear|a mystery)\b"#, options: .regularExpression) != nil { return false }
-        if lower.range(of: #"^\s*(what|who)('s| is) \w+ (is|was|can|could|will|would|should|must|has|needs|means|matters|goes)\b"#, options: .regularExpression) != nil { return false }
+        if lower.range(of: #"^\s*(what|who)('s| is| was) \w+ (is|was|can|could|will|would|should|must|has|needs|means|matters|goes)\b"#, options: .regularExpression) != nil { return false }
+        // "Should you need anything, let me know": a condition, not a question.
+        if lower.range(of: #"^\s*should (you|we|they|anyone) (need|want|have|require|find|see)\b[^?]*,"#, options: .regularExpression) != nil { return false }
 
         // Skip openers and a short name after a greeting: "Hey Alfred, what do you…".
         var k = 0
@@ -123,6 +125,7 @@ enum Grammar {
         }
         if ["have", "haven't"].contains(w0) { return pronouns.contains(w1) }       // "Have a good one" is not one
         if w0 == "am" { return w1 == "i" }
+        if w0 == "any", t.count > 6 || t.contains(where: { ["is", "are", "was", "welcome", "appreciated", "let"].contains($0.word) }) { return false }   // "Any feedback is appreciated"
         if w0 == "any" { return ["idea", "ideas", "update", "updates", "news", "thoughts", "chance", "luck", "word", "feedback", "questions", "plans", "clue", "reason"].contains(w1) }
 
         // Wh-questions.
@@ -190,6 +193,7 @@ enum Grammar {
         "the", "a", "an", "it", "that", "this", "only", "again", "now", "today", "too", "so", "if", "then", "as", "than", "from", "i", "we", "you",
         "they", "he", "she", "basis", "please", "right", "yet", "anyway", "though", "about", "because", "when", "while", "since", "until",
         "can", "will", "would", "should", "could", "do", "does", "did", "has", "have", "had", "not", "just", "very", "really", "all",
+        "my", "your", "our", "his", "her", "their", "its", "before", "after", "when", "ago",
         "here", "there", "actually", "basically", "instead", "first", "maybe", "max", "total", "ago", "later", "enough", "overall", "anyway"]
     private static let unitRE = try! NSRegularExpression(pattern:
         #"(?i)\b(\d+|one|two|three|four|five|six|seven|eight|nine|ten|twelve|fifteen|twenty|thirty|forty|fifty|sixty|ninety|hundred) (second|minute|hour|day|week|month|year|step|page|point|person|mile|foot|inch|star|player|seat|dollar)(?= ([a-z][\w'’]*))"#)
@@ -227,8 +231,14 @@ enum Grammar {
     private static let sentenceStart = try! NSRegularExpression(pattern: #"([.?!])( +)([a-z])"#)
 
     /// "i" → "I" (and i'm, i've…), and a sentence that begins in lowercase gets its capital.
+    private static let listItemStart = try! NSRegularExpression(pattern: #"(^|\n)(- |[0-9]+\. )([a-z])"#)
+
     static func capitals(_ text: String) -> String {
         var s = loneI.stringByReplacingMatches(in: text, range: NSRange(text.startIndex..., in: text), withTemplate: "I")
+        // A list item starts like a sentence: "- Three apples".
+        for m in listItemStart.matches(in: s, range: NSRange(location: 0, length: (s as NSString).length)).reversed() {
+            let r = m.range(at: 3); s = (s as NSString).replacingCharacters(in: r, with: (s as NSString).substring(with: r).uppercased())
+        }
         let ns = s as NSString
         for m in sentenceStart.matches(in: s, range: NSRange(location: 0, length: ns.length)).reversed() {
             let before = ns.substring(to: m.range.location)
