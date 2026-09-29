@@ -4,6 +4,12 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.19 — 29 September 2026
+
+- Thinking out loud stays out of your text: "you know", "I mean", "like", "anyway" and "I don't
+  know" go when they only fill a gap, and so do restarts like "I'm waiting for, I'm waiting for".
+  "Do you know the answer" and "I like it" stay as they are. Part of Remove fillers in Style.
+
 ## 1.0.18 — 28 September 2026
 
 - Hyphens where a pair of words describes the next one: "a one-time purchase", "a 7-day trial",
