@@ -188,10 +188,24 @@ enum PipelineTest {
             // Two seconds from the microphone through AudioRecorder (TYPEVOICE_FORCE_QUEUE=1 for
             // the input-only fallback). Prints what came back.
             let r = AudioRecorder()
+            let tw = ContinuousClock.now
+            r.prewarm()
+            print(String(format: "prewarm %.0f ms (off the key press)", Double((ContinuousClock.now - tw) / .microseconds(1)) / 1000))
+            let t0 = ContinuousClock.now
             do { try r.start() } catch { print("start failed: \(error.localizedDescription)"); exit(1) }
+            print(String(format: "mic opened in %.0f ms", Double((ContinuousClock.now - t0) / .microseconds(1)) / 1000))
             Thread.sleep(forTimeInterval: 2.0)
             let rec = r.stop()
             print(String(format: "recorded %.2f s, %d samples, peak %.4f", rec.seconds, rec.samples.count, rec.peak))
+            // A second dictation, the way the app does it: prewarm after the session, then start.
+            Thread.sleep(forTimeInterval: 0.5)
+            r.prewarm(); Thread.sleep(forTimeInterval: 1.0)
+            let t2 = ContinuousClock.now
+            do { try r.start() } catch { print("second start failed: \(error.localizedDescription)"); exit(1) }
+            print(String(format: "second session: mic opened in %.0f ms", Double((ContinuousClock.now - t2) / .microseconds(1)) / 1000))
+            Thread.sleep(forTimeInterval: 1.0)
+            let rec2 = r.stop()
+            print(String(format: "recorded %.2f s, peak %.4f", rec2.seconds, rec2.peak))
             exit(rec.samples.count > 16_000 ? 0 : 1)
         }
         if files.first == "replay" {

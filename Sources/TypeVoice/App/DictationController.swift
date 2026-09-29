@@ -40,6 +40,13 @@ final class DictationController {
         Packs.Index.warm()
         // The English word list (Dictionary and pack safety checks) loads once, off the first dictation's clock.
         Task.detached(priority: .utility) { _ = English.isWord("warm") }
+        // The mic's slow setup happens now and after every session, not on the key press; again
+        // when the Mac wakes, since the audio hardware may have been rebuilt while it slept.
+        let rec = recorder
+        Task.detached(priority: .utility) { rec.prewarm() }
+        wakeObserver = NSWorkspace.shared.notificationCenter.addObserver(forName: NSWorkspace.didWakeNotification, object: nil, queue: nil) { _ in
+            Task.detached(priority: .utility) { try? await Task.sleep(for: .seconds(2)); rec.prewarm() }
+        }
         recorder.onInterrupted = { [weak self] in
             guard let self, self.state.phase.isListening else { return }
             Log.d("mic changed mid-session; finishing with what was heard")
@@ -88,6 +95,10 @@ final class DictationController {
     func restartHotkey() { hotkey.start() }
 
     private var axWatcher: Task<Void, Never>?
+    /// The mic opening in the background for the current session, and which session it was.
+    private var micStart: Task<Void, Error>?
+    private var micGen = 0
+    private var wakeObserver: Any?
 
     /// If Accessibility is missing or gets revoked, keep checking and reinstall
     /// the hotkey the moment it's back. Cheap: one bool every 2 s.
@@ -169,13 +180,29 @@ final class DictationController {
         target = inserter.captureTarget()
         state.resetLevels()
         levelSmoother = 0
-        do {
-            try recorder.start()
-        } catch {
-            Log.d("mic start failed: \(error.localizedDescription)")
-            hud?.present(for: target)
-            show(.error(error.localizedDescription), for: .milliseconds(1400))
-            return
+        // Opening the mic can take a second after the Mac has been idle (the audio hardware wakes
+        // up). That used to happen here on the main thread: no pill until it was done, and a key
+        // released meanwhile ended the session with nothing recorded. Now the pill shows at once
+        // and the mic opens in the background; stopping waits for it (see finish()).
+        let rec = recorder, t0 = ContinuousClock.now
+        micGen &+= 1
+        let gen = micGen
+        let opening = Task.detached(priority: .userInitiated) { try rec.start() }
+        micStart = opening
+        Task { @MainActor [weak self] in
+            do {
+                try await opening.value
+                let ms = (ContinuousClock.now - t0).ms
+                Log.timing("mic.start", since: t0)
+                if ms > 300 { Log.d("mic took \(Int(ms)) ms to open") }
+            } catch {
+                guard let self, self.micGen == gen else { return }
+                Log.d("mic start failed: \(error.localizedDescription)")
+                self.lengthCap?.cancel(); self.lengthCap = nil
+                self.lockWindow?.cancel(); self.lockWindow = nil
+                self.locked = false
+                self.show(.error(error.localizedDescription), for: .milliseconds(1400))
+            }
         }
         locked = Prefs.triggerMode == .toggle          // toggle mode is hands-free by nature
         state.listeningSince = .now
@@ -214,7 +241,14 @@ final class DictationController {
         lockWindow?.cancel(); lockWindow = nil
         lengthCap?.cancel(); lengthCap = nil
         finishTask?.cancel(); finishTask = nil
-        recorder.cancel()
+        // If the mic is still opening, close it once it has: never leave it running.
+        let rec = recorder, opening = micStart, gen = micGen
+        Task { @MainActor [weak self] in
+            _ = try? await opening?.value
+            guard let self, self.micGen == gen else { return }
+            rec.cancel()
+            Task.detached(priority: .utility) { rec.prewarm() }
+        }
         locked = false
         state.processingNote = nil
         state.phase = .idle
@@ -301,8 +335,15 @@ final class DictationController {
 
     private func finish() {
         guard state.phase.isListening else { return }
-        let rec = recorder.stop()
-        finish(with: rec)
+        // A quick release while the mic is still opening waits for it, instead of ending on nothing.
+        let opening = micStart
+        Task { @MainActor [weak self] in
+            _ = try? await opening?.value
+            guard let self, self.state.phase.isListening else { return }
+            self.finish(with: self.recorder.stop())
+            let rec = self.recorder
+            Task.detached(priority: .utility) { rec.prewarm() }
+        }
     }
 
     private func finish(with rec: AudioRecorder.Recording) {

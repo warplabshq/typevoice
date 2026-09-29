@@ -49,8 +49,36 @@ final class AudioRecorder: @unchecked Sendable {
     private var queueInput: QueueInput?
     private var queueSpectrum: Spectrum?
 
+    /// Opening the mic from cold costs about a second, nearly all of it creating the input node
+    /// and asking the device for its format; starting the engine is ~50 ms. Both of those are done
+    /// here, off the key press: at launch, after each session, after the Mac wakes and after a
+    /// device change. It doesn't start the mic (no indicator, nothing heard).
+    func prewarm() {
+        setup.withLock {
+            guard !isRunning else { return }
+            let t0 = ContinuousClock.now
+            if needsReset { engine.stop(); engine.reset(); needsReset = false }
+            let input = engine.inputNode
+            if let dev = InputDevices.resolve(preference: Prefs.inputDeviceUID), let unit = input.audioUnit {
+                var id = dev.id
+                AudioUnitSetProperty(unit, kAudioOutputUnitProperty_CurrentDevice, kAudioUnitScope_Global, 0, &id, UInt32(MemoryLayout<AudioDeviceID>.size))
+            }
+            _ = input.outputFormat(forBus: 0)
+            _ = Self.tapFormat(input)
+            Log.timing("mic.prewarm", since: t0)
+        }
+    }
+    /// start() and prewarm() touch the same engine from different threads; one at a time.
+    private let setup = NSLock()
+
     func start() throws {
-        guard !isRunning else { return }
+        try setup.withLock { try startLocked() }
+    }
+
+    private func startLocked() throws {
+        // Already running (a cancel that was still waiting for the mic to open, then a new press):
+        // keep the mic, drop what the cancelled session heard.
+        guard !isRunning else { lock.withLock { samples.removeAll(keepingCapacity: true); peak = 0 }; return }
         lock.withLock { samples.removeAll(keepingCapacity: true); peak = 0 }
         if ProcessInfo.processInfo.environment["TYPEVOICE_FORCE_QUEUE"] == "1" { try startQueue(); return }
 
