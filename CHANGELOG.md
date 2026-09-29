@@ -4,6 +4,14 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.20 — 29 September 2026
+
+- The pill shows the moment you press your key, even after the Mac has been idle, and the mic
+  is ready about ten times sooner. Before, the first press after a while could end with nothing
+  recorded.
+- "First" stays a word ("First, we ship"), and "one three" is no longer typed as a time.
+- Transcription bug fixes.
+
 ## 1.0.19 — 29 September 2026
 
 - Thinking out loud stays out of your text: "you know", "I mean", "like", "anyway" and "I don't
