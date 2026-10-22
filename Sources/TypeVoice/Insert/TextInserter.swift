@@ -197,13 +197,7 @@ final class TextInserter {
 
     // MARK: Paste path
 
-    private struct ClipboardSnapshot {
-        let items: [[NSPasteboard.PasteboardType: Data]]
-        let changeCount: Int
-    }
-
     private func paste(_ text: String, into target: Target) async throws {
-        let pb = NSPasteboard.general
         // ⌘V goes to whatever is in front, so the app you dictated into must be in front again.
         // Activation can be slow (Electron, another display) or refused: wait for it, and if it
         // never comes, don't paste into some other app — the caller copies the text instead.
@@ -229,54 +223,107 @@ final class TextInserter {
             try await Task.sleep(for: .milliseconds(10))
         }
 
-        // The clipboard as it is right now (something copied during the waits above counts).
-        let snapshot = ClipboardSnapshot(
-            items: (pb.pasteboardItems ?? []).map { item in
-                var d: [NSPasteboard.PasteboardType: Data] = [:]
-                for t in item.types { if let data = item.data(forType: t) { d[t] = data } }
-                return d
-            },
-            changeCount: pb.changeCount
-        )
-
-        pb.clearContents()
-        pb.setString(text, forType: .string)
-        // Clipboard managers skip "transient" contents, so dictations don't pile up in their history.
-        pb.setData(Data(), forType: Self.transient)
-        let ours = pb.changeCount
+        let stage = ClipboardStage(text, transient: Self.transient)
 
         let src = CGEventSource(stateID: .combinedSessionState)
         guard let down = CGEvent(keyboardEventSource: src, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: true),
               let up = CGEvent(keyboardEventSource: src, virtualKey: CGKeyCode(kVK_ANSI_V), keyDown: false) else {
+            stage.restoreNow()
             throw InsertError.noTextTarget
         }
         down.flags = .maskCommand
         up.flags = .maskCommand
         down.post(tap: .cghidEventTap)
         up.post(tap: .cghidEventTap)
-
-        // Give the app time to read the pasteboard, then put the user's clipboard back. 350 ms was
-        // too short for Electron/Chromium apps just brought forward: they pasted the old clipboard.
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(1000))
-            guard pb.changeCount == ours else { return }   // user copied something meanwhile
-            pb.clearContents()
-            let restored: [NSPasteboardItem] = snapshot.items.map { dict in
-                let item = NSPasteboardItem()
-                for (t, d) in dict { item.setData(d, forType: t) }
-                return item
-            }
-            restored.first?.setData(Data(), forType: Self.transient)   // not a new entry in clipboard history
-            if !restored.isEmpty { pb.writeObjects(restored) }
-        }
+        stage.restoreAfterPaste()
     }
 
-    private static let transient = NSPasteboard.PasteboardType("org.nspasteboard.TransientType")
+    static let transient = NSPasteboard.PasteboardType("org.nspasteboard.TransientType")
 
     /// Fallback when insertion fails: leave the text on the clipboard.
     func copyToClipboard(_ text: String) {
         let pb = NSPasteboard.general
         pb.clearContents()
         pb.setString(text, forType: .string)
+    }
+}
+
+/// The dictation on the clipboard just long enough for one paste, then the user's clipboard back.
+/// The text is offered lazily, so the system tells us the moment an app actually reads it: the
+/// clipboard comes back only after that read (a fixed 1 s was too short for a busy Chromium or
+/// Electron app, which then pasted the old clipboard instead of the dictation). Never synced to
+/// other devices by Universal Clipboard.
+@MainActor
+final class ClipboardStage {
+    private let pb: NSPasteboard
+    private let snapshot: [[NSPasteboard.PasteboardType: Data]]
+    private let lazy: LazyText
+    private let transient: NSPasteboard.PasteboardType
+    private var ours = 0
+
+    /// No read within this long and the paste most likely never happened: give the clipboard back.
+    static let giveUp: Duration = .seconds(5)
+    /// Never sooner than this after ⌘V (a clipboard manager may peek before the app does).
+    static let floor: Duration = .milliseconds(1000)
+
+    init(_ text: String, transient: NSPasteboard.PasteboardType, pasteboard: NSPasteboard = .general) {
+        pb = pasteboard
+        self.transient = transient
+        lazy = LazyText(text)
+        // The clipboard as it is right now (something copied while we waited counts).
+        snapshot = (pb.pasteboardItems ?? []).map { item in
+            var d: [NSPasteboard.PasteboardType: Data] = [:]
+            for t in item.types { if let data = item.data(forType: t) { d[t] = data } }
+            return d
+        }
+        _ = pb.prepareForNewContents(with: .currentHostOnly)
+        let item = NSPasteboardItem()
+        item.setDataProvider(lazy, forTypes: [.string])
+        // Clipboard managers skip "transient" contents, so dictations don't pile up in their history.
+        item.setData(Data(), forType: transient)
+        pb.writeObjects([item])
+        ours = pb.changeCount
+    }
+
+    var wasRead: Bool { lazy.wasRead }
+
+    func restoreAfterPaste() {
+        Task { @MainActor in
+            let t0 = ContinuousClock.now
+            var readAt: ContinuousClock.Instant?
+            while ContinuousClock.now - t0 < Self.giveUp {
+                try? await Task.sleep(for: .milliseconds(50))
+                guard pb.changeCount == ours else { return }   // the user copied something meanwhile
+                if readAt == nil, lazy.wasRead { readAt = .now }
+                if let readAt, ContinuousClock.now - t0 >= Self.floor, ContinuousClock.now - readAt >= .milliseconds(250) { break }
+            }
+            if readAt == nil { Log.d("paste: the app never read the clipboard; giving it back") }
+            restoreNow()
+        }
+    }
+
+    func restoreNow() {
+        guard pb.changeCount == ours else { return }
+        _ = pb.prepareForNewContents(with: .currentHostOnly)
+        let restored: [NSPasteboardItem] = snapshot.map { dict in
+            let item = NSPasteboardItem()
+            for (t, d) in dict { item.setData(d, forType: t) }
+            return item
+        }
+        restored.first?.setData(Data(), forType: transient)   // not a new entry in clipboard history
+        if !restored.isEmpty { pb.writeObjects(restored) }
+    }
+}
+
+/// Hands the text over only when an app asks for it, and remembers that it was asked.
+final class LazyText: NSObject, NSPasteboardItemDataProvider, @unchecked Sendable {
+    let text: String
+    private let lock = NSLock()
+    private var read = false
+    init(_ text: String) { self.text = text }
+    var wasRead: Bool { lock.withLock { read } }
+    func pasteboard(_ pasteboard: NSPasteboard?, item: NSPasteboardItem, provideDataForType type: NSPasteboard.PasteboardType) {
+        item.setString(text, forType: type)
+        lock.withLock { read = true }
     }
 }

@@ -1,3 +1,4 @@
+import AppKit
 import AVFoundation
 import FluidAudio
 import Foundation
@@ -26,6 +27,28 @@ enum PipelineTest {
             let t0 = ContinuousClock.now
             for c in cases { print("\(c)\n  → \(Vocabulary.apply(terms, to: c))") }
             print(String(format: "%d terms, %.2f ms per sentence", terms.count, Double((ContinuousClock.now - t0) / .microseconds(1)) / 1000 / Double(cases.count)))
+            exit(0)
+        }
+        if files.first == "clipboard" {
+            // A pretend app that reads the clipboard late, in another process: it must get the
+            // dictation, and the clipboard must be the user's again afterwards.
+            MainActor.assumeIsolated {
+                let pb = NSPasteboard.general
+                let saved = pb.string(forType: .string)
+                for delay in [0.1, 1.8, 3.5, 6.0] {
+                    pb.clearContents(); pb.setString("OLD CLIPBOARD", forType: .string)
+                    let stage = ClipboardStage("DICTATION", transient: TextInserter.transient)
+                    stage.restoreAfterPaste()
+                    let p = Process(), out = Pipe()
+                    p.executableURL = URL(fileURLWithPath: "/bin/sh"); p.arguments = ["-c", "sleep \(delay); pbpaste"]; p.standardOutput = out
+                    try? p.run()
+                    let end = Date().addingTimeInterval(max(delay, 5) + 1.5)
+                    while Date() < end { RunLoop.main.run(until: Date().addingTimeInterval(0.02)) }
+                    let got = String(data: out.fileHandleForReading.readDataToEndOfFile(), encoding: .utf8) ?? ""
+                    print(String(format: "app reads after %.1fs → pasted %@ · clipboard afterwards: %@", delay, got, pb.string(forType: .string) ?? "(empty)"))
+                }
+                pb.clearContents(); if let saved { pb.setString(saved, forType: .string) }
+            }
             exit(0)
         }
         if files.first == "structure" {
