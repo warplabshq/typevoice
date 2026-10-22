@@ -6,8 +6,8 @@ import Foundation
 struct RegionalPrice: Decodable, Sendable {
     let country: String
     let currency: String
-    let personal: Int
-    let team: Int
+    let personal: Double   // 599 in India, 5.99 elsewhere
+    let team: Double
     let tax: String
 
     /// "🇮🇳" from "IN".
@@ -15,8 +15,9 @@ struct RegionalPrice: Decodable, Sendable {
         String(String.UnicodeScalarView(country.unicodeScalars.compactMap { UnicodeScalar(0x1F1E6 + $0.value - 65) }))
     }
 
-    func format(_ amount: Int) -> String {
-        Decimal(amount).formatted(.currency(code: currency).precision(.fractionLength(0)).locale(Locale(identifier: "en_US")))
+    func format(_ amount: Double) -> String {
+        let cents = amount.rounded() != amount
+        return Decimal(amount).formatted(.currency(code: currency).precision(.fractionLength(cents ? 2 : 0)).locale(Locale(identifier: "en_US")))
     }
 
     static func fetch() async -> RegionalPrice? {

@@ -4,6 +4,11 @@ The top entry is what Sparkle shows before an update installs (`make notes` turn
 `dist/TypeVoice-<version>.html`; `make release` runs that for you). Keep entries in the
 user's words: what changed for the person dictating, not which file moved.
 
+## 1.0.23 — 23 October 2026
+
+- TypeVoice is now $19.99 for one Mac (a team key is $79 for five people), and the License tab
+  shows the new prices.
+
 ## 1.0.22 — 22 October 2026
 
 - In slow or busy apps, a dictation no longer pastes whatever you had copied before instead of

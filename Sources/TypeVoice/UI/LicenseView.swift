@@ -21,7 +21,7 @@ struct LicenseView: View {
                 case .licensed:
                     hero(icon: "checkmark.seal.fill", title: "\(Brand.name) is yours",
                          text: licensing.plan == .team
-                             ? "Thank you. This Mac is activated with your team's key; each person can use it on two Macs."
+                             ? "Thank you. This Mac is activated with your team's key; each person can use it on one Mac."
                              : "Thank you. This Mac is activated; use the same key on your other Mac.")
                 }
             }
@@ -51,8 +51,8 @@ struct LicenseView: View {
                         Text(licensing.licenseKeyMasked ?? "").font(.system(.body, design: .monospaced))
                     }
                     Text(licensing.plan == .team
-                         ? "A team key: \(Brand.teamSeats) people, two Macs each. Deactivate this Mac before handing it on, so the seat is free for someone else."
-                         : "Your key was emailed to you by Dodo Payments when you bought \(Brand.name); it covers two Macs. Deactivate this Mac before selling it or handing it on, so the seat is free for your next one.")
+                         ? "A team key: \(Brand.teamSeats) people, one Mac each. Deactivate this Mac before handing it on, so the seat is free for someone else."
+                         : "Your key was emailed to you by Dodo Payments when you bought \(Brand.name); it covers one Mac. Deactivate this Mac before selling it or handing it on, so the key is free for your next one.")
                         .font(.callout).foregroundStyle(.secondary)
                     HStack(spacing: 12) {
                         Button(licensing.busy ? "…" : "Deactivate this Mac") { Task { await licensing.deactivate() } }
@@ -71,7 +71,7 @@ struct LicenseView: View {
                                 .disabled(!Licensing.isConfigured)
                         } label: {
                             VStack(alignment: .leading, spacing: 2) {
-                                Text("Team key · \(Brand.teamSeats) people, two Macs each")
+                                Text("Team key · \(Brand.teamSeats) people, one Mac each")
                                 Text("One shared key. Enter it below when it arrives; this Mac moves over and your personal seat is freed.")
                                     .font(.callout).foregroundStyle(.secondary)
                             }
@@ -100,7 +100,7 @@ struct LicenseView: View {
                             .disabled(!Licensing.isConfigured)
                     } label: {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("For you · one purchase, two Macs")
+                            Text("For you · one purchase, one Mac")
                             Text(Licensing.isConfigured
                                  ? "Checkout opens in your browser. The key arrives by email and lands here by itself."
                                  : "The checkout link isn't configured in this build.")
@@ -112,7 +112,7 @@ struct LicenseView: View {
                             .disabled(!Licensing.isConfigured)
                     } label: {
                         VStack(alignment: .leading, spacing: 2) {
-                            Text("For a team · \(Brand.teamSeats) people, two Macs each")
+                            Text("For a team · \(Brand.teamSeats) people, one Mac each")
                             Text(regional == nil ? "One shared key for the whole team. A few countries have their own price, shown at checkout."
                                                  : "One shared key for the whole team.")
                                 .font(.callout).foregroundStyle(.secondary)

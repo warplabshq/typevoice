@@ -43,11 +43,11 @@ enum Brand {
         return page.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? ""
     }
     /// Shown next to the Buy buttons; keep them in step with the Dodo products.
-    static let price = "$79"
-    static let teamPrice = "$299"
+    static let price = "$19.99"
+    static let teamPrice = "$79"
     static let teamSeats = 5
 
-    /// The team key: one purchase, one shared key, five people with two Macs each.
+    /// The team key: one purchase, one shared key, five people, one Mac each.
     static var teamCheckoutURL: URL {
         let test = UserDefaults.standard.bool(forKey: "dodoTest")
         let base = test ? "https://test.checkout.dodopayments.com/buy/pdt_0Nnye4HFHXLRKq4WkVJXG"
